@@ -41,7 +41,7 @@ int main () {
     mil();
     bvtv();
 
-    printf("Hello world!\n");
+    printf("\nHello world!\n");
 
     return 0;
 }
