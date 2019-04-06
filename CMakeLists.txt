@@ -32,7 +32,8 @@ set(SOURCE_FILES
         bvtv/bvtv.c
         mil/mil.c
         reader/reader.c
-        regions/region_extraction.c)
+        regions/region_extraction.c
+        eigen/eigen.c)
 
 # ================================================================================
 # C++ Global Flags
@@ -88,3 +89,6 @@ endif()
 # Define binary executable and libraries to be linked
 # ================================================================================
 add_executable(bonemap ${SOURCE_FILES})
+
+# Add math library for floating point environment
+target_link_libraries(bonemap m)
