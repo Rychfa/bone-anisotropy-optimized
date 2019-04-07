@@ -54,7 +54,9 @@ int normalize(double v[3]) {
 /// \param eVec
 /// \param eVal
 void eigen3(double M[3][3], double eVec[3][3], double eVal[3]) {
-
+    //
+    // Clean eVal and create 3x3 identity matrix
+    //
     double I[3][3];
     for (int i = 0; i < 3; ++i) {
         for (int j = 0; j < 3; ++j) {
@@ -66,7 +68,9 @@ void eigen3(double M[3][3], double eVec[3][3], double eVal[3]) {
 
     double p1 = M[0][1]*M[0][1] + M[0][2]*M[0][2] + M[1][2]*M[1][2];
     if (p1 == 0) {
-        // A is diagonal.
+        //
+        // M is a diagonal matrix
+        //
         eVal[0] = M[0][0];
         eVal[1] = M[1][1];
         eVal[2] = M[2][2];
@@ -78,9 +82,10 @@ void eigen3(double M[3][3], double eVec[3][3], double eVal[3]) {
         double a3 = M[2][2] - diagMean;
         double p2 = a1*a1 + a2*a2 + a3*a3 + 2*p1;
         double p = sqrt(p2 / 6);
-
+        //
+        // Create matrix B
+        //
         double B[3][3];
-
         for (int i = 0; i < 3; ++i) {
             for (int j = 0; j < 3; ++j) {
                 B[i][j] = (1 / p) * (M[i][j] - diagMean * I[i][j]);
@@ -100,7 +105,7 @@ void eigen3(double M[3][3], double eVec[3][3], double eVal[3]) {
         else
             phi = acos(r) / 3;
         //
-        // the eigenvalues satisfy eig3 <= eig2 <= eig1
+        // The eigenvalues satisfy eig3 <= eig2 <= eig1
         //
         eVal[0] = diagMean + 2 * p * cos(phi);
         eVal[2] = diagMean + 2 * p * cos(phi + (2*M_PI/3));

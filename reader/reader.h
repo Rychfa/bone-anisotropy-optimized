@@ -30,6 +30,8 @@
 ///
 /// Function declarations
 ///
-void reader ();
+double* readLowResImage ();
+double* readHighResImage ();
+void destroyImageMatrices ();
 
 #endif //BONEMAP_READER_H
