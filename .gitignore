@@ -1,2 +1,8 @@
 *.out
 *.s
+
+# CMake
+cmake-build-*/
+
+# Clion
+.idea/
