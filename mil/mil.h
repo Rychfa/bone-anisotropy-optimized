@@ -30,6 +30,6 @@
 ///
 /// Function declarations
 ///
-void mil ();
+double* mil (int*** hr_sphere_region, int n, double** directions_vectors, int n_vectors, int dimension);
 
 #endif //BONEMAP_MIL_H

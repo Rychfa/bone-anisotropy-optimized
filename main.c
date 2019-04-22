@@ -35,10 +35,10 @@ int main () {
     //
     // Call everything
     //
-    reader();
+//    reader();
     coordMap();
     region_extraction();
-    mil();
+//    mil();
     bvtv();
 
     printf("Hello world!\n");
