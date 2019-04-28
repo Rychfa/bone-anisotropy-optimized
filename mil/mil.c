@@ -26,7 +26,10 @@
 */
 #include <stdlib.h>
 #include <math.h>
+#include <time.h>
+#include <assert.h>
 #include "mil.h"
+#include "stdio.h"
 
 ///
 /// Skeleton for MIL
@@ -41,7 +44,7 @@ int find_maximum_absolute_value(int *array, int length) {
     return max;
 }
 
-double* init_mil_vector(int n_vectors) {
+double *init_mil_vector(int n_vectors) {
     double *directions_vectors_mil = (double *) malloc(n_vectors * sizeof(double));
     for (int j = 0; j < n_vectors; ++j) {
         directions_vectors_mil[j] = 0.0;
@@ -49,7 +52,96 @@ double* init_mil_vector(int n_vectors) {
     return directions_vectors_mil;
 }
 
+int **randomly_generate_central_points(int n_central_point, int max_coordinate) {
+    int **central_points = (int**)malloc(n_central_point * sizeof(int*));
+
+    for (int i = 0; i < n_central_point; ++i) {
+        central_points[i] = (int*)malloc(3 * sizeof(int));
+
+        int z = arc4random_uniform(max_coordinate);
+        int y = arc4random_uniform(max_coordinate);
+        int x = arc4random_uniform(max_coordinate);
+
+        central_points[i] = (int[3]){z, y, x};
+    }
+
+    return central_points;
+}
+
+//double l1_norm(double *vector, int size) {
+//    double l1_norm = 0;
+//    for (int i = 0; i < size; ++i) {
+//        l1_norm += fabs(vector[i]);
+//    }
+//    return l1_norm;
+//}
+//
+//void validate_direction_vectors(double** direction_vectors, int n, int d) {
+//    for (int i = 0; i < n; ++i) {
+//        double direction_vector_l1_norm = l1_norm(direction_vectors[i], d);
+//        assert(direction_vector_l1_norm == 1.0);
+//    }
+//}
+
 double *mil(int ***hr_sphere_region, int n, double **directions_vectors, int n_vectors, int dimension) {
+//    validate_direction_vectors(directions_vectors, n_vectors, dimension);
+
+    double *directions_vectors_mil = init_mil_vector(n_vectors);
+
+    double directions_vectors_bone_length[n_vectors], directions_vectors_intercepts[n_vectors];
+    for (int j = 0; j < n_vectors; ++j) {
+        directions_vectors_bone_length[j] = 0.0;
+        directions_vectors_intercepts[j] = 0.0;
+    }
+
+    // todo: for now, statically initialized, only one central Point.
+    //  Will be replaced by: randomly_generate_central_points(,). Deallocate memory at the end !
+    int n_central_point = 1;
+    int central_points[1][3] = {{n / 2 - 1, n / 2 - 1, n / 2 - 1}};
+
+    for (int k = 0; k < n_central_point; ++k) {
+        int *central_point = central_points[k];
+
+        for (int i = 0; i < n_vectors; ++i) {
+            double *direction_vector = directions_vectors[i];
+
+            double z = central_point[0], y = central_point[1], x = central_point[2];
+            int z_int = (int) z, y_int = (int) y, x_int = (int) x;
+            int vector_state = hr_sphere_region[z_int][y_int][x_int];
+
+            while ((z < n && z >= 0) && (y < n && y >= 0) && (x < n && x >= 0)) {
+                z_int = (int) z, y_int = (int) y, x_int = (int) x;
+
+                int current_state = hr_sphere_region[z_int][y_int][x_int];
+
+                if (current_state == 1) {
+                    ++directions_vectors_bone_length[i];
+                }
+
+                if (current_state != vector_state) {
+                    ++directions_vectors_intercepts[i];
+                    vector_state = current_state;
+                }
+
+                z += direction_vector[0];
+                y += direction_vector[1];
+                x += direction_vector[2];
+            }
+        }
+    }
+
+    for (int i = 0; i < n_vectors; ++i) {
+        directions_vectors_mil[i] =
+                directions_vectors_intercepts[i] > 0.0 ? (double) directions_vectors_bone_length[i] /
+                                                         directions_vectors_intercepts[i]
+                                                       : directions_vectors_bone_length[i];
+    }
+
+    return directions_vectors_mil;
+}
+
+
+double *mil2(int ***hr_sphere_region, int n, double **directions_vectors, int n_vectors, int dimension) {
 
     //todo: Extend to n point: loop over n 'central point', and calculate the average MIL over the direction_vectors.
     //todo: Now, for simplicity, only one point.
@@ -66,11 +158,9 @@ double *mil(int ***hr_sphere_region, int n, double **directions_vectors, int n_v
         for (int dim = 0; dim < dimension; ++dim) {
             if (direction_vector[dim] == 0.0) {
                 final_point[dim] = central_point[dim];
-            }
-            else if (direction_vector[dim] > 0.0) {
+            } else if (direction_vector[dim] > 0.0) {
                 final_point[dim] = (int) floor(direction_vector[dim] * n) - 1;
-            }
-            else {
+            } else {
                 final_point[dim] = (int) floor(direction_vector[dim] * central_point[dim]) + central_point[dim];
             }
         }

@@ -1,7 +1,8 @@
-#include "tsc_x86.h"
+//#include "tsc_x86.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include "ellipsoid.h"
 
 #define NUM_RUNS 1
 // #define CALIBRATE
@@ -177,41 +178,41 @@ double rdtsc(double *A, double *B, double *C, long n,
 }
 #endif
 
-int main(int argc, char **argv)
-{
-	/* initialize data */
-	double Ipoints[][3] = 
-		{{-0.28687072, -0.5844695 , -0.29465669},
-        { 0.29664863,  0.62228291,  0.36936989},
-        { 0.01220042,  0.04451405,  0.28935352},
-        { 0.03887869, -0.06267655, -0.02044771},
-        { 0.16627267,  0.62938256, -0.08679698},
-        { 0.2123087 ,  0.55534194, -0.09466649},
-        { 0.26719668,  0.47538131,  0.58769478},
-        { 0.28394338,  0.54458556,  0.51808755},
-        {-0.01285678,  0.39130018, -0.55237714},
-        { 0.08337157,  0.20009325, -0.22645592}};
-
-  /* test correctness. Q should be according to CVXPY
-  	[[239.24816358 -81.82197492 -47.58347817]
- 		[-81.82197492  29.89943344  16.36709216]
- 		[-47.58347817  16.36709216  10.84916192]]
- 	*/
-  double Q[3][3];
-  int n = sizeof(Ipoints)/sizeof(double)/3;
-  printf("%d\n", n);
-  fit_ellipsoid(Ipoints, n, Q);
-  for (int i=0; i<3; i++) {
-  	for (int j=0; j<3; j++) {
-  		printf("%f, ", Q[i][j]);
-  	}
-  	printf("\n");
-  }
-
-	/* perform timings */
-	// double cycles = rdtsc(A, B, C, n, mm1);
-	// printf("mm1: %g, %g\n", cycles, (2*n*n*n)/cycles);
-
-	// cycles = rdtsc(A, B, C, n, mm2);
-	// printf("mm2: %g, %g\n", cycles, (2*n*n*n)/cycles);
-}
+//int main(int argc, char **argv)
+//{
+//	/* initialize data */
+//	double Ipoints[][3] =
+//		{{-0.28687072, -0.5844695 , -0.29465669},
+//        { 0.29664863,  0.62228291,  0.36936989},
+//        { 0.01220042,  0.04451405,  0.28935352},
+//        { 0.03887869, -0.06267655, -0.02044771},
+//        { 0.16627267,  0.62938256, -0.08679698},
+//        { 0.2123087 ,  0.55534194, -0.09466649},
+//        { 0.26719668,  0.47538131,  0.58769478},
+//        { 0.28394338,  0.54458556,  0.51808755},
+//        {-0.01285678,  0.39130018, -0.55237714},
+//        { 0.08337157,  0.20009325, -0.22645592}};
+//
+//  /* test correctness. Q should be according to CVXPY
+//  	[[239.24816358 -81.82197492 -47.58347817]
+// 		[-81.82197492  29.89943344  16.36709216]
+// 		[-47.58347817  16.36709216  10.84916192]]
+// 	*/
+//  double Q[3][3];
+//  int n = sizeof(Ipoints)/sizeof(double)/3;
+//  printf("%d\n", n);
+//  fit_ellipsoid(Ipoints, n, Q);
+//  for (int i=0; i<3; i++) {
+//  	for (int j=0; j<3; j++) {
+//  		printf("%f, ", Q[i][j]);
+//  	}
+//  	printf("\n");
+//  }
+//
+//	/* perform timings */
+//	// double cycles = rdtsc(A, B, C, n, mm1);
+//	// printf("mm1: %g, %g\n", cycles, (2*n*n*n)/cycles);
+//
+//	// cycles = rdtsc(A, B, C, n, mm2);
+//	// printf("mm2: %g, %g\n", cycles, (2*n*n*n)/cycles);
+//}

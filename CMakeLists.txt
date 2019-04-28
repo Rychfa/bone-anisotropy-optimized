@@ -24,6 +24,7 @@ include_directories(
         coord_map
         bvtv
         regions
+        ellipsoid
 )
 
 set(SOURCE_FILES
@@ -31,6 +32,8 @@ set(SOURCE_FILES
         coord_map/coord_map.c
         bvtv/bvtv.c
         mil/mil.c
+        mil/test_mil.c
+        ellipsoid/ellipsoid.c
         reader/reader.c
         regions/region_extraction.c
         eigen/eigen.c)
