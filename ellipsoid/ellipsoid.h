@@ -33,7 +33,9 @@
 /// Pre-processor 
 ///
 
-//#define M_SQRT3 1.7320508075688772935
+#ifdef linux
+#define M_SQRT3 1.7320508075688772935
+#endif
 
 ///
 /// Public data
