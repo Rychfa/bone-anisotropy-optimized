@@ -43,6 +43,8 @@ int main () {
 //    mil();
 //    bvtv();
 
+		test_mil_and_ellipsoid();
+
     printf("Done !\n");
 
     return 0;
