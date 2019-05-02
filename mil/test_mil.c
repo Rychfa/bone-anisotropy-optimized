@@ -5,6 +5,7 @@
 #include "stdio.h"
 #include "stdlib.h"
 #include "mil.h"
+#include "test_mil.h"
 #include "ellipsoid.h"
 
 void print_sphere(int ***sphere, int n) {
@@ -134,11 +135,11 @@ void print_vector(double *vector, int n) {
     printf("\n*******\n");
 }
 
-void print_matrix2(double *matrix, int n, int d) {
+void print_matrix2(double matrix[][3], int n, int d) {
     for (int i = 0; i < n; ++i) {
         for (int j = 0; j < d; ++j) {
             char coma_or_space = j < d - 1 ? ',' : ' ';
-            printf("%f%c", matrix[i*d + j], coma_or_space);
+            printf("%f%c", matrix[i][j], coma_or_space);
         }
         printf("\n");
     }
@@ -160,32 +161,28 @@ void print_matrix3(double matrix[3][3]) {
 //###################
 
 void test_mil() {
-    int n = 10, n_vectors = 3, dimension = 3;
-    int ***sphere_region_hr = init_sphere_region_hr(n);
-    double **direction_vectors = build_direction_vectors(n_vectors, dimension);
-    print_matrix2(direction_vectors, n_vectors, dimension);
-
-    double *mean_intercept_length = mil(sphere_region_hr, n, direction_vectors, n_vectors, dimension);
-    print_vector(mean_intercept_length, n_vectors);
-
-    destroy_sphere(sphere_region_hr, n);
-    destroy_matrix(direction_vectors, n_vectors);
-    free(mean_intercept_length);
+//    int n = 10, n_vectors = 3, dimension = 3;
+//    int ***sphere_region_hr = init_sphere_region_hr(n);
+//    double **direction_vectors = build_direction_vectors(n_vectors, dimension);
+//    print_matrix2(direction_vectors, n_vectors, dimension);
+//
+//    double *mean_intercept_length = mil(sphere_region_hr, n, direction_vectors, n_vectors, dimension);
+//    print_vector(mean_intercept_length, n_vectors);
+//
+//    destroy_sphere(sphere_region_hr, n);
+//    destroy_matrix(direction_vectors, n_vectors);
+//    free(mean_intercept_length);
 }
 
 void test_mil_and_ellipsoid() {
     int n = 10, n_vectors = NUM_DIRECTIONS, dimension = 3;
     int ***sphere_region_hr = init_sphere_region_hr(n);
     print_sphere(sphere_region_hr, n);
-    //todo: make direction_vector consistent ! Generally, need for api consistency / normalisation
-    // double **direction_vectors = build_direction_vectors2(n_vectors, dimension);
-    // double directions[n_vectors][dimension];
-    // build_direction_vectors3(directions, n_vectors);
     print_matrix2(DIRECTIONS, n_vectors, dimension);
 //    printf("%f,%f,%f\n", directions[7][0], directions[7][1], directions[7][2]);
 //    printf("%f,%f,%f\n", directions[8][0], directions[8][1], directions[8][2]);
 
-    double *mean_intercept_length = mil(sphere_region_hr, n, DIRECTIONS, n_vectors, dimension); // seg faulting here
+    double *mean_intercept_length = mil(sphere_region_hr, n, DIRECTIONS, n_vectors); // seg faulting here
     printf("test\n");
     print_vector(mean_intercept_length, n_vectors);
     double Q[3][3];

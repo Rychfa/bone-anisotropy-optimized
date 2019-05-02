@@ -33,13 +33,13 @@
 /// Pre-processor 
 ///
 
-#define M_SQRT3 1.7320508075688772935
+//#define M_SQRT3 1.7320508075688772935
 
 ///
 /// Public data
 ///
 
-static const double DIRECTIONS[][3] = 
+static double DIRECTIONS[][3] =
 	{
 		{ 0,  0, -1},
 		{ 0,  0,  1},

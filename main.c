@@ -31,6 +31,7 @@
 #include "region_extraction.h"
 #include "bvtv.h"
 #include "mil.h"
+#include "test_mil.h"
 #include "ellipsoid.h"
 
 int main () {
@@ -43,7 +44,7 @@ int main () {
 //    mil();
 //    bvtv();
 
-		test_mil_and_ellipsoid();
+    test_mil_and_ellipsoid();
 
     printf("Done !\n");
 
