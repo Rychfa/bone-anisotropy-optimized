@@ -27,9 +27,95 @@
 #ifndef BONEMAP_ELLIPSOID_H
 #define BONEMAP_ELLIPSOID_H
 
+#include <math.h>
+
+///
+/// Pre-processor 
+///
+
+#define M_SQRT3 1.7320508075688772935
+
+///
+/// Public data
+///
+
+static const double DIRECTIONS[][3] = 
+	{
+		{ 0,  0, -1},
+		{ 0,  0,  1},
+		{ 0, -1,  0},
+		{ 0, -1, -1},
+		{ 0, -1,  1},
+		{ 0,  1,  0},
+		{ 0,  1, -1},
+		{ 0,  1,  1},
+		{-1,  0,  0},
+		{-1,  0, -1},
+		{-1,  0,  1},
+		{-1, -1,  0},
+		{-1, -1, -1},
+		{-1, -1,  1},
+		{-1,  1,  0},
+		{-1,  1, -1},
+		{-1,  1,  1},
+		{ 1,  0,  0},
+		{ 1,  0, -1},
+		{ 1,  0,  1},
+		{ 1, -1,  0},
+		{ 1, -1, -1},
+		{ 1, -1,  1},
+		{ 1,  1,  0},
+		{ 1,  1, -1},
+		{ 1,  1,  1},
+	};
+
+static const double DIRECTIONS_NORMALIZED[][3] = 
+	{
+		{ 0,  0, -1},
+		{ 0,  0,  1},
+		{ 0, -1,  0},
+		{ 0, -1/M_SQRT2, -1/M_SQRT2},
+		{ 0, -1/M_SQRT2,  1/M_SQRT2},
+		{ 0,  1,  0},
+		{ 0,  1/M_SQRT2, -1/M_SQRT2},
+		{ 0,  1/M_SQRT2,  1/M_SQRT2},
+		{-1,  0,  0},
+		{-1/M_SQRT2,  0, -1/M_SQRT2},
+		{-1/M_SQRT2,  0,  1/M_SQRT2},
+		{-1/M_SQRT2, -1/M_SQRT2,  0},
+		{-1/M_SQRT3, -1/M_SQRT3, -1/M_SQRT3},
+		{-1/M_SQRT3, -1/M_SQRT3,  1/M_SQRT3},
+		{-1/M_SQRT2,  1/M_SQRT2,  0},
+		{-1/M_SQRT3,  1/M_SQRT3, -1/M_SQRT3},
+		{-1/M_SQRT3,  1/M_SQRT3,  1/M_SQRT3},
+		{ 1,  0,  0},
+		{ 1/M_SQRT2,  0, -1/M_SQRT2},
+		{ 1/M_SQRT2,  0,  1/M_SQRT2},
+		{ 1/M_SQRT2, -1/M_SQRT2,  0},
+		{ 1/M_SQRT3, -1/M_SQRT3, -1/M_SQRT3},
+		{ 1/M_SQRT3, -1/M_SQRT3,  1/M_SQRT3},
+		{ 1/M_SQRT2,  1/M_SQRT2,  0},
+		{ 1/M_SQRT3,  1/M_SQRT3, -1/M_SQRT3},
+		{ 1/M_SQRT3,  1/M_SQRT3,  1/M_SQRT3},
+	};
+
+static const int NUM_DIRECTIONS = sizeof(DIRECTIONS)/sizeof(double)/3;
+
 ///
 /// Function declarations
 ///
+
+/*
+ * The raw ellipsoid fitting routine
+ * @p : pointer to an array of length 3, the points in 3D space on which to fit
+ */
 void fit_ellipsoid(const double (*p)[3], int n, double Q[3][3]);
+
+/*
+ * convenience function, wraps fit_ellipsoid above, given the mils (lengths) along
+ * each of the DIRECTIONS defined above
+ *
+ */
+void fit_ellipsoid_mils(const double *mils, double Q[3][3]);
 
 #endif //BONEMAP_ELLIPSOID_H
