@@ -58,9 +58,9 @@ int **randomly_generate_central_points(int n_central_point, int max_coordinate) 
     for (int i = 0; i < n_central_point; ++i) {
         central_points[i] = (int*)malloc(3 * sizeof(int));
 
-        int z = arc4random_uniform(max_coordinate);
-        int y = arc4random_uniform(max_coordinate);
-        int x = arc4random_uniform(max_coordinate);
+        int z = rand() % max_coordinate; //arc4random_uniform(max_coordinate);
+        int y = rand() % max_coordinate; //arc4random_uniform(max_coordinate);
+        int x = rand() % max_coordinate; //arc4random_uniform(max_coordinate);
 
         central_points[i] = (int[3]){z, y, x};
     }
