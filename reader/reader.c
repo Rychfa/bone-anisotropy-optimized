@@ -32,17 +32,6 @@
 // TODO: What datatype for input arrays? (double, float or int)
 //
 
-#define LOW_RES_FILE "../images/LowRes_F16_L_fall_3p0_segmented/F16_L_fall_3p0_mask.raw"
-#define LOW_RES_D1 28
-#define LOW_RES_D2 16
-#define LOW_RES_D3 32
-#define LOW_RES_SIZE (LOW_RES_D1 * LOW_RES_D2 * LOW_RES_D3)
-#define HIGH_RES_FILE "../images/HighRes_F16_L_segmented/625_3775_F16_L_H_SEG_cov_crop_rotate.raw"
-#define HIGH_RES_D1 1149
-#define HIGH_RES_D2 703
-#define HIGH_RES_D3 1304
-#define HIGH_RES_SIZE (HIGH_RES_D1 * HIGH_RES_D2 * HIGH_RES_D3)
-
 typedef union {
     float f;
     char c[4];
@@ -88,6 +77,10 @@ double* readHighResImage () {
         }
         ptrHighRes[i] = uCharInt.i;
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> devel_jp
     }
 
     if (fgetc((FILE*)fp) == EOF) {
@@ -100,6 +93,10 @@ double* readHighResImage () {
 double* readLowResImage () {
 
     FILE *fp;
+<<<<<<< HEAD
+=======
+    FILE *fd;
+>>>>>>> devel_jp
     charFloat_t uCharFloat;
     fp = fopen(LOW_RES_FILE, "r");
     if (fp == NULL) {
@@ -112,6 +109,10 @@ double* readLowResImage () {
     //
     ptrLowRes = malloc ((sizeof ptrLowRes ) * LOW_RES_SIZE);
 
+<<<<<<< HEAD
+=======
+    fd = fopen("debug_reader_lowres.txt","w");
+>>>>>>> devel_jp
     for (int i = 0; i < LOW_RES_SIZE; ++i) {
                 //
                 // Read bytes and convert to float
@@ -127,7 +128,13 @@ double* readLowResImage () {
                     uCharFloat.c[l] = c;
                 }
                 ptrLowRes[i] = uCharFloat.f;
+<<<<<<< HEAD
     }
+=======
+                fprintf(fd,"%d, %.3f\n", i, ptrLowRes[i]);
+    }
+    fclose(fd);
+>>>>>>> devel_jp
 
     if (fgetc((FILE*)fp) == EOF) {
         printf("Low res file read correctly!\n");
@@ -139,4 +146,8 @@ double* readLowResImage () {
 void destroyImageMatrices () {
     free(ptrLowRes);
     free(ptrHighRes);
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> devel_jp

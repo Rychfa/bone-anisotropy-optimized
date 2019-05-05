@@ -25,6 +25,7 @@ include_directories(
         bvtv
         regions
         ellipsoid
+        utils
 )
 
 set(SOURCE_FILES
@@ -36,7 +37,9 @@ set(SOURCE_FILES
         ellipsoid/ellipsoid.c
         reader/reader.c
         regions/region_extraction.c
-        eigen/eigen.c)
+        eigen/eigen.c
+        utils/utils.c)
+
 
 # ================================================================================
 # C++ Global Flags

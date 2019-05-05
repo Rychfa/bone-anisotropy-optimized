@@ -24,25 +24,13 @@
 *  You should have received a copy of the GNU General Public License
 *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-#ifndef BONEMAP_READER_H
-#define BONEMAP_READER_H
-
-#define LOW_RES_FILE "../images/LowRes_F16_L_fall_3p0_segmented/F16_L_fall_3p0_mask.raw"
-#define LOW_RES_D1 28
-#define LOW_RES_D2 16
-#define LOW_RES_D3 32
-#define LOW_RES_SIZE (LOW_RES_D1 * LOW_RES_D2 * LOW_RES_D3)
-#define HIGH_RES_FILE "../images/HighRes_F16_L_segmented/625_3775_F16_L_H_SEG_cov_crop_rotate.raw"
-#define HIGH_RES_D1 1149
-#define HIGH_RES_D2 703
-#define HIGH_RES_D3 1304
-#define HIGH_RES_SIZE (HIGH_RES_D1 * HIGH_RES_D2 * HIGH_RES_D3)
+#ifndef BONEMAP_UTILS_H
+#define BONEMAP_UTILS_H
 
 ///
 /// Function declarations
 ///
-double* readLowResImage ();
-double* readHighResImage ();
-void destroyImageMatrices ();
+void writeVTK(int *image, double voxelsize, int ndim);
+void calculateRotationMatrix(double r[9], double ax, double ay, double az);
 
-#endif //BONEMAP_READER_H
+#endif //BONEMAP_UTILS_H

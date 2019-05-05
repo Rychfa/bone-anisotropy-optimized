@@ -58,6 +58,7 @@ int **randomly_generate_central_points(int n_central_point, int max_coordinate) 
     for (int i = 0; i < n_central_point; ++i) {
         central_points[i] = (int*)malloc(3 * sizeof(int));
 
+
         int z = rand() % max_coordinate; //arc4random_uniform(max_coordinate);
         int y = rand() % max_coordinate; //arc4random_uniform(max_coordinate);
         int x = rand() % max_coordinate; //arc4random_uniform(max_coordinate);
@@ -83,7 +84,11 @@ int **randomly_generate_central_points(int n_central_point, int max_coordinate) 
 //    }
 //}
 
+<<<<<<< HEAD
 double *mil(int ***hr_sphere_region, int n, double directions_vectors[][3], int n_vectors) {
+=======
+double *mil(int ***hr_sphere_region, int n, double **directions_vectors, int n_vectors, int dimension) {
+>>>>>>> devel_jp
 //    validate_direction_vectors(directions_vectors, n_vectors, dimension);
 
     double *directions_vectors_mil = init_mil_vector(n_vectors);
@@ -200,4 +205,8 @@ double *mil2(int ***hr_sphere_region, int n, double **directions_vectors, int n_
     }
 
     return directions_vectors_mil;
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> devel_jp
