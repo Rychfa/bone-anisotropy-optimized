@@ -25,11 +25,13 @@
 *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
 #include "stdio.h"
+#include "stdlib.h"
 #include "reader.h"
 #include "coord_map.h"
 #include "region_extraction.h"
 #include "bvtv.h"
 #include "mil.h"
+#include "test_mil.h"
 #include "ellipsoid.h"
 #include "utils.h"
 
@@ -42,6 +44,11 @@ int main () {
 //    region_extraction();
 //    mil();
 //    bvtv();
+
+//    test_mil_and_ellipsoid();
+
+//    printf("Done !\n");
+
     int *sphere = malloc( (sizeof (int*)) * SPHERE_ARRAY_SIZE);
 
 

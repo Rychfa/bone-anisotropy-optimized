@@ -24,12 +24,25 @@
 *  You should have received a copy of the GNU General Public License
 *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
+#include <stdlib.h>
+#include <math.h>
+#include <time.h>
+#include <assert.h>
+#include <stdio.h>
 #include "mil.h"
 
 ///
 /// Skeleton for MIL
 ///
-void mil () {
+int find_maximum_absolute_value(int *array, int length) {
+    int max = -1;
+    for (int i = 0; i < length; ++i) {
+        if (max < abs(array[i])) {
+            max = abs(array[i]);
+        }
+    }
+    return max;
+}
 
 double *init_mil_vector(int n_vectors) {
     double *directions_vectors_mil = (double *) malloc(n_vectors * sizeof(double));
@@ -45,12 +58,10 @@ int **randomly_generate_central_points(int n_central_point, int max_coordinate) 
     for (int i = 0; i < n_central_point; ++i) {
         central_points[i] = (int*)malloc(3 * sizeof(int));
 
-        /* int z = arc4random_uniform(max_coordinate); */
-        /* int y = arc4random_uniform(max_coordinate); */
-        /* int x = arc4random_uniform(max_coordinate); */
-        int z = rand();
-        int y = rand();
-        int x = rand();
+
+        int z = rand() % max_coordinate; //arc4random_uniform(max_coordinate);
+        int y = rand() % max_coordinate; //arc4random_uniform(max_coordinate);
+        int x = rand() % max_coordinate; //arc4random_uniform(max_coordinate);
 
         central_points[i] = (int[3]){z, y, x};
     }
@@ -73,7 +84,11 @@ int **randomly_generate_central_points(int n_central_point, int max_coordinate) 
 //    }
 //}
 
+<<<<<<< HEAD
+double *mil(int ***hr_sphere_region, int n, double directions_vectors[][3], int n_vectors) {
+=======
 double *mil(int ***hr_sphere_region, int n, double **directions_vectors, int n_vectors, int dimension) {
+>>>>>>> devel_jp
 //    validate_direction_vectors(directions_vectors, n_vectors, dimension);
 
     double *directions_vectors_mil = init_mil_vector(n_vectors);
@@ -190,4 +205,8 @@ double *mil2(int ***hr_sphere_region, int n, double **directions_vectors, int n_
     }
 
     return directions_vectors_mil;
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> devel_jp
