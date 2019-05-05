@@ -44,6 +44,7 @@ int main () {
 //    bvtv();
     int *sphere = malloc( (sizeof (int*)) * SPHERE_ARRAY_SIZE);
 
+
     /* calculateRotationMatrix(rotation_matrix, ax, ay, az); */
 
     /* printf("rotation_matrix: %.3f, %.3f, %.3f \n", rotation_matrix[0], rotation_matrix[1], rotation_matrix[2]); */
@@ -83,7 +84,7 @@ int main () {
     free(sphere);
     destroyImageMatrices();
 
-    printf("\nHello world!\n");
+    printf("\nDone\n");
 
     return 0;
 }
