@@ -49,18 +49,18 @@ int main () {
 
 //    printf("Done !\n");
 
-    int *sphere = malloc( (sizeof (int*)) * SPHERE_ARRAY_SIZE);
+    int *sphere = malloc( (sizeof (int)) * SPHERE_ARRAY_SIZE);
 
 
     /* calculateRotationMatrix(rotation_matrix, ax, ay, az); */
 
     /* printf("rotation_matrix: %.3f, %.3f, %.3f \n", rotation_matrix[0], rotation_matrix[1], rotation_matrix[2]); */
 
-    //createSphereMask(&sphere);
-    //writeVTK(&sphere, HIGH_RES_VOXEL_SIZE, SPHERE_NDIM);
+    createSphereMask(sphere);
+    writeVTK(sphere, HIGH_RES_VOXEL_SIZE, SPHERE_NDIM);
 
 
-    double* ptrHighRes; // = readHighResImage();
+    double* ptrHighRes = readHighResImage();
     double* ptrLowRes = readLowResImage();
 
     double rotation_matrix[9];
@@ -86,7 +86,7 @@ int main () {
     rotation_matrix[7] = -3.91584012e-04;
     rotation_matrix[8] = 9.12783188e-01;
    
-    coordMap(ptrLowRes, ptrHighRes, &sphere, rotation_matrix, xT, yT, zT, xC, yC, zC);
+    coordMap(ptrLowRes, ptrHighRes, sphere, rotation_matrix, xT, yT, zT, xC, yC, zC);
     
     free(sphere);
     destroyImageMatrices();

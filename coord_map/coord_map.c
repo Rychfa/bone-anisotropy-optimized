@@ -49,7 +49,7 @@ void coordMap (double* ptrLowRes, double* ptrHighRes, int* sphere, double rotati
     int i_hr, j_hr, k_hr, ii_hr;
     int imin, jmin, kmin;
     int radius_i, radius_j, radius_k;
-    int *extracted_region = malloc((sizeof (int*)) * SPHERE_ARRAY_SIZE);
+    int *extracted_region = malloc((sizeof (int)) * SPHERE_ARRAY_SIZE);
 
     FILE *fd;
 
@@ -155,7 +155,8 @@ void coordMap (double* ptrLowRes, double* ptrHighRes, int* sphere, double rotati
                  k_hr = (int) tz_hr;
 
                  fprintf(fd,"%d ,%d, %d, %d, %d, %d\n", i_lr, j_lr, k_lr, i_hr, j_hr, k_hr);
-                 printf("coordMap: lr(%d ,%d, %d), hr(%d, %d, %d)\n", i_lr, j_lr, k_lr, i_hr, j_hr, k_hr);
+                 //printf("coordMap: lr(%d ,%d, %d), hr(%d, %d, %d)\n", i_lr, j_lr, k_lr, i_hr, j_hr, k_hr);
+
                  // extract a sphere region
                  //region_extraction(i_hr, j_hr, k_hr, &sphere, &extracted_region, &ptrHighRes);
                  // compute fabric

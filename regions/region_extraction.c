@@ -64,7 +64,7 @@ void createSphereMask(int *sphere) {
                 } else {
                     sphere[ii] = 0; 
                 }
-                printf("createSphereMask: %d %d\n", ii, sphere[ii]);
+                //printf("createSphereMask: %d %d\n", ii, sphere[ii]);
             }
         }
     }
