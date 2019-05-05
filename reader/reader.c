@@ -77,10 +77,6 @@ double* readHighResImage () {
         }
         ptrHighRes[i] = uCharInt.i;
 
-<<<<<<< HEAD
-=======
-
->>>>>>> devel_jp
     }
 
     if (fgetc((FILE*)fp) == EOF) {
@@ -93,10 +89,7 @@ double* readHighResImage () {
 double* readLowResImage () {
 
     FILE *fp;
-<<<<<<< HEAD
-=======
     FILE *fd;
->>>>>>> devel_jp
     charFloat_t uCharFloat;
     fp = fopen(LOW_RES_FILE, "r");
     if (fp == NULL) {
@@ -108,11 +101,7 @@ double* readLowResImage () {
     // Allocate memory for low res image
     //
     ptrLowRes = malloc ((sizeof ptrLowRes ) * LOW_RES_SIZE);
-
-<<<<<<< HEAD
-=======
     fd = fopen("debug_reader_lowres.txt","w");
->>>>>>> devel_jp
     for (int i = 0; i < LOW_RES_SIZE; ++i) {
                 //
                 // Read bytes and convert to float
@@ -128,13 +117,9 @@ double* readLowResImage () {
                     uCharFloat.c[l] = c;
                 }
                 ptrLowRes[i] = uCharFloat.f;
-<<<<<<< HEAD
-    }
-=======
                 fprintf(fd,"%d, %.3f\n", i, ptrLowRes[i]);
     }
     fclose(fd);
->>>>>>> devel_jp
 
     if (fgetc((FILE*)fp) == EOF) {
         printf("Low res file read correctly!\n");
@@ -146,8 +131,4 @@ double* readLowResImage () {
 void destroyImageMatrices () {
     free(ptrLowRes);
     free(ptrHighRes);
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> devel_jp
