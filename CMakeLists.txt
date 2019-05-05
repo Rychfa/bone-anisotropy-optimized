@@ -24,6 +24,8 @@ include_directories(
         coord_map
         bvtv
         regions
+        ellipsoid
+        utils
 )
 
 set(SOURCE_FILES
@@ -32,7 +34,9 @@ set(SOURCE_FILES
         bvtv/bvtv.c
         mil/mil.c
         reader/reader.c
-        regions/region_extraction.c)
+        regions/region_extraction.c
+        eigen/eigen.c
+        utils/utils.c)
 
 # ================================================================================
 # C++ Global Flags

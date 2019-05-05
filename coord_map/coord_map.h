@@ -30,6 +30,6 @@
 ///
 /// Function declarations
 ///
-void coordMap ();
+void coordMap (double* ptrLowRes, double* ptrHighRes, int *sphere, double  rotation_matrix[9], double xT, double yT, double zT, double xC, double yC, double zC);
 
 #endif //BONEMAP_BVTV_H
