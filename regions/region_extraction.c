@@ -86,7 +86,7 @@ void region_extraction (int i_hr, int j_hr, int k_hr, int *sphere, int *extracte
     imin = i_hr - SPHERE_HALF_NDIM;
     jmin = j_hr - SPHERE_HALF_NDIM;
     kmin = k_hr - SPHERE_HALF_NDIM;
-    printf("region_extraction: i j k min %d %d %d \n", imin, jmin, kmin);
+    //printf("region_extraction: i j k min %d %d %d \n", imin, jmin, kmin);
 
     for (int k=0; k < SPHERE_NDIM; k++) {
         khr = k + kmin;

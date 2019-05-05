@@ -159,12 +159,16 @@ void coordMap (double* ptrLowRes, double* ptrHighRes, int* sphere, double rotati
                  //printf("coordMap: lr(%d ,%d, %d), hr(%d, %d, %d)\n", i_lr, j_lr, k_lr, i_hr, j_hr, k_hr);
 
                  // extract a sphere region
-                 if ((i_lr==9) && (j_lr==7) && (k_lr==25)) {
-                     region_extraction(292, 400, 1024, sphere, extracted_region, ptrHighRes);
-                     writeVTK(extracted_region, HIGH_RES_VOXEL_SIZE, SPHERE_NDIM);
-                     // compute fabric
-                     //evec, eval = mil(extracted_sphere_region);
-                 }
+                 region_extraction(i_hr, j_hr, k_hr, sphere, extracted_region, ptrHighRes);
+                 //evec, eval = mil(extracted_sphere_region);
+
+                 /* // debug */
+                 /* if ((i_lr==9) && (j_lr==7) && (k_lr==25)) { */
+                 /*     region_extraction(292, 400, 1024, sphere, extracted_region, ptrHighRes); */
+                 /*     writeVTK(extracted_region, HIGH_RES_VOXEL_SIZE, SPHERE_NDIM); */
+                 /*     // compute fabric */
+                 /*     //evec, eval = mil(extracted_sphere_region); */
+                 //}
 
 
               }  

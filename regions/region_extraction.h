@@ -27,7 +27,7 @@
 #ifndef BONEMAP_REGION_EXTRACTION_H
 #define BONEMAP_REGION_EXTRACTION_H
 
-#define SPHERE_DIAMETER 1.0
+#define SPHERE_DIAMETER 6.6
 #define HIGH_RES_VOXEL_SIZE 0.082
 #define SPHERE_NDIM  (int) (SPHERE_DIAMETER /HIGH_RES_VOXEL_SIZE + 1)
 #define SPHERE_HALF_NDIM ((int) (SPHERE_NDIM/2))
@@ -37,6 +37,6 @@
 /// Function declarations
 ///
 void createSphereMask(int *sphere);
-void region_extraction ();
+void region_extraction (int i_hr, int j_hr, int k_hr, int *sphere, int *extracted_region, double *ptrHighRes);
 
 #endif //BONEMAP_REGION_EXTRACTION_H
