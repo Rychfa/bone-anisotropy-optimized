@@ -57,8 +57,7 @@ int main () {
     /* printf("rotation_matrix: %.3f, %.3f, %.3f \n", rotation_matrix[0], rotation_matrix[1], rotation_matrix[2]); */
 
     createSphereMask(sphere);
-    writeVTK(sphere, HIGH_RES_VOXEL_SIZE, SPHERE_NDIM);
-
+    //writeVTK(sphere, HIGH_RES_VOXEL_SIZE, SPHERE_NDIM);
 
     double* ptrHighRes = readHighResImage();
     double* ptrLowRes = readLowResImage();

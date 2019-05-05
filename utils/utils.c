@@ -69,7 +69,7 @@ void writeVTK(int *image, double voxelsize, int ndim) {
     
     printf("writeVTK: start writing file\n");
 
-    fptr = fopen("sphere.vtk","w");
+    fptr = fopen("region.vtk","w");
     fprintf(fptr,"# vtk DataFile Version 2.0\n");
     fprintf(fptr,"Sphere mask\n");
     fprintf(fptr,"ASCII\n");
