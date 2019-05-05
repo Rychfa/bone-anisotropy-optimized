@@ -202,8 +202,8 @@ int main () {
                 double eVecs[3][3];
                 double eVals[3];
                 eigen3(Q, eVecs, eVals);
+                //TODO: what to do with eVecs, evals?
 
-                
               }  
 
             }

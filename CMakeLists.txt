@@ -21,8 +21,6 @@ set(CMAKE_CXX_FLAGS_DEBUG   "")
 include_directories(
         reader
         mil
-        coord_map
-        bvtv
         regions
         ellipsoid
         utils
@@ -31,8 +29,6 @@ include_directories(
 
 set(SOURCE_FILES
         main.c
-        coord_map/coord_map.c
-        bvtv/bvtv.c
         mil/mil.c
         mil/test_mil.c
         ellipsoid/ellipsoid.c
