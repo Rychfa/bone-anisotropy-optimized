@@ -26,6 +26,7 @@ include_directories(
         regions
         ellipsoid
         utils
+        eigen
 )
 
 set(SOURCE_FILES

@@ -84,7 +84,7 @@ int **randomly_generate_central_points(int n_central_point, int max_coordinate) 
 //    }
 //}
 
-double *mil(int ***hr_sphere_region, int n, double directions_vectors[][3], int n_vectors) {
+double *mil(int hr_sphere_region[81][81][81], int n, double directions_vectors[][3], int n_vectors) {
 //    validate_direction_vectors(directions_vectors, n_vectors, dimension);
 
     double *directions_vectors_mil = init_mil_vector(n_vectors);

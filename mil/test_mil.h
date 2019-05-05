@@ -32,5 +32,7 @@
 ///
 void test_mil_and_ellipsoid();
 
+void print_vector(double *vector, int n);
+
 #endif //TEST_MIL_H
 
