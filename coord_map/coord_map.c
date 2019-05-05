@@ -167,6 +167,6 @@ void coordMap (double* ptrLowRes, double* ptrHighRes, int* sphere, double rotati
             }
         }
     }
-    //fclose(fd);
+    fclose(fd);
 
 }
