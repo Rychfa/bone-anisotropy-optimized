@@ -7,7 +7,8 @@ static const double ALPHA   = 0.25;
 static const double BETA    = 0.5;
 
 /**
- *
+ * returns p^T Q p 
+ * flop count = 12adds + 12mults
  */ 
 static double _quadratic_form(const double p[3], const double Q[3][3])
 {
@@ -28,7 +29,8 @@ static double _quadratic_form(const double p[3], const double Q[3][3])
 }
 
 /**
- *
+ * returns \sum_i (p_i^T Q p_i - 1)^2
+ * flop count = n*(3 adds + 1mult  + 2*C(_quadratic_form))
  */
 static double _cost(const double (*p)[3], int n, const double Q[3][3])
 {
@@ -45,6 +47,13 @@ static double _cost(const double (*p)[3], int n, const double Q[3][3])
  * Gradient descent with backtracking line search [Boyd Chapter 9] 
  * applied to the ellisoid fitting problem:
  * Q = argmin \sum_i (p_i^T Q p_i - 1)^2
+ * flop count PER iter_step = 
+ * 				n*( C(_quadratic_form)+1 + 9mults + 9*(2mults+1adds) ) + 
+ *        -9mults + 
+ *        9*(1add + 1mult) + 9*(1mult+1add) + 
+ *					iters_bt*(C(_cost)*2 + 1add + 2mult + 1mult + 9*(1add + 1mult)) +
+ *        9*(1add + 3 mults)
+ *	where iters_bt = number of back tracking iterations
  */
 void fit_ellipsoid(const double (*p)[3], int n, double Q[3][3])
 {
