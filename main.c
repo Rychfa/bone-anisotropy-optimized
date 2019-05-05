@@ -27,9 +27,7 @@
 #include "stdio.h"
 #include "stdlib.h"
 #include "reader.h"
-#include "coord_map.h"
 #include "region_extraction.h"
-#include "bvtv.h"
 #include "mil.h"
 #include "test_mil.h"
 #include "ellipsoid.h"
@@ -204,6 +202,8 @@ int main () {
                 double eVecs[3][3];
                 double eVals[3];
                 eigen3(Q, eVecs, eVals);
+
+                
               }  
 
             }

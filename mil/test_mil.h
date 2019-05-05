@@ -30,7 +30,7 @@
 ///
 /// Function declarations
 ///
-void test_mil_and_ellipsoid();
+// void test_mil_and_ellipsoid();
 
 void print_vector(double *vector, int n);
 
