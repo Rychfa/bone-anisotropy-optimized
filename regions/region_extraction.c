@@ -92,6 +92,10 @@ void region_extraction (int i_hr, int j_hr, int k_hr, int *sphere, int *extracte
                 ii = i + j*SPHERE_NDIM + k*SPHERE_NDIM*SPHERE_NDIM;
                 ii_hr = ihr + jhr*HIGH_RES_D1 + khr*HIGH_RES_D1*HIGH_RES_D2;
                 //
-                extracted_region[ii] = sphere[ii] * ptrHighRes[ii_hr];
+                if (ii_hr < HIGH_RES_SIZE) {
+                    extracted_region[ii] = sphere[ii] * ptrHighRes[ii_hr];
+                } else {
+                    extracted_region[ii] = 0;
+                }
     }}}
 }
