@@ -39,7 +39,7 @@
 using namespace std;
 
 #define CYCLES_REQUIRED 1e7
-#define REP 25
+#define REP 5
 #define EPS (1e-3)
 
 /* prototype of the function you need to optimize */
@@ -78,7 +78,7 @@ void destroy(int* sphere, int* ptrHighRes, int* ptrLowRes, double* rotation_matr
 void register_functions()
 {
     // TODO: Add correct number of flops
-    add_function(&kernel_basic, "Base kernel", 100);
+    add_function(&kernel_basic, "Base kernel", 1572181);
     // Add your functions here. Don't modify the number of flops parameter.
 }
 
@@ -147,11 +147,11 @@ void add_function(comp_func f, string name, int flops)
 double perf_test(comp_func f, string desc, int flops)
 {
     double cycles = 0.;
-    long num_runs = 5;
+    long num_runs = 3;
     double multiplier = 1;
     myInt64 start, end;
 
-    int*    sphere;
+    int* sphere;
     int* ptrHighRes;
     int* ptrLowRes;
     double* rotation_matrix;
@@ -188,6 +188,8 @@ double perf_test(comp_func f, string desc, int flops)
         }
         end = stop_tsc(start);
 
+        cout << "run set " << j << " finished" << endl;
+
         cycles = ((double)end) / num_runs;
 
         cyclesList.push_back(cycles);
@@ -196,8 +198,7 @@ double perf_test(comp_func f, string desc, int flops)
     destroy(sphere, ptrHighRes, ptrLowRes, rotation_matrix, ptrEvecOut, ptrEvalsOut, false);
     cyclesList.sort();
     cycles = cyclesList.front();
-    return  cycles;
-//    return  (1.0 * flops) / cycles;
+    return  (1.0 * flops) / cycles;
 }
 
 /*
@@ -254,7 +255,7 @@ int main(int argc, char **argv)
     {
         perf = perf_test(userFuncs[i], funcNames[i], funcFlops[i]);
         cout << "Running: " << funcNames[i] << endl;
-        cout << perf << " cycles" << endl;
+        cout << perf << " floats/cycle" << endl;
     }
     cout << endl;
 
