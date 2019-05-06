@@ -97,6 +97,6 @@ void region_extraction (int i_hr, int j_hr, int k_hr, int *sphere, int *extracte
                 ii = i + j*SPHERE_NDIM + k*SPHERE_NDIM*SPHERE_NDIM;
                 ii_hr = ihr + jhr*HIGH_RES_D1 + k*HIGH_RES_D1*HIGH_RES_D2;
                 extracted_region[ii] = (int) ((double) sphere[ii]) * ptrHighRes[ii_hr];
-                //printf("region_extraction: ii= %d, sph = %d, ii_hr= %d, hr = %.3f, extracted = %d \n", ii,sphere[ii], ii_hr, ptrHighRes[ii_hr],   extracted_region[ii]);
+                printf("region_extraction: ii= %d, sph = %d, ii_hr= %d, hr = %.3f, extracted = %d \n", ii,sphere[ii], ii_hr, ptrHighRes[ii_hr],   extracted_region[ii]);
     }}}
 }

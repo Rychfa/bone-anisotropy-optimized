@@ -58,60 +58,62 @@ void calculateRotationMatrix(double r[9], double ax, double ay, double az) {
     printf("rotation_matrix: r2 %.3f %.3f %.3f \n", r[6], r[7], r[8]);
 }
 
-void writeVTK(int *image, double voxelsize, int ndim) {
+void writeVTK(int *image, double voxelsize, int dim1, int dim2, int dim3, char filename[100]) {
     printf("writeVTK: enter\n");
     // output debug
     FILE *fptr;
     double coord;
-    int ndimp1 = ndim+1;
+    int dim1p1 = dim1+1;
+    int dim2p1 = dim2+1;
+    int dim3p1 = dim3+1;
     int ii;
 
     
     printf("writeVTK: start writing file\n");
 
-    fptr = fopen("region.vtk","w");
+    fptr = fopen(filename,"w");
     fprintf(fptr,"# vtk DataFile Version 2.0\n");
     fprintf(fptr,"Sphere mask\n");
     fprintf(fptr,"ASCII\n");
     fprintf(fptr,"DATASET RECTILINEAR_GRID\n");
-    fprintf(fptr,"DIMENSIONS %d %d %d\n", ndimp1, ndimp1, ndimp1);
+    fprintf(fptr,"DIMENSIONS %d %d %d\n", dim1p1, dim2p1, dim3p1);
     
-    fprintf(fptr,"X_COORDINATES %d float\n", ndimp1);
-    for (int i=0; i < ndimp1; i++){
+    fprintf(fptr,"X_COORDINATES %d float\n", dim1p1);
+    for (int i=0; i < dim1p1; i++){
         coord = i*voxelsize;
         fprintf(fptr, "%.3f ", coord);
     }
     fprintf(fptr,"\n");
     
-    fprintf(fptr,"Y_COORDINATES %d float\n", ndimp1);
-    for (int j=0; j < ndimp1; j++){
+    fprintf(fptr,"Y_COORDINATES %d float\n", dim2p1);
+    for (int j=0; j < dim2p1; j++){
         coord = j*voxelsize;
         fprintf(fptr, "%.3f ", coord);
     }
     fprintf(fptr,"\n");
     
-    fprintf(fptr,"Z_COORDINATES %d float\n", ndimp1);
-    for (int k=0; k < ndimp1; k++){
+    fprintf(fptr,"Z_COORDINATES %d float\n", dim3p1);
+    for (int k=0; k < dim3p1; k++){
         coord = k*voxelsize;
         fprintf(fptr, "%.3f ", coord);
     }
     fprintf(fptr,"\n");
-    fprintf(fptr,"CELL_DATA %d\n", ndim*ndim*ndim);
+    fprintf(fptr,"CELL_DATA %d\n", dim1*dim2*dim3);
     fprintf(fptr,"FIELD FieldData 1\n");
-    fprintf(fptr,"Voxel_value 1 %d float\n", ndim*ndim*ndim);
+    fprintf(fptr,"Voxel_value 1 %d float\n", dim1*dim2*dim3);
 
     printf("writeVTK: writing voxel values\n");
-    for (int k=0; k < ndim; k++){
-        for (int j=0; j < ndim; j++){
-            for (int i=0; i < ndim; i++){
-                ii = i + j*ndim + k*ndim*ndim;
+    for (int k=0; k < dim3; k++){
+        for (int j=0; j < dim2; j++){
+            for (int i=0; i < dim1; i++){
+                ii = i + j*dim1 + k*dim1*dim2;
                 //printf("writeVTK: %d %d\n", ii, image[ii]);
                 fprintf(fptr,"%d ", image[ii]);
             }
         }
     }
     fprintf(fptr,"\n");
-    fprintf(fptr,"POINT_DATA %d\n",(ndimp1)*(ndimp1)*(ndimp1));
+    fprintf(fptr,"POINT_DATA %d\n",(dim1p1)*(dim2p1)*(dim3p1));
 
     printf("writeVTK: finish writing file\n");
 

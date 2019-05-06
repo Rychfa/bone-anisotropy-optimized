@@ -30,7 +30,7 @@
 ///
 /// Function declarations
 ///
-void writeVTK(int *image, double voxelsize, int ndim);
+void writeVTK(int *image, double voxelsize, int dim1, int dim2, int dim3, char filename[100]);
 void calculateRotationMatrix(double r[9], double ax, double ay, double az);
 
 #endif //BONEMAP_UTILS_H
