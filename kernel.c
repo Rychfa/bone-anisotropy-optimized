@@ -26,6 +26,7 @@
 */
 #include <stdio.h>
 #include <stdlib.h>
+#include "kernel.h"
 #include "reader.h"
 #include "region_extraction.h"
 #include "mil.h"
@@ -73,7 +74,7 @@ void deInit (int* sphere, double* ptrHighRes, double* ptrLowRes, double* rotatio
     free(ptrEvecOut);
 }
 
-void kernel (int* sphere, double* ptrHighRes, double* ptrLowRes, double* rotation_matrix, double* ptrEvecOut) {
+void kernel_basic (int* sphere, double* ptrHighRes, double* ptrLowRes, double* rotation_matrix, double* ptrEvecOut) {
     double ax, ay, az, xT, yT, zT, xC, yC, zC;
 
     ax = -0.000429;
@@ -101,7 +102,7 @@ void kernel (int* sphere, double* ptrHighRes, double* ptrLowRes, double* rotatio
     int radius_i, radius_j, radius_k;
     int *extracted_region = malloc((sizeof (int)) * SPHERE_ARRAY_SIZE);
 
-    FILE *fd;
+//    FILE *fd;
 
     zero = 0.0;
     half = 0.5;
@@ -132,11 +133,11 @@ void kernel (int* sphere, double* ptrHighRes, double* ptrLowRes, double* rotatio
     r21 = rotation_matrix[6];
     r22 = rotation_matrix[7];
 
-    printf("coordMap: r [%.3f, %.3f, %.3f, %.3f, %.3f, %.3f, %.3f, %.3f, %.3f]\n", r00, r01, r02, r10, r11, r12, r20, r21, r22);
-    printf("coordMap: center of rotation: %.3f ,%.3f, %.3f\n", xC, yC, zC);
-    printf("coordMap: translation: %.3f ,%.3f, %.3f\n", xT, yT, zT);
+//    printf("coordMap: r [%.3f, %.3f, %.3f, %.3f, %.3f, %.3f, %.3f, %.3f, %.3f]\n", r00, r01, r02, r10, r11, r12, r20, r21, r22);
+//    printf("coordMap: center of rotation: %.3f ,%.3f, %.3f\n", xC, yC, zC);
+//    printf("coordMap: translation: %.3f ,%.3f, %.3f\n", xT, yT, zT);
 
-    fd = fopen("mapped_coord.txt","w");
+//    fd = fopen("mapped_coord.txt","w");
     // loop over all femur voxels
     for (int k_lr=0; k_lr < LOW_RES_D3; k_lr++)
     {
@@ -204,7 +205,7 @@ void kernel (int* sphere, double* ptrHighRes, double* ptrLowRes, double* rotatio
                     j_hr = (int) ty_hr;
                     k_hr = (int) tz_hr;
 
-                    fprintf(fd,"%d ,%d, %d, %d, %d, %d\n", i_lr, j_lr, k_lr, i_hr, j_hr, k_hr);
+//                    fprintf(fd,"%d ,%d, %d, %d, %d, %d\n", i_lr, j_lr, k_lr, i_hr, j_hr, k_hr);
                     //printf("coordMap: lr(%d ,%d, %d), hr(%d, %d, %d)\n", i_lr, j_lr, k_lr, i_hr, j_hr, k_hr);
 
                     // extract a sphere region
@@ -225,22 +226,5 @@ void kernel (int* sphere, double* ptrHighRes, double* ptrLowRes, double* rotatio
             }
         }
     }
-    fclose(fd);
-}
-
-int main () {
-
-    int*    sphere;
-    double* ptrHighRes;
-    double* ptrLowRes;
-    double* rotation_matrix;
-    double* ptrEvecOut;
-
-    init  (&sphere, &ptrHighRes, &ptrLowRes, &rotation_matrix, &ptrEvecOut);
-    kernel(sphere, ptrHighRes, ptrLowRes, rotation_matrix, ptrEvecOut);
-    deInit(sphere, ptrHighRes, ptrLowRes, rotation_matrix, ptrEvecOut);
-
-    printf("\nDone\n");
-
-    return 0;
+//    fclose(fd);
 }

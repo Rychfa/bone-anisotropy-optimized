@@ -28,14 +28,15 @@ include_directories(
 )
 
 set(SOURCE_FILES
-        main.c
+        main.cpp
         mil/mil.c
         mil/test_mil.c
         ellipsoid/ellipsoid.c
         reader/reader.c
         regions/region_extraction.c
         eigen/eigen.c
-        utils/utils.c)
+        utils/utils.c
+        kernel.c)
 
 
 # ================================================================================
