@@ -102,7 +102,7 @@ void kernel_basic (int* sphere, int* ptrHighRes, int* ptrLowRes, double* rotatio
     int radius_i, radius_j, radius_k;
     int *extracted_region = malloc((sizeof (int)) * SPHERE_ARRAY_SIZE);
 
-//    FILE *fd;
+    FILE *fd;
 
     zero = 0.0;
     half = 0.5;
@@ -137,7 +137,8 @@ void kernel_basic (int* sphere, int* ptrHighRes, int* ptrLowRes, double* rotatio
 //    printf("coordMap: center of rotation: %.3f ,%.3f, %.3f\n", xC, yC, zC);
 //    printf("coordMap: translation: %.3f ,%.3f, %.3f\n", xT, yT, zT);
 
-//    fd = fopen("mapped_coord.txt","w");
+    fd = fopen("output.txt","w");
+
     // loop over all femur voxels
     for (int k_lr=0; k_lr < LOW_RES_D3; k_lr++)
     {
@@ -205,7 +206,6 @@ void kernel_basic (int* sphere, int* ptrHighRes, int* ptrLowRes, double* rotatio
                     j_hr = (int) ty_hr;
                     k_hr = (int) tz_hr;
 
-//                    fprintf(fd,"%d ,%d, %d, %d, %d, %d\n", i_lr, j_lr, k_lr, i_hr, j_hr, k_hr);
                     //printf("coordMap: lr(%d ,%d, %d), hr(%d, %d, %d)\n", i_lr, j_lr, k_lr, i_hr, j_hr, k_hr);
 
                     // extract a sphere region
@@ -221,10 +221,22 @@ void kernel_basic (int* sphere, int* ptrHighRes, int* ptrLowRes, double* rotatio
                     double eVals[3];
                     eigen3(Q, &ptrEvecOut[ii_lr*9], eVals);
                     //TODO: what to do with eVecs, evals?
+
+                    fprintf(fd, "%d, %d, %d, " /* index into LR image */
+                        "%.3f, %.3f, %.3f, "   /* e vals */
+                        "%.3f, %.3f, %.3f, "   /* e vecs*/
+                        "%.3f, %.3f, %.3f, "
+                        "%.3f, %.3f, %.3f\n",
+                        i_lr, j_lr, k_lr, 
+                        eVals[0], eVals[1], eVals[2],
+                        eVecs[0][0], eVecs[0][1], eVecs[0][2], 
+                        eVecs[1][0], eVecs[1][1], eVecs[1][2],
+                        eVecs[2][0], eVecs[2][1], eVecs[2][2]);
+
                 }
 
             }
         }
     }
-//    fclose(fd);
+   fclose(fd);
 }

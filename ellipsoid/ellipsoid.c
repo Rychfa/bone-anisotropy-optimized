@@ -48,8 +48,8 @@ static double _cost(const double (*p)[3], int n, const double Q[3][3])
  * applied to the ellisoid fitting problem:
  * Q = argmin \sum_i (p_i^T Q p_i - 1)^2
  * flop count PER iter_step = 
- * 				n*( C(_quadratic_form)+1 + 9mults + 9*(2mults+1adds) ) + 
- *        -9mults + 
+ * 				n*( C(_quadratic_form)+1add + 9mults + 9*(2mults+1adds) ) + 
+ *        9mults + 
  *        9*(1add + 1mult) + 9*(1mult+1add) + 
  *					iters_bt*(C(_cost)*2 + 1add + 2mult + 1mult + 9*(1add + 1mult)) +
  *        9*(1add + 3 mults)
