@@ -35,7 +35,7 @@
 #include "utils.h"
 #include "eigen.h"
 
-void init (int** sphere, int** ptrHighRes, int** ptrLowRes, double** rotation_matrix, double** ptrEvecOut) {
+void init (int** sphere, int** ptrHighRes, int** ptrLowRes, double** rotation_matrix, double** ptrEvecOut, double ** ptrEvalsOut) {
     //
     // Create sphere mask
     //
@@ -65,17 +65,42 @@ void init (int** sphere, int** ptrHighRes, int** ptrLowRes, double** rotation_ma
     // Allocate space for the output eigen vectors
     //
     *ptrEvecOut = calloc (sizeof(double), 3*3*LOW_RES_SIZE);
+    *ptrEvalsOut = calloc(sizeof(double), 3*LOW_RES_SIZE);
 }
 
-void deInit (int* sphere, int* ptrHighRes, int* ptrLowRes, double* rotation_matrix, double* ptrEvecOut) {
+void deInit (int* sphere, int* ptrHighRes, int* ptrLowRes, double* rotation_matrix, double* ptrEvecOut, double *ptrEvalsOut, bool generate_ground_truth) {
+    if (generate_ground_truth) {
+        FILE *fd = fopen("ground_truth.txt","w");
+
+        for (int k=0; k<LOW_RES_D3; k++) {
+            for (int j=0; j<LOW_RES_D2; j++) {
+                for (int i=0; i<LOW_RES_D1; i++) {
+                    int temp = i + j*LOW_RES_D1 + k*LOW_RES_D1*LOW_RES_D2;
+                    fprintf(fd, "%d, %d, %d, " /* index into LR image */
+                            "%.3f, %.3f, %.3f, "   /* e vals */
+                            "%.3f, %.3f, %.3f, "   /* e vecs*/
+                            "%.3f, %.3f, %.3f, "
+                            "%.3f, %.3f, %.3f\n",
+                            i, j, k, 
+                            ptrEvalsOut[3*temp+0], ptrEvalsOut[3*temp+1], ptrEvalsOut[3*temp+2],
+                            ptrEvecOut[9*temp+0],ptrEvecOut[9*temp+1],ptrEvecOut[9*temp+2],
+                            ptrEvecOut[9*temp+3],ptrEvecOut[9*temp+4],ptrEvecOut[9*temp+5],
+                            ptrEvecOut[9*temp+6],ptrEvecOut[9*temp+7],ptrEvecOut[9*temp+8]);
+                }
+            }
+       }
+       fclose(fd);
+    }
+
     free(sphere);
     free(ptrHighRes);
     free(ptrLowRes);
     free(rotation_matrix);
     free(ptrEvecOut);
+    free(ptrEvalsOut);
 }
 
-void kernel_basic (int* sphere, int* ptrHighRes, int* ptrLowRes, double* rotation_matrix, double* ptrEvecOut) {
+void kernel_basic (int* sphere, int* ptrHighRes, int* ptrLowRes, double* rotation_matrix, double* ptrEvecOut, double *ptrEvalsOut) {
     double ax, ay, az, xT, yT, zT, xC, yC, zC;
 
     ax = -0.000429;
@@ -102,8 +127,6 @@ void kernel_basic (int* sphere, int* ptrHighRes, int* ptrLowRes, double* rotatio
     int imin, jmin, kmin;
     int radius_i, radius_j, radius_k;
     int *extracted_region = malloc((sizeof (int)) * SPHERE_ARRAY_SIZE);
-
-    FILE *fd;
 
     zero = 0.0;
     half = 0.5;
@@ -141,11 +164,9 @@ void kernel_basic (int* sphere, int* ptrHighRes, int* ptrLowRes, double* rotatio
     printf("coordMap: translation: %.3f ,%.3f, %.3f\n", xT, yT, zT);
 
      // debug
-     region_extraction(366, 341, 915, sphere, extracted_region, ptrHighRes); 
-     writeVTK(extracted_region, HIGH_RES_VOXEL_SIZE, SPHERE_NDIM, SPHERE_NDIM, SPHERE_NDIM, "test/region.vtk"); 
+     // region_extraction(366, 341, 915, sphere, extracted_region, ptrHighRes); 
+     // writeVTK(extracted_region, HIGH_RES_VOXEL_SIZE, SPHERE_NDIM, SPHERE_NDIM, SPHERE_NDIM, "test/region.vtk"); 
     //
-
-    fd = fopen("output.txt","w");
 
     // loop over all femur voxels
     for (int k_lr=0; k_lr < LOW_RES_D3; k_lr++)
@@ -231,26 +252,10 @@ void kernel_basic (int* sphere, int* ptrHighRes, int* ptrLowRes, double* rotatio
                     double Q[3][3];
                     fit_ellipsoid_mils(mils, Q);
 
-                    double eVecs[3][3];
-                    double eVals[3];
-                    // eigen3(Q, &ptrEvecOut[ii_lr*9], eVals); //TODO:.. ?
-                    eigen3(Q, eVecs, eVals);
-
-                    fprintf(fd, "%d, %d, %d, " /* index into LR image */
-                        "%.3f, %.3f, %.3f, "   /* e vals */
-                        "%.3f, %.3f, %.3f, "   /* e vecs*/
-                        "%.3f, %.3f, %.3f, "
-                        "%.3f, %.3f, %.3f\n",
-                        i_lr, j_lr, k_lr,
-                        eVals[0], eVals[1], eVals[2],
-                        eVecs[0][0], eVecs[0][1], eVecs[0][2],
-                        eVecs[1][0], eVecs[1][1], eVecs[1][2],
-                        eVecs[2][0], eVecs[2][1], eVecs[2][2]);
-
+                    // eigen3(Q, eVecs, eVals); 
+                    eigen3(Q, &ptrEvecOut[ii_lr*9], &ptrEvalsOut[ii_lr*3]);
                 }
-
             }
         }
     }
-    fclose(fd);
 }

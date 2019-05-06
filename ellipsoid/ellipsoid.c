@@ -35,7 +35,7 @@ static double _quadratic_form(const double p[3], const double Q[3][3])
 
 /**
  * returns \sum_i (p_i^T Q p_i - 1)^2
- * flop count = n*(3 adds + 1mult  + 2*C(_quadratic_form))
+ * flop count = n*(3adds + 1mult  + 2*C(_quadratic_form))
  */
 static double _cost(const double (*p)[3], int n, const double Q[3][3])
 {
@@ -163,7 +163,7 @@ void fit_ellipsoid(const double (*p)[3], int n, double Q[3][3])
 /*
  * convenience function, wraps fit_ellipsoid above, given the mils (lengths) along
  * each of the DIRECTIONS defined above
- *
+ * flop count = NUM_DIRS*3mults + C(fit_ellipsoid)
  */
 void fit_ellipsoid_mils(const double *mils, double Q[3][3])
 {

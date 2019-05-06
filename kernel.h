@@ -27,14 +27,16 @@
 #ifndef BONEMAP_KERNEL_H
 #define BONEMAP_KERNEL_H
 
+#include <stdbool.h>
+
 #ifdef __cplusplus
-extern "C" void init(int** sphere, int** ptrHighRes, int** ptrLowRes, double** rotation_matrix, double** ptrEvecOut);
-extern "C" void kernel_basic(int* sphere, int* ptrHighRes, int* ptrLowRes, double* rotation_matrix, double* ptrEvecOut);
-extern "C" void deInit(int* sphere, int* ptrHighRes, int* ptrLowRes, double* rotation_matrix, double* ptrEvecOut);
+extern "C" void init(int** sphere, int** ptrHighRes, int** ptrLowRes, double** rotation_matrix, double** ptrEvecOut, double** ptrEvalsOut);
+extern "C" void kernel_basic(int* sphere, int* ptrHighRes, int* ptrLowRes, double* rotation_matrix, double* ptrEvecOut, double *ptrEvalsOut);
+extern "C" void deInit(int* sphere, int* ptrHighRes, int* ptrLowRes, double* rotation_matrix, double* ptrEvecOut, double *ptrEvalsOut, bool generate_ground_truth);
 #else
-void init(int** sphere, int** ptrHighRes, int** ptrLowRes, double** rotation_matrix, double** ptrEvecOut);
-void kernel_basic(int* sphere, int* ptrHighRes, int* ptrLowRes, double* rotation_matrix, double* ptrEvecOut);
-void deInit(int* sphere, int* ptrHighRes, int* ptrLowRes, double* rotation_matrix, double* ptrEvecOut);
+void init(int** sphere, int** ptrHighRes, int** ptrLowRes, double** rotation_matrix, double** ptrEvecOut, double **ptrEvalsOut);
+void kernel_basic(int* sphere, int* ptrHighRes, int* ptrLowRes, double* rotation_matrix, double* ptrEvecOut, double *ptrEvalsOut);
+void deInit(int* sphere, int* ptrHighRes, int* ptrLowRes, double* rotation_matrix, double* ptrEvecOut, double *ptrEvalsOut, bool generate_ground_truth);
 #endif
 
 #endif //BONEMAP_KERNEL_H
