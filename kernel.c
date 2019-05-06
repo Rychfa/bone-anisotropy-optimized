@@ -41,13 +41,11 @@ void init (int** sphere, int** ptrHighRes, int** ptrLowRes, double** rotation_ma
     //
     *sphere = malloc( (sizeof (int)) * SPHERE_ARRAY_SIZE);
     createSphereMask(*sphere);
-    //writeVTK(*sphere, HIGH_RES_VOXEL_SIZE, SPHERE_NDIM, SPHERE_NDIM, SPHERE_NDIM, "test/sphere.vtk");
     //
     // Read input images
     //
     *ptrHighRes = readHighResImage();
     *ptrLowRes = readLowResImage();
-    //writeVTK(*ptrHighRes, HIGH_RES_VOXEL_SIZE, HIGH_RES_D1, HIGH_RES_D2, HIGH_RES_D3, "test/debug_hr_image.vtk");
     //
     // Init rotation matrix
     //
@@ -154,12 +152,6 @@ void kernel_basic (int* sphere, int* ptrHighRes, int* ptrLowRes, double* rotatio
     r20 = rotation_matrix[6];
     r21 = rotation_matrix[7];
     r22 = rotation_matrix[8];
-
-    // printf("coordMap: r [%.20f, %.20f, %.20f]\n", r00, r01, r02);
-    // printf("coordMap: r [%.20f, %.20f, %.20f]\n", r10, r11, r12);
-    // printf("coordMap: r [%.20f, %.20f, %.20f]\n", r20, r21, r22);
-    // printf("coordMap: center of rotation: %.20f ,%.20f, %.20f\n", xC, yC, zC);
-    // printf("coordMap: translation: %.20f ,%.20f, %.20f\n", xT, yT, zT);
 
     // loop over all femur voxels
     for (int k_lr=0; k_lr < LOW_RES_D3; k_lr++)

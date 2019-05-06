@@ -35,7 +35,6 @@
 ///
 void createSphereMask(int *sphere) {
 
-    // printf("createSphereMask: enter\n");
     double radius = SPHERE_DIAMETER/2.0;
     double distance, xc, yc, zc;
     double x, y, z;
@@ -47,8 +46,6 @@ void createSphereMask(int *sphere) {
 
     double halfvoxel = HIGH_RES_VOXEL_SIZE/2.0;
 
-    // printf("createSphereMask: ndim = %d\n", SPHERE_NDIM);
-    // printf("createSphereMask: voxel size = %f\n", HIGH_RES_VOXEL_SIZE);
     // loop over all voxels and set 1 in the sphere
     for (int k=0; k < SPHERE_NDIM; k++){
         z = k*HIGH_RES_VOXEL_SIZE + halfvoxel;
@@ -64,11 +61,9 @@ void createSphereMask(int *sphere) {
                 } else {
                     sphere[ii] = 0; 
                 }
-                //printf("createSphereMask: %d %d\n", ii, sphere[ii]);
             }
         }
     }
-    // printf("createSphereMask: finish setting sphere\n");
 
 }
 
@@ -86,7 +81,6 @@ void region_extraction (int i_hr, int j_hr, int k_hr, int *sphere, int *extracte
     ihr_min = i_hr - SPHERE_HALF_NDIM;
     jhr_min = j_hr - SPHERE_HALF_NDIM;
     khr_min = k_hr - SPHERE_HALF_NDIM;
-    //printf("region_extraction: i j k min %d %d %d \n", ihr_min, jhr_min, khr_min);
 
     for (int k=0; k < SPHERE_NDIM; k++) {
         khr = k + khr_min;
@@ -99,6 +93,5 @@ void region_extraction (int i_hr, int j_hr, int k_hr, int *sphere, int *extracte
                 ii_hr = ihr + jhr*HIGH_RES_D1 + khr*HIGH_RES_D1*HIGH_RES_D2;
                 //
                 extracted_region[ii] = sphere[ii] * ptrHighRes[ii_hr];
-                //printf("region_extraction: ii= %d, sph = %d, ii_hr= %d, hr = %.3f, extracted = %d \n", ii,sphere[ii], ii_hr, ptrHighRes[ii_hr],   extracted_region[ii]);
     }}}
 }
