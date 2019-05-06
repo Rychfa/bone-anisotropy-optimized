@@ -59,7 +59,7 @@ double* readHighResImage () {
     //
     // Allocate memory for low res image
     //
-    ptrHighRes = malloc ((sizeof ptrHighRes ) * HIGH_RES_SIZE);
+    ptrHighRes = malloc (sizeof(double) * HIGH_RES_SIZE);
 
     for (int i = 0; i < HIGH_RES_SIZE; ++i) {
         //
@@ -100,7 +100,7 @@ double* readLowResImage () {
     //
     // Allocate memory for low res image
     //
-    ptrLowRes = malloc ((sizeof ptrLowRes ) * LOW_RES_SIZE);
+    ptrLowRes = malloc (sizeof(double) * LOW_RES_SIZE);
     fd = fopen("debug_reader_lowres.txt","w");
     for (int i = 0; i < LOW_RES_SIZE; ++i) {
                 //
