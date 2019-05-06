@@ -144,7 +144,7 @@ void kernel_basic (int* sphere, int* ptrHighRes, int* ptrLowRes, double* rotatio
     {
         // calculate vector from the center of the image
         // to the center of this voxel
-        z_lr = (float) k_lr*voxel_size_lr - zC + half_voxel_size_lr;
+        z_lr = k_lr*voxel_size_lr - zC + half_voxel_size_lr;
         // multiply the vector with the rotation matrix
         zDr02 = z_lr * r02;
         zDr12 = z_lr * r12;
@@ -154,7 +154,7 @@ void kernel_basic (int* sphere, int* ptrHighRes, int* ptrLowRes, double* rotatio
         {
             //calculate vector from the center of the image
             //to the center of this voxel
-            y_lr = (float) j_lr*voxel_size_lr - yC + half_voxel_size_lr;
+            y_lr = j_lr*voxel_size_lr - yC + half_voxel_size_lr;
             //multiply the vector with the rotation matrix
             yDr01 = y_lr * r01;
             yDr11 = y_lr * r11;
@@ -164,11 +164,15 @@ void kernel_basic (int* sphere, int* ptrHighRes, int* ptrLowRes, double* rotatio
             {
                 // calculate vector from the center of the image
                 // to the center of this voxel
-                x_lr = (float) i_lr*voxel_size_lr - xC + half_voxel_size_lr;
+                x_lr = i_lr*voxel_size_lr - xC + half_voxel_size_lr;
                 // check if this voxel inside the FE mask
                 ii_lr = i_lr + j_lr*LOW_RES_D1 + k_lr*LOW_RES_D1*LOW_RES_D2;
                 if (ptrLowRes[ii_lr] > 0.5)
                 {
+                    //
+                    // This is executed approx. one third of the times.
+                    //
+
                     // multiply the vector with the rotation matrix
                     xDr00 = x_lr * r00;
                     xDr10 = x_lr * r10;
@@ -228,9 +232,9 @@ void kernel_basic (int* sphere, int* ptrHighRes, int* ptrLowRes, double* rotatio
                         "%.3f, %.3f, %.3f, "   /* e vecs*/
                         "%.3f, %.3f, %.3f, "
                         "%.3f, %.3f, %.3f\n",
-                        i_lr, j_lr, k_lr, 
+                        i_lr, j_lr, k_lr,
                         eVals[0], eVals[1], eVals[2],
-                        eVecs[0][0], eVecs[0][1], eVecs[0][2], 
+                        eVecs[0][0], eVecs[0][1], eVecs[0][2],
                         eVecs[1][0], eVecs[1][1], eVecs[1][2],
                         eVecs[2][0], eVecs[2][1], eVecs[2][2]);
 
@@ -239,5 +243,5 @@ void kernel_basic (int* sphere, int* ptrHighRes, int* ptrLowRes, double* rotatio
             }
         }
     }
-   fclose(fd);
+    fclose(fd);
 }
