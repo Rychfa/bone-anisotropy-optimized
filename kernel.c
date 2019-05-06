@@ -219,9 +219,8 @@ void kernel_basic (int* sphere, int* ptrHighRes, int* ptrLowRes, double* rotatio
 
                     double eVecs[3][3];
                     double eVals[3];
-                    // eigen3(Q, &ptrEvecOut[ii_lr*9], eVals);
+                    // eigen3(Q, &ptrEvecOut[ii_lr*9], eVals); //TODO:.. ?
                     eigen3(Q, eVecs, eVals);
-                    //TODO: what to do with eVecs, evals?
 
                     fprintf(fd, "%d, %d, %d, " /* index into LR image */
                         "%.3f, %.3f, %.3f, "   /* e vals */
