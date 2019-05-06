@@ -77,10 +77,10 @@ void deInit (int* sphere, int* ptrHighRes, int* ptrLowRes, double* rotation_matr
                 for (int i=0; i<LOW_RES_D1; i++) {
                     int temp = i + j*LOW_RES_D1 + k*LOW_RES_D1*LOW_RES_D2;
                     fprintf(fd, "%d, %d, %d, " /* index into LR image */
-                            "%.3f, %.3f, %.3f, "   /* e vals */
-                            "%.3f, %.3f, %.3f, "   /* e vecs*/
-                            "%.3f, %.3f, %.3f, "
-                            "%.3f, %.3f, %.3f\n",
+                            "%.20f, %.20f, %.20f, "   /* e vals */
+                            "%.20f, %.20f, %.20f, "   /* e vecs*/
+                            "%.20f, %.20f, %.20f, "
+                            "%.20f, %.20f, %.20f\n",
                             i, j, k, 
                             ptrEvalsOut[3*temp+0], ptrEvalsOut[3*temp+1], ptrEvalsOut[3*temp+2],
                             ptrEvecOut[9*temp+0],ptrEvecOut[9*temp+1],ptrEvecOut[9*temp+2],
@@ -158,11 +158,11 @@ void kernel_basic (int* sphere, int* ptrHighRes, int* ptrLowRes, double* rotatio
     r21 = rotation_matrix[6];
     r22 = rotation_matrix[7];
 
-    printf("coordMap: r [%.3f, %.3f, %.3f]\n", r00, r01, r02);
-    printf("coordMap: r [%.3f, %.3f, %.3f]\n", r10, r11, r12);
-    printf("coordMap: r [%.3f, %.3f, %.3f]\n", r20, r21, r22);
-    printf("coordMap: center of rotation: %.3f ,%.3f, %.3f\n", xC, yC, zC);
-    printf("coordMap: translation: %.3f ,%.3f, %.3f\n", xT, yT, zT);
+    // printf("coordMap: r [%.20f, %.20f, %.20f]\n", r00, r01, r02);
+    // printf("coordMap: r [%.20f, %.20f, %.20f]\n", r10, r11, r12);
+    // printf("coordMap: r [%.20f, %.20f, %.20f]\n", r20, r21, r22);
+    // printf("coordMap: center of rotation: %.20f ,%.20f, %.20f\n", xC, yC, zC);
+    // printf("coordMap: translation: %.20f ,%.20f, %.20f\n", xT, yT, zT);
 
      // debug
      // region_extraction(366, 341, 915, sphere, extracted_region, ptrHighRes); 
@@ -244,7 +244,7 @@ void kernel_basic (int* sphere, int* ptrHighRes, int* ptrLowRes, double* rotatio
                     //printf("coordMap: lr(%d ,%d, %d), hr(%d, %d, %d)\n", i_lr, j_lr, k_lr, i_hr, j_hr, k_hr);
 
                     // extract a sphere region
-                    //region_extraction(i_hr, j_hr, k_hr, sphere, extracted_region, ptrHighRes);
+                    region_extraction(i_hr, j_hr, k_hr, sphere, extracted_region, ptrHighRes);
                     // compute fabric
                     double mils[NUM_DIRECTIONS];
                     mil( extracted_region, SPHERE_NDIM, DIRECTIONS, NUM_DIRECTIONS, mils);
@@ -253,7 +253,7 @@ void kernel_basic (int* sphere, int* ptrHighRes, int* ptrLowRes, double* rotatio
                     double Q[3][3];
                     fit_ellipsoid_mils(mils, Q);
 
-                    eigen3(Q, &ptrEvecOut[ii_lr*9], &ptrEvalsOut[ii_lr*3]);
+                    eigen3(Q, &ptrEvecOut[ii_lr*9], &ptrEvalsOut[ii_lr*3]); // TODO how to fix warning? 
                 }
             }
         }

@@ -35,7 +35,7 @@
 ///
 void createSphereMask(int *sphere) {
 
-    printf("createSphereMask: enter\n");
+    // printf("createSphereMask: enter\n");
     double radius = SPHERE_DIAMETER/2.0;
     double distance, xc, yc, zc;
     double x, y, z;
@@ -47,8 +47,8 @@ void createSphereMask(int *sphere) {
 
     double halfvoxel = HIGH_RES_VOXEL_SIZE/2.0;
 
-    printf("createSphereMask: ndim = %d\n", SPHERE_NDIM);
-    printf("createSphereMask: voxel size = %f\n", HIGH_RES_VOXEL_SIZE);
+    // printf("createSphereMask: ndim = %d\n", SPHERE_NDIM);
+    // printf("createSphereMask: voxel size = %f\n", HIGH_RES_VOXEL_SIZE);
     // loop over all voxels and set 1 in the sphere
     for (int k=0; k < SPHERE_NDIM; k++){
         z = k*HIGH_RES_VOXEL_SIZE + halfvoxel;
@@ -68,7 +68,7 @@ void createSphereMask(int *sphere) {
             }
         }
     }
-    printf("createSphereMask: finish setting sphere\n");
+    // printf("createSphereMask: finish setting sphere\n");
 
 }
 

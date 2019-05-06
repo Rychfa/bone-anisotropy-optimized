@@ -39,7 +39,7 @@
 using namespace std;
 
 #define CYCLES_REQUIRED 1e7
-#define REP 5
+#define REP 3
 #define EPS (1e-3)
 
 /* prototype of the function you need to optimize */
@@ -188,8 +188,6 @@ double perf_test(comp_func f, string desc, int flops)
         }
         end = stop_tsc(start);
 
-        cout << "run set " << j << " finished" << endl;
-
         cycles = ((double)end) / num_runs;
 
         cyclesList.push_back(cycles);
@@ -246,15 +244,18 @@ int main(int argc, char **argv)
                                 (double (*)[3][3]) ptrEvecOut, 
                                 LOW_RES_SIZE);
         if (error > EPS) {
-            cout << "ERROR: the results for function " << i << " are incorrect." << std::endl;
+            cout << "ERROR: the results for function " << i << " are incorrect -> ";
+            printf(" %g\n", error);
+        } else {
+            printf("userFuncs[%d] is correct!\n", i);
         }
         destroy(sphere, ptrHighRes, ptrLowRes, rotation_matrix, ptrEvecOut, ptrEvalsOut, false);
     }
 
     for (i = 0; i < numFuncs; i++)
     {
-        perf = perf_test(userFuncs[i], funcNames[i], funcFlops[i]);
         cout << "Running: " << funcNames[i] << endl;
+        perf = perf_test(userFuncs[i], funcNames[i], funcFlops[i]);
         cout << perf << " floats/cycle" << endl;
     }
     cout << endl;
