@@ -89,7 +89,6 @@ int* readHighResImage () {
 int* readLowResImage () {
 
     FILE *fp;
-    FILE *fd;
     charFloat_t uCharFloat;
     fp = fopen(LOW_RES_FILE, "r");
     if (fp == NULL) {
@@ -101,7 +100,7 @@ int* readLowResImage () {
     // Allocate memory for low res image
     //
     ptrLowRes = malloc (sizeof(int) * LOW_RES_SIZE);
-    fd = fopen("debug_reader_lowres.txt","w");
+
     for (int i = 0; i < LOW_RES_SIZE; ++i) {
                 //
                 // Read bytes and convert to float
@@ -117,9 +116,7 @@ int* readLowResImage () {
                     uCharFloat.c[l] = c;
                 }
                 ptrLowRes[i] = uCharFloat.f;
-                fprintf(fd,"%d, %d\n", i, ptrLowRes[i]);
     }
-    fclose(fd);
 
     if (fgetc((FILE*)fp) == EOF) {
         printf("Low res file read correctly!\n");
