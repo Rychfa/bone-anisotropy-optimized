@@ -178,6 +178,10 @@ void kernel_basic (int* sphere, int* ptrHighRes, int* ptrLowRes, double* rotatio
                 // check if this voxel inside the FE mask
                 if (ptrLowRes[ii_lr] > 0)
                 {
+                    //
+                    // This is executed approx. one third of the times.
+                    //
+
                     // multiply the vector with the rotation matrix
                     xDr00 = x_lr * r00;
                     xDr10 = x_lr * r10;
@@ -237,9 +241,9 @@ void kernel_basic (int* sphere, int* ptrHighRes, int* ptrLowRes, double* rotatio
                         "%.3f, %.3f, %.3f, "   /* e vecs*/
                         "%.3f, %.3f, %.3f, "
                         "%.3f, %.3f, %.3f\n",
-                        i_lr, j_lr, k_lr, 
+                        i_lr, j_lr, k_lr,
                         eVals[0], eVals[1], eVals[2],
-                        eVecs[0][0], eVecs[0][1], eVecs[0][2], 
+                        eVecs[0][0], eVecs[0][1], eVecs[0][2],
                         eVecs[1][0], eVecs[1][1], eVecs[1][2],
                         eVecs[2][0], eVecs[2][1], eVecs[2][2]);
 
@@ -248,5 +252,5 @@ void kernel_basic (int* sphere, int* ptrHighRes, int* ptrLowRes, double* rotatio
             }
         }
     }
-   fclose(fd);
+    fclose(fd);
 }

@@ -56,6 +56,8 @@ int normalize(double v[3]) {
 /// \param eVal: eigen values
 /// flop count (best-case) : 12  mults + 14  adds (assumming diagonal matrix)
 /// flop count (worst-case): 132 mults + 127 adds + 16 divs + 3 sqrts + 1*Cost_acos + 2*Cost_cos
+/// Implementation of cos in libm:
+/// https://sourceware.org/git/?p=glibc.git;a=blob;f=sysdeps/ieee754/dbl-64/s_sin.c;h=26799f1909b953cda9b0249cd61d15ccf42b51d4;hb=HEAD
 void eigen3(double M[3][3], double eVec[3][3], double eVal[3]) {
     //
     // Clean eVal and create 3x3 identity matrix
