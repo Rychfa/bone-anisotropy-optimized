@@ -52,15 +52,15 @@ void init (int** sphere, int** ptrHighRes, int** ptrLowRes, double** rotation_ma
     // Init rotation matrix
     //
     *rotation_matrix = malloc (sizeof(double) * 9);
-    (*rotation_matrix)[0] =  0.91241511;
-    (*rotation_matrix)[1] =  0.02857433;
-    (*rotation_matrix)[2] = -0.40826728;
-    (*rotation_matrix)[3] = -0.0259223;
-    (*rotation_matrix)[4] =  0.99959159;
-    (*rotation_matrix)[5] =  0.01202831;
-    (*rotation_matrix)[6] =  0.40844424;
-    (*rotation_matrix)[7] = -3.91584012e-04;
-    (*rotation_matrix)[8] =  0.91278319;
+    (*rotation_matrix)[0] = 0.93698197;
+    (*rotation_matrix)[1] = -0.00553534;
+    (*rotation_matrix)[2] = 0.34933386;
+    (*rotation_matrix)[3] = 0.00427267;
+    (*rotation_matrix)[4] = 0.99998126;
+    (*rotation_matrix)[5] = 0.004385;
+    (*rotation_matrix)[6] = -0.34935159;
+    (*rotation_matrix)[7] = -0.00261608;
+    (*rotation_matrix)[8] = 0.93698806;
     //
     // Allocate space for the output eigen vectors
     //
@@ -102,17 +102,14 @@ void deInit (int* sphere, int* ptrHighRes, int* ptrLowRes, double* rotation_matr
 }
 
 void kernel_basic (int* sphere, int* ptrHighRes, int* ptrLowRes, double* rotation_matrix, double* ptrEvecOut, double *ptrEvalsOut) {
-    double ax, ay, az, xT, yT, zT, xC, yC, zC;
+    double xT, yT, zT, xC, yC, zC;
 
-    ax = -0.000429;
-    ay = -0.420749;
-    az = -0.028403;
-    xT = 4.978221;
-    yT = 9.715922;
-    zT = 19.025912;
-    xC = 40.7950011268;
-    yC = 22.7550006285;
-    zC = 47.3550013080;
+    xT = 5.386915;
+    yT = 5.253300;
+    zT = 16.591884;
+    xC = 37.0230010226;
+    yC = 22.5910006240;
+    zC = 45.8790012673;
 
     double r00, r01, r02, r10, r11, r12, r20, r21, r22;
     double voxel_size_lr, voxel_size_hr;
@@ -154,20 +151,15 @@ void kernel_basic (int* sphere, int* ptrHighRes, int* ptrLowRes, double* rotatio
     r10 = rotation_matrix[3];
     r11 = rotation_matrix[4];
     r12 = rotation_matrix[5];
-    r20 = rotation_matrix[5];
-    r21 = rotation_matrix[6];
-    r22 = rotation_matrix[7];
+    r20 = rotation_matrix[6];
+    r21 = rotation_matrix[7];
+    r22 = rotation_matrix[8];
 
-    printf("coordMap: r [%.3f, %.3f, %.3f]\n", r00, r01, r02);
-    printf("coordMap: r [%.3f, %.3f, %.3f]\n", r10, r11, r12);
-    printf("coordMap: r [%.3f, %.3f, %.3f]\n", r20, r21, r22);
+    printf("coordMap: r [%.4f, %.4f, %.4f]\n", r00, r01, r02);
+    printf("coordMap: r [%.4f, %.4f, %.4f]\n", r10, r11, r12);
+    printf("coordMap: r [%.4f, %.4f, %.4f]\n", r20, r21, r22);
     printf("coordMap: center of rotation: %.3f ,%.3f, %.3f\n", xC, yC, zC);
     printf("coordMap: translation: %.3f ,%.3f, %.3f\n", xT, yT, zT);
-
-     // debug
-     // region_extraction(366, 341, 915, sphere, extracted_region, ptrHighRes); 
-     // writeVTK(extracted_region, HIGH_RES_VOXEL_SIZE, SPHERE_NDIM, SPHERE_NDIM, SPHERE_NDIM, "test/region.vtk"); 
-    //
 
     // loop over all femur voxels
     for (int k_lr=0; k_lr < LOW_RES_D3; k_lr++)
@@ -241,10 +233,16 @@ void kernel_basic (int* sphere, int* ptrHighRes, int* ptrLowRes, double* rotatio
                     j_hr = (int) ty_hr;
                     k_hr = (int) tz_hr;
 
-                    //printf("coordMap: lr(%d ,%d, %d), hr(%d, %d, %d)\n", i_lr, j_lr, k_lr, i_hr, j_hr, k_hr);
+                    // debug
+                    if ((i_lr == 17) && (j_lr == 9) && (k_lr == 23)) {
+                        printf("coordMap: lr(%d ,%d, %d), hr(%d, %d, %d)\n", i_lr, j_lr, k_lr, i_hr, j_hr, k_hr);
+                        region_extraction(i_hr, j_hr, k_hr, sphere, extracted_region, ptrHighRes);
+                        writeVTK(extracted_region, HIGH_RES_VOXEL_SIZE, SPHERE_NDIM, SPHERE_NDIM, SPHERE_NDIM, "test/region.vtk");
+                    }
 
                     // extract a sphere region
                     //region_extraction(i_hr, j_hr, k_hr, sphere, extracted_region, ptrHighRes);
+
                     // compute fabric
                     double mils[NUM_DIRECTIONS];
                     mil( extracted_region, SPHERE_NDIM, DIRECTIONS, NUM_DIRECTIONS, mils);
