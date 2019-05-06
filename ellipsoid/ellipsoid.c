@@ -1,5 +1,10 @@
+// #define DEBUG
+
 #include <string.h>
 #include "ellipsoid.h"
+#ifdef DEBUG
+	#include <stdio.h>
+#endif
 
 /* some parameters */
 static const double EPSILON = 1e-9;
@@ -59,7 +64,15 @@ void fit_ellipsoid(const double (*p)[3], int n, double Q[3][3])
 {
 	double Qk[3][3] = {{1,0,0}, {0,1,0}, {0,0,1}}; 
 
+#ifdef DEBUG
+	int outer_loop_count = 0;
+	int inner_loop_count = 0;
+#endif
+
 	while(1) {
+#ifdef DEBUG
+		outer_loop_count++;
+#endif
 		/* determine gradient */
 
 		double grad[3][3] = {{0}};
@@ -107,7 +120,13 @@ void fit_ellipsoid(const double (*p)[3], int n, double Q[3][3])
 				trace_gradstep += grad[i][j]*step[j][i];
 			}
 		}
+#ifdef DEBUG
+		inner_loop_count = 0;
+#endif
 		while (_cost(p, n, Qk_plus_tstep) > _cost(p, n, Qk) + ALPHA*t*trace_gradstep) {
+#ifdef DEBUG
+			inner_loop_count++;
+#endif
 			t = t*BETA;
 
 			for (int i=0; i<3; i++) {
@@ -116,6 +135,9 @@ void fit_ellipsoid(const double (*p)[3], int n, double Q[3][3])
 				}
 			}
 		}
+#ifdef DEBUG
+		printf("[ellipsoid]:  inner loop iters = %d\n", inner_loop_count);
+#endif
 
 		/* stopping critera check */
 
@@ -130,6 +152,10 @@ void fit_ellipsoid(const double (*p)[3], int n, double Q[3][3])
 
 		memcpy(Qk, Qk_plus_tstep, sizeof(Qk));
 	} /* main while loop */
+
+#ifdef DEBUG
+	printf("[ellipsoid]:outer loop iters = %d\n", outer_loop_count);
+#endif
 
 	memcpy(Q, Qk, sizeof(Qk));
 }
