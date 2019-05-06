@@ -211,7 +211,8 @@ void kernel_basic (int* sphere, int* ptrHighRes, int* ptrLowRes, double* rotatio
                     // extract a sphere region
                     // region_extraction(i_hr, j_hr, k_hr, sphere, extracted_region, ptrHighRes);
                     // compute fabric
-                    double *mils = mil( extracted_region, SPHERE_NDIM, DIRECTIONS, NUM_DIRECTIONS);
+                    double mils[NUM_DIRECTIONS];
+                    mil( extracted_region, SPHERE_NDIM, DIRECTIONS, NUM_DIRECTIONS, mils);
                     //print_vector(mils, NUM_DIRECTIONS);
 
                     double Q[3][3];
