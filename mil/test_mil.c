@@ -160,42 +160,36 @@ void print_matrix3(double matrix[3][3]) {
 
 //###################
 
-void test_mil() {
-//    int n = 10, n_vectors = 3, dimension = 3;
-//    int ***sphere_region_hr = init_sphere_region_hr(n);
-//    double **direction_vectors = build_direction_vectors(n_vectors, dimension);
-//    print_matrix2(direction_vectors, n_vectors, dimension);
-//
-//    double *mean_intercept_length = mil(sphere_region_hr, n, direction_vectors, n_vectors, dimension);
-//    print_vector(mean_intercept_length, n_vectors);
-//
-//    destroy_sphere(sphere_region_hr, n);
-//    destroy_matrix(direction_vectors, n_vectors);
-//    free(mean_intercept_length);
-}
+// void test_mil() {
+// //    int n = 10, n_vectors = 3, dimension = 3;
+// //    int ***sphere_region_hr = init_sphere_region_hr(n);
+// //    double **direction_vectors = build_direction_vectors(n_vectors, dimension);
+// //    print_matrix2(direction_vectors, n_vectors, dimension);
+// //
+// //    double *mean_intercept_length = mil(sphere_region_hr, n, direction_vectors, n_vectors, dimension);
+// //    print_vector(mean_intercept_length, n_vectors);
+// //
+// //    destroy_sphere(sphere_region_hr, n);
+// //    destroy_matrix(direction_vectors, n_vectors);
+// //    free(mean_intercept_length);
+// }
 
-void test_mil_and_ellipsoid() {
-    int n = 10, n_vectors = NUM_DIRECTIONS, dimension = 3;
-    int ***sphere_region_hr = init_sphere_region_hr(n);
-    print_sphere(sphere_region_hr, n);
-    print_matrix2(DIRECTIONS, n_vectors, dimension);
-//    printf("%f,%f,%f\n", directions[7][0], directions[7][1], directions[7][2]);
-//    printf("%f,%f,%f\n", directions[8][0], directions[8][1], directions[8][2]);
+// void test_mil_and_ellipsoid() {
+//     int n = 10, n_vectors = NUM_DIRECTIONS, dimension = 3;
+//     int ***sphere_region_hr = init_sphere_region_hr(n);
+//     print_sphere(sphere_region_hr, n);
+//     print_matrix2(DIRECTIONS, n_vectors, dimension);
+// //    printf("%f,%f,%f\n", directions[7][0], directions[7][1], directions[7][2]);
+// //    printf("%f,%f,%f\n", directions[8][0], directions[8][1], directions[8][2]);
 
-    double *mean_intercept_length = mil(sphere_region_hr, n, DIRECTIONS, n_vectors); // seg faulting here
-    printf("test\n");
-    print_vector(mean_intercept_length, n_vectors);
-    double Q[3][3];
-    fit_ellipsoid_mils(mean_intercept_length, Q);
-    print_matrix3(Q);
+//     double *mean_intercept_length = mil(sphere_region_hr, n, DIRECTIONS, n_vectors); // seg faulting here
+//     printf("test\n");
+//     print_vector(mean_intercept_length, n_vectors);
+//     double Q[3][3];
+//     fit_ellipsoid_mils(mean_intercept_length, Q);
+//     print_matrix3(Q);
 
-    destroy_sphere(sphere_region_hr, n);
-    // destroy_matrix(direction_vectors, n_vectors);
-    free(mean_intercept_length);
-}
-
-
-void test_mil_and_ellipsoid2()
-{
-
-}
+//     destroy_sphere(sphere_region_hr, n);
+//     // destroy_matrix(direction_vectors, n_vectors);
+//     free(mean_intercept_length);
+// }

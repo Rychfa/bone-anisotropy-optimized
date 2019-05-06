@@ -20,7 +20,8 @@ void print_matrix (double m[3][3], int n1, int n2) {
 
 ///
 /// \param v
-/// \return
+/// \return 0: if zero vector found. 1: otherwise
+/// flop count: 3 adds + 3 mults + 1 sqrt + 3 divs (if non-zero vector)
 int normalize(double v[3]) {
     //
     // Determine magnitud
@@ -50,9 +51,11 @@ int normalize(double v[3]) {
 // Communications of the ACM, 4 (4): 168,
 // doi:10.1145/355578.366316
 ///
-/// \param M
-/// \param eVec
-/// \param eVal
+/// \param M: Input matrix
+/// \param eVec: eigen vectors
+/// \param eVal: eigen values
+/// flop count (best-case) : 12  mults + 14  adds (assumming diagonal matrix)
+/// flop count (worst-case): 132 mults + 127 adds + 16 divs + 3 sqrts + 1*Cost_acos + 2*Cost_cos
 void eigen3(double M[3][3], double eVec[3][3], double eVal[3]) {
     //
     // Clean eVal and create 3x3 identity matrix
@@ -103,7 +106,7 @@ void eigen3(double M[3][3], double eVec[3][3], double eVal[3]) {
         else if (r >= 1)
             phi = 0;
         else
-            phi = acos(r) / 3;
+            phi = acos(r) / 3; // Determine flop count of acos function
         //
         // The eigenvalues satisfy eig3 <= eig2 <= eig1
         //
@@ -127,10 +130,13 @@ void eigen3(double M[3][3], double eVec[3][3], double eVal[3]) {
         A[2][i][i] -= eVal[2];
     }
 
+    //
+    // flop count (worst case): 27*(3 adds + 3 mults) + 3*(3 adds + 3 mults + 1 sqrt) + 3 divs
+    //
     for (int e = 0; e < 3; ++e) {
         //
         // Matrix matrix multiplication till non zero column is found.
-        // The non zero column is the eigenvector
+        // The non zero column is the eigen-vector
         //
         for (int i = 0; i < 3; ++i) {
             for (int j = 0; j < 3; ++j) {
