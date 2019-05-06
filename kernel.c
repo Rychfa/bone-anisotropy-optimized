@@ -234,19 +234,19 @@ void kernel_basic (int* sphere, int* ptrHighRes, int* ptrLowRes, double* rotatio
                     k_hr = (int) tz_hr;
 
                     // debug
-                    if ((i_lr == 17) && (j_lr == 9) && (k_lr == 23)) {
+                    if ((i_lr == 13) && (j_lr == 4) && (k_lr == 28)) { 
                         printf("coordMap: lr(%d ,%d, %d), hr(%d, %d, %d)\n", i_lr, j_lr, k_lr, i_hr, j_hr, k_hr);
                         region_extraction(i_hr, j_hr, k_hr, sphere, extracted_region, ptrHighRes);
-                        writeVTK(extracted_region, HIGH_RES_VOXEL_SIZE, SPHERE_NDIM, SPHERE_NDIM, SPHERE_NDIM, "test/region.vtk");
+                        // writeVTK(extracted_region, HIGH_RES_VOXEL_SIZE, SPHERE_NDIM, SPHERE_NDIM, SPHERE_NDIM, "test/region.vtk");
                     
-                        double mils[NUM_DIRECTIONS];
-                        mil( extracted_region, SPHERE_NDIM, DIRECTIONS, NUM_DIRECTIONS, mils);
-                        //print_vector(mils, NUM_DIRECTIONS);
+                        /* double mils[NUM_DIRECTIONS]; */
+                        /* mil( extracted_region, SPHERE_NDIM, DIRECTIONS, NUM_DIRECTIONS, mils); */
+                        /* //print_vector(mils, NUM_DIRECTIONS); */
 
-                        double Q[3][3];
-                        fit_ellipsoid_mils(mils, Q);
+                        /* double Q[3][3]; */
+                        /* fit_ellipsoid_mils(mils, Q); */
 
-                        eigen3(Q, &ptrEvecOut[ii_lr*9], &ptrEvalsOut[ii_lr*3]);
+                        /* eigen3(Q, &ptrEvecOut[ii_lr*9], &ptrEvalsOut[ii_lr*3]); */
 
                     }
 
