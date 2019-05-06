@@ -24,12 +24,17 @@
 *  You should have received a copy of the GNU General Public License
 *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-#include "bvtv.h"
+#ifndef BONEMAP_KERNEL_H
+#define BONEMAP_KERNEL_H
 
-///
-/// Skeleton for BV/TV.
-///
+#ifdef __cplusplus
+extern "C" void init(int** sphere, double** ptrHighRes, double** ptrLowRes, double** rotation_matrix, double** ptrEvecOut);
+extern "C" void kernel_basic(int* sphere, double* ptrHighRes, double* ptrLowRes, double* rotation_matrix, double* ptrEvecOut);
+extern "C" void deInit(int* sphere, double* ptrHighRes, double* ptrLowRes, double* rotation_matrix, double* ptrEvecOut);
+#else
+void init(int** sphere, double** ptrHighRes, double** ptrLowRes, double** rotation_matrix, double** ptrEvecOut);
+void kernel_basic(int* sphere, double* ptrHighRes, double* ptrLowRes, double* rotation_matrix, double* ptrEvecOut);
+void deInit(int* sphere, double* ptrHighRes, double* ptrLowRes, double* rotation_matrix, double* ptrEvecOut);
+#endif
 
-void bvtv () {
-
-}
+#endif //BONEMAP_KERNEL_H

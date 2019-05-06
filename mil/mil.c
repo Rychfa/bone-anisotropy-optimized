@@ -28,8 +28,8 @@
 #include <math.h>
 #include <time.h>
 #include <assert.h>
+#include <stdio.h>
 #include "mil.h"
-#include "stdio.h"
 
 ///
 /// Skeleton for MIL
@@ -58,9 +58,10 @@ int **randomly_generate_central_points(int n_central_point, int max_coordinate) 
     for (int i = 0; i < n_central_point; ++i) {
         central_points[i] = (int*)malloc(3 * sizeof(int));
 
-        int z = arc4random_uniform(max_coordinate);
-        int y = arc4random_uniform(max_coordinate);
-        int x = arc4random_uniform(max_coordinate);
+
+        int z = rand() % max_coordinate; //arc4random_uniform(max_coordinate);
+        int y = rand() % max_coordinate; //arc4random_uniform(max_coordinate);
+        int x = rand() % max_coordinate; //arc4random_uniform(max_coordinate);
 
         central_points[i] = (int[3]){z, y, x};
     }
@@ -83,7 +84,7 @@ int **randomly_generate_central_points(int n_central_point, int max_coordinate) 
 //    }
 //}
 
-double *mil(int ***hr_sphere_region, int n, double **directions_vectors, int n_vectors, int dimension) {
+double *mil(int hr_sphere_region[81][81][81], int n, double directions_vectors[][3], int n_vectors) {
 //    validate_direction_vectors(directions_vectors, n_vectors, dimension);
 
     double *directions_vectors_mil = init_mil_vector(n_vectors);
@@ -141,63 +142,63 @@ double *mil(int ***hr_sphere_region, int n, double **directions_vectors, int n_v
 }
 
 
-double *mil2(int ***hr_sphere_region, int n, double **directions_vectors, int n_vectors, int dimension) {
+// double *mil2(int ***hr_sphere_region, int n, double **directions_vectors, int n_vectors, int dimension) {
 
-    //todo: Extend to n point: loop over n 'central point', and calculate the average MIL over the direction_vectors.
-    //todo: Now, for simplicity, only one point.
-    int central_point[3] = {n / 2 - 1, n / 2 - 1, n / 2 - 1};
+//     //todo: Extend to n point: loop over n 'central point', and calculate the average MIL over the direction_vectors.
+//     //todo: Now, for simplicity, only one point.
+//     int central_point[3] = {n / 2 - 1, n / 2 - 1, n / 2 - 1};
 
-    double directions_vectors_bone_length[n_vectors], directions_vectors_intercepts[n_vectors];
-    double *directions_vectors_mil = init_mil_vector(n_vectors);
+//     double directions_vectors_bone_length[n_vectors], directions_vectors_intercepts[n_vectors];
+//     double *directions_vectors_mil = init_mil_vector(n_vectors);
 
-    // for each direction vector
-    for (int i = 0; i < n_vectors; ++i) {
-        double *direction_vector = directions_vectors[i]; // of dimension 3
-        int final_point[dimension], coordinate_director[dimension];
+//     // for each direction vector
+//     for (int i = 0; i < n_vectors; ++i) {
+//         double *direction_vector = directions_vectors[i]; // of dimension 3
+//         int final_point[dimension], coordinate_director[dimension];
 
-        for (int dim = 0; dim < dimension; ++dim) {
-            if (direction_vector[dim] == 0.0) {
-                final_point[dim] = central_point[dim];
-            } else if (direction_vector[dim] > 0.0) {
-                final_point[dim] = (int) floor(direction_vector[dim] * n) - 1;
-            } else {
-                final_point[dim] = (int) floor(direction_vector[dim] * central_point[dim]) + central_point[dim];
-            }
-        }
-        for (int dim = 0; dim < dimension; ++dim)
-            coordinate_director[dim] = final_point[dim] - central_point[dim];
+//         for (int dim = 0; dim < dimension; ++dim) {
+//             if (direction_vector[dim] == 0.0) {
+//                 final_point[dim] = central_point[dim];
+//             } else if (direction_vector[dim] > 0.0) {
+//                 final_point[dim] = (int) floor(direction_vector[dim] * n) - 1;
+//             } else {
+//                 final_point[dim] = (int) floor(direction_vector[dim] * central_point[dim]) + central_point[dim];
+//             }
+//         }
+//         for (int dim = 0; dim < dimension; ++dim)
+//             coordinate_director[dim] = final_point[dim] - central_point[dim];
 
-        // go through the direction vector, from the central point to final point.
-        // get the corresponding index in the grid, and count the nbr of bone cell and intercepts
-        int max_step = find_maximum_absolute_value(coordinate_director, dimension);
-        double vector_step = 1.0 / max_step;
-        int current_point[dimension];
-        int nbr_of_bone_cell = 0;
-        int nbr_of_intercept = 0;
-        int vector_state = hr_sphere_region[central_point[0]][central_point[1]][central_point[2]];
-        for (int step = 0; step <= max_step; ++step) {
-            double t = step * vector_step;
-            for (int dim = 0; dim < dimension; ++dim) {
-                current_point[dim] = (int) round(central_point[dim] + t * coordinate_director[dim]);
-            }
+//         // go through the direction vector, from the central point to final point.
+//         // get the corresponding index in the grid, and count the nbr of bone cell and intercepts
+//         int max_step = find_maximum_absolute_value(coordinate_director, dimension);
+//         double vector_step = 1.0 / max_step;
+//         int current_point[dimension];
+//         int nbr_of_bone_cell = 0;
+//         int nbr_of_intercept = 0;
+//         int vector_state = hr_sphere_region[central_point[0]][central_point[1]][central_point[2]];
+//         for (int step = 0; step <= max_step; ++step) {
+//             double t = step * vector_step;
+//             for (int dim = 0; dim < dimension; ++dim) {
+//                 current_point[dim] = (int) round(central_point[dim] + t * coordinate_director[dim]);
+//             }
 
-            int current_state = hr_sphere_region[current_point[0]][current_point[1]][current_point[2]];
-            if (current_state == 1) {
-                ++nbr_of_bone_cell;
-            }
-            if (current_state != vector_state) {
-                ++nbr_of_intercept;
-                vector_state = current_state;
-            }
-        }
+//             int current_state = hr_sphere_region[current_point[0]][current_point[1]][current_point[2]];
+//             if (current_state == 1) {
+//                 ++nbr_of_bone_cell;
+//             }
+//             if (current_state != vector_state) {
+//                 ++nbr_of_intercept;
+//                 vector_state = current_state;
+//             }
+//         }
 
-        directions_vectors_bone_length[i] += nbr_of_bone_cell;
-        directions_vectors_intercepts[i] += nbr_of_intercept;
-    }
+//         directions_vectors_bone_length[i] += nbr_of_bone_cell;
+//         directions_vectors_intercepts[i] += nbr_of_intercept;
+//     }
 
-    for (int i = 0; i < n_vectors; ++i) {
-        directions_vectors_mil[i] = (double) directions_vectors_bone_length[i] / directions_vectors_intercepts[i];
-    }
+//     for (int i = 0; i < n_vectors; ++i) {
+//         directions_vectors_mil[i] = (double) directions_vectors_bone_length[i] / directions_vectors_intercepts[i];
+//     }
 
-    return directions_vectors_mil;
-}
+//     return directions_vectors_mil;
+// }

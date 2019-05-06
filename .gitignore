@@ -3,6 +3,9 @@
 
 # CMake
 cmake-build-*/
+build
+
+images/
 
 # Clion
 .idea/

@@ -32,17 +32,6 @@
 // TODO: What datatype for input arrays? (double, float or int)
 //
 
-#define LOW_RES_FILE "../images/LowRes_F16_L_fall_3p0_segmented/F16_L_fall_3p0_mask.raw"
-#define LOW_RES_D1 28
-#define LOW_RES_D2 16
-#define LOW_RES_D3 32
-#define LOW_RES_SIZE (LOW_RES_D1 * LOW_RES_D2 * LOW_RES_D3)
-#define HIGH_RES_FILE "../images/HighRes_F16_L_segmented/625_3775_F16_L_H_SEG_cov_crop_rotate.raw"
-#define HIGH_RES_D1 1149
-#define HIGH_RES_D2 703
-#define HIGH_RES_D3 1304
-#define HIGH_RES_SIZE (HIGH_RES_D1 * HIGH_RES_D2 * HIGH_RES_D3)
-
 typedef union {
     float f;
     char c[4];
@@ -70,7 +59,7 @@ double* readHighResImage () {
     //
     // Allocate memory for low res image
     //
-    ptrHighRes = malloc ((sizeof ptrHighRes ) * HIGH_RES_SIZE);
+    ptrHighRes = malloc (sizeof(double) * HIGH_RES_SIZE);
 
     for (int i = 0; i < HIGH_RES_SIZE; ++i) {
         //
@@ -100,6 +89,7 @@ double* readHighResImage () {
 double* readLowResImage () {
 
     FILE *fp;
+    FILE *fd;
     charFloat_t uCharFloat;
     fp = fopen(LOW_RES_FILE, "r");
     if (fp == NULL) {
@@ -110,8 +100,8 @@ double* readLowResImage () {
     //
     // Allocate memory for low res image
     //
-    ptrLowRes = malloc ((sizeof ptrLowRes ) * LOW_RES_SIZE);
-
+    ptrLowRes = malloc (sizeof(double) * LOW_RES_SIZE);
+    fd = fopen("debug_reader_lowres.txt","w");
     for (int i = 0; i < LOW_RES_SIZE; ++i) {
                 //
                 // Read bytes and convert to float
@@ -127,7 +117,9 @@ double* readLowResImage () {
                     uCharFloat.c[l] = c;
                 }
                 ptrLowRes[i] = uCharFloat.f;
+                fprintf(fd,"%d, %.3f\n", i, ptrLowRes[i]);
     }
+    fclose(fd);
 
     if (fgetc((FILE*)fp) == EOF) {
         printf("Low res file read correctly!\n");

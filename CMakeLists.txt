@@ -21,22 +21,23 @@ set(CMAKE_CXX_FLAGS_DEBUG   "")
 include_directories(
         reader
         mil
-        coord_map
-        bvtv
         regions
         ellipsoid
+        utils
+        eigen
 )
 
 set(SOURCE_FILES
-        main.c
-        coord_map/coord_map.c
-        bvtv/bvtv.c
+        main.cpp
         mil/mil.c
         mil/test_mil.c
         ellipsoid/ellipsoid.c
         reader/reader.c
         regions/region_extraction.c
-        eigen/eigen.c)
+        eigen/eigen.c
+        utils/utils.c
+        kernel.c)
+
 
 # ================================================================================
 # C++ Global Flags

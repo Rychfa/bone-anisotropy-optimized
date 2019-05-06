@@ -24,26 +24,13 @@
 *  You should have received a copy of the GNU General Public License
 *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
 */
-#include "stdio.h"
-#include "stdlib.h"
-#include "reader.h"
-#include "coord_map.h"
-#include "region_extraction.h"
-#include "bvtv.h"
-#include "mil.h"
-#include "ellipsoid.h"
+#ifndef BONEMAP_UTILS_H
+#define BONEMAP_UTILS_H
 
-int main () {
-    //
-    // Call everything
-    //
-//    reader();
-//    coordMap();
-//    region_extraction();
-//    mil();
-//    bvtv();
+///
+/// Function declarations
+///
+void writeVTK(int *image, double voxelsize, int ndim);
+void calculateRotationMatrix(double r[9], double ax, double ay, double az);
 
-    printf("Done !\n");
-
-    return 0;
-}
+#endif //BONEMAP_UTILS_H

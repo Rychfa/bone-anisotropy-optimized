@@ -1,21 +1,14 @@
-//#include "tsc_x86.h"
-#include <stdlib.h>
-#include <stdio.h>
 #include <string.h>
 #include "ellipsoid.h"
-
-#define NUM_RUNS 1
-// #define CALIBRATE
-#define CYCLES_REQUIRED 1e8
 
 /* some parameters */
 static const double EPSILON = 1e-9;
 static const double ALPHA   = 0.25;
 static const double BETA    = 0.5;
 
-
 /**
- *
+ * returns p^T Q p 
+ * flop count = 12adds + 12mults
  */ 
 static double _quadratic_form(const double p[3], const double Q[3][3])
 {
@@ -36,7 +29,8 @@ static double _quadratic_form(const double p[3], const double Q[3][3])
 }
 
 /**
- *
+ * returns \sum_i (p_i^T Q p_i - 1)^2
+ * flop count = n*(3 adds + 1mult  + 2*C(_quadratic_form))
  */
 static double _cost(const double (*p)[3], int n, const double Q[3][3])
 {
@@ -53,6 +47,13 @@ static double _cost(const double (*p)[3], int n, const double Q[3][3])
  * Gradient descent with backtracking line search [Boyd Chapter 9] 
  * applied to the ellisoid fitting problem:
  * Q = argmin \sum_i (p_i^T Q p_i - 1)^2
+ * flop count PER iter_step = 
+ * 				n*( C(_quadratic_form)+1 + 9mults + 9*(2mults+1adds) ) + 
+ *        -9mults + 
+ *        9*(1add + 1mult) + 9*(1mult+1add) + 
+ *					iters_bt*(C(_cost)*2 + 1add + 2mult + 1mult + 9*(1add + 1mult)) +
+ *        9*(1add + 3 mults)
+ *	where iters_bt = number of back tracking iterations
  */
 void fit_ellipsoid(const double (*p)[3], int n, double Q[3][3])
 {
@@ -133,86 +134,21 @@ void fit_ellipsoid(const double (*p)[3], int n, double Q[3][3])
 	memcpy(Q, Qk, sizeof(Qk));
 }
 
-#if 0
-void fill_vector(double * x, int n) {
-    for(int i=0; i < n; i++) {
-        x[i] = (double) rand();
-    }
-}
-
-double rdtsc(double *A, double *B, double *C, long n, 
-	void (*func)(double *, double *, double *, long)) 
+/*
+ * convenience function, wraps fit_ellipsoid above, given the mils (lengths) along
+ * each of the DIRECTIONS defined above
+ *
+ */
+void fit_ellipsoid_mils(const double *mils, double Q[3][3])
 {
-    int i, num_runs;
-    myInt64 cycles;
-    myInt64 start;
-    num_runs = NUM_RUNS;
+	/* construct the points */
+	double p[NUM_DIRECTIONS][3];
+	for (int i=0; i<NUM_DIRECTIONS; i++) {
+		for (int j=0; j<3; j++) {
+			p[i][j] = mils[i] * DIRECTIONS_NORMALIZED[i][j];
+		}
+	}
 
-    /* 
-     * The CPUID instruction serializes the pipeline.
-     * Using it, we can create execution barriers around the code we want to time.
-     * The calibrate section is used to make the computation large enough so as to 
-     * avoid measurements bias due to the timing overhead.
-     */
-#ifdef CALIBRATE
-    while(num_runs < (1 << 14)) {
-        start = start_tsc();
-        for (i = 0; i < num_runs; ++i) {
-        	func(A, B, C, n);
-        }
-        cycles = stop_tsc(start);
-
-        if(cycles >= CYCLES_REQUIRED) break;
-
-        num_runs *= 2;
-    }
-#endif
-
-    start = start_tsc();
-    for (i = 0; i < num_runs; ++i) {
-        func(A, B, C, n);
-    }
-
-    cycles = stop_tsc(start)/num_runs;
-    return (double) cycles;
+	/* call the main routine */
+	fit_ellipsoid(p, NUM_DIRECTIONS, Q);
 }
-#endif
-
-//int main(int argc, char **argv)
-//{
-//	/* initialize data */
-//	double Ipoints[][3] =
-//		{{-0.28687072, -0.5844695 , -0.29465669},
-//        { 0.29664863,  0.62228291,  0.36936989},
-//        { 0.01220042,  0.04451405,  0.28935352},
-//        { 0.03887869, -0.06267655, -0.02044771},
-//        { 0.16627267,  0.62938256, -0.08679698},
-//        { 0.2123087 ,  0.55534194, -0.09466649},
-//        { 0.26719668,  0.47538131,  0.58769478},
-//        { 0.28394338,  0.54458556,  0.51808755},
-//        {-0.01285678,  0.39130018, -0.55237714},
-//        { 0.08337157,  0.20009325, -0.22645592}};
-//
-//  /* test correctness. Q should be according to CVXPY
-//  	[[239.24816358 -81.82197492 -47.58347817]
-// 		[-81.82197492  29.89943344  16.36709216]
-// 		[-47.58347817  16.36709216  10.84916192]]
-// 	*/
-//  double Q[3][3];
-//  int n = sizeof(Ipoints)/sizeof(double)/3;
-//  printf("%d\n", n);
-//  fit_ellipsoid(Ipoints, n, Q);
-//  for (int i=0; i<3; i++) {
-//  	for (int j=0; j<3; j++) {
-//  		printf("%f, ", Q[i][j]);
-//  	}
-//  	printf("\n");
-//  }
-//
-//	/* perform timings */
-//	// double cycles = rdtsc(A, B, C, n, mm1);
-//	// printf("mm1: %g, %g\n", cycles, (2*n*n*n)/cycles);
-//
-//	// cycles = rdtsc(A, B, C, n, mm2);
-//	// printf("mm2: %g, %g\n", cycles, (2*n*n*n)/cycles);
-//}
