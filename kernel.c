@@ -35,7 +35,7 @@
 #include "utils.h"
 #include "eigen.h"
 
-void init (int** sphere, double** ptrHighRes, double** ptrLowRes, double** rotation_matrix, double** ptrEvecOut) {
+void init (int** sphere, int** ptrHighRes, int** ptrLowRes, double** rotation_matrix, double** ptrEvecOut) {
     //
     // Create sphere mask
     //
@@ -66,7 +66,7 @@ void init (int** sphere, double** ptrHighRes, double** ptrLowRes, double** rotat
     *ptrEvecOut = calloc (sizeof(double), 3*3*LOW_RES_SIZE);
 }
 
-void deInit (int* sphere, double* ptrHighRes, double* ptrLowRes, double* rotation_matrix, double* ptrEvecOut) {
+void deInit (int* sphere, int* ptrHighRes, int* ptrLowRes, double* rotation_matrix, double* ptrEvecOut) {
     free(sphere);
     free(ptrHighRes);
     free(ptrLowRes);
@@ -74,7 +74,7 @@ void deInit (int* sphere, double* ptrHighRes, double* ptrLowRes, double* rotatio
     free(ptrEvecOut);
 }
 
-void kernel_basic (int* sphere, double* ptrHighRes, double* ptrLowRes, double* rotation_matrix, double* ptrEvecOut) {
+void kernel_basic (int* sphere, int* ptrHighRes, int* ptrLowRes, double* rotation_matrix, double* ptrEvecOut) {
     double ax, ay, az, xT, yT, zT, xC, yC, zC;
 
     ax = -0.000429;
@@ -102,7 +102,7 @@ void kernel_basic (int* sphere, double* ptrHighRes, double* ptrLowRes, double* r
     int radius_i, radius_j, radius_k;
     int *extracted_region = malloc((sizeof (int)) * SPHERE_ARRAY_SIZE);
 
-//    FILE *fd;
+    FILE *fd;
 
     zero = 0.0;
     half = 0.5;
@@ -137,7 +137,8 @@ void kernel_basic (int* sphere, double* ptrHighRes, double* ptrLowRes, double* r
 //    printf("coordMap: center of rotation: %.3f ,%.3f, %.3f\n", xC, yC, zC);
 //    printf("coordMap: translation: %.3f ,%.3f, %.3f\n", xT, yT, zT);
 
-//    fd = fopen("mapped_coord.txt","w");
+    fd = fopen("output.txt","w");
+
     // loop over all femur voxels
     for (int k_lr=0; k_lr < LOW_RES_D3; k_lr++)
     {
@@ -205,13 +206,13 @@ void kernel_basic (int* sphere, double* ptrHighRes, double* ptrLowRes, double* r
                     j_hr = (int) ty_hr;
                     k_hr = (int) tz_hr;
 
-//                    fprintf(fd,"%d ,%d, %d, %d, %d, %d\n", i_lr, j_lr, k_lr, i_hr, j_hr, k_hr);
                     //printf("coordMap: lr(%d ,%d, %d), hr(%d, %d, %d)\n", i_lr, j_lr, k_lr, i_hr, j_hr, k_hr);
 
                     // extract a sphere region
                     // region_extraction(i_hr, j_hr, k_hr, sphere, extracted_region, ptrHighRes);
                     // compute fabric
-                    double *mils = mil( extracted_region, SPHERE_NDIM, DIRECTIONS, NUM_DIRECTIONS);
+                    double mils[NUM_DIRECTIONS];
+                    mil( extracted_region, SPHERE_NDIM, DIRECTIONS, NUM_DIRECTIONS, mils);
                     //print_vector(mils, NUM_DIRECTIONS);
 
                     double Q[3][3];
@@ -219,12 +220,24 @@ void kernel_basic (int* sphere, double* ptrHighRes, double* ptrLowRes, double* r
 
                     double eVecs[3][3];
                     double eVals[3];
-                    eigen3(Q, &ptrEvecOut[ii_lr*9], eVals);
-                    //TODO: what to do with eVecs, evals?
+                    // eigen3(Q, &ptrEvecOut[ii_lr*9], eVals); //TODO:.. ?
+                    eigen3(Q, eVecs, eVals);
+
+                    fprintf(fd, "%d, %d, %d, " /* index into LR image */
+                        "%.3f, %.3f, %.3f, "   /* e vals */
+                        "%.3f, %.3f, %.3f, "   /* e vecs*/
+                        "%.3f, %.3f, %.3f, "
+                        "%.3f, %.3f, %.3f\n",
+                        i_lr, j_lr, k_lr, 
+                        eVals[0], eVals[1], eVals[2],
+                        eVecs[0][0], eVecs[0][1], eVecs[0][2], 
+                        eVecs[1][0], eVecs[1][1], eVecs[1][2],
+                        eVecs[2][0], eVecs[2][1], eVecs[2][2]);
+
                 }
 
             }
         }
     }
-//    fclose(fd);
+   fclose(fd);
 }

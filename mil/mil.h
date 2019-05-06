@@ -28,9 +28,10 @@
 #define BONEMAP_MIL_H
 
 ///
-/// Function declarations TODO: the int n here is suprflous, since I fixed the dimension on hr_sphere_region..
-/// TODO: don't return the array, just return the result into a parameter 
-double* mil (int hr_sphere_region[81][81][81], int n, double directions_vectors[][3], int n_vectors);
+/// Function declarations 
+/// 
+void mil(int *hr_sphere_region, int n, double directions_vectors[][3], int n_vectors, 
+    double *directions_vectors_mil);
 
 
 #endif //BONEMAP_MIL_H

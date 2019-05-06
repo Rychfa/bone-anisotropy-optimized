@@ -84,10 +84,9 @@ int **randomly_generate_central_points(int n_central_point, int max_coordinate) 
 //    }
 //}
 
-double *mil(int hr_sphere_region[81][81][81], int n, double directions_vectors[][3], int n_vectors) {
+void mil(int *hr_sphere_region, int n, double directions_vectors[][3], int n_vectors, 
+    double *directions_vectors_mil) {
 //    validate_direction_vectors(directions_vectors, n_vectors, dimension);
-
-    double *directions_vectors_mil = init_mil_vector(n_vectors);
 
     double directions_vectors_bone_length[n_vectors], directions_vectors_intercepts[n_vectors];
     for (int j = 0; j < n_vectors; ++j) {
@@ -108,12 +107,12 @@ double *mil(int hr_sphere_region[81][81][81], int n, double directions_vectors[]
 
             double z = central_point[0], y = central_point[1], x = central_point[2];
             int z_int = (int) z, y_int = (int) y, x_int = (int) x;
-            int vector_state = hr_sphere_region[z_int][y_int][x_int];
+            int vector_state = hr_sphere_region[z_int*n*n + y_int*n + x_int];
 
             while ((z < n && z >= 0) && (y < n && y >= 0) && (x < n && x >= 0)) {
                 z_int = (int) z, y_int = (int) y, x_int = (int) x;
 
-                int current_state = hr_sphere_region[z_int][y_int][x_int];
+                int current_state = hr_sphere_region[z_int*n*n + y_int*n + x_int];
 
                 if (current_state == 1) {
                     ++directions_vectors_bone_length[i];
@@ -137,8 +136,6 @@ double *mil(int hr_sphere_region[81][81][81], int n, double directions_vectors[]
                                                          directions_vectors_intercepts[i]
                                                        : directions_vectors_bone_length[i];
     }
-
-    return directions_vectors_mil;
 }
 
 

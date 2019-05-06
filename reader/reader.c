@@ -42,10 +42,10 @@ typedef union {
     char c[4];
 } charInt_t;
 
-static double* ptrLowRes;
-static double* ptrHighRes;
+static int* ptrLowRes;
+static int* ptrHighRes;
 
-double* readHighResImage () {
+int* readHighResImage () {
 
     FILE *fp;
     charInt_t uCharInt;
@@ -59,7 +59,7 @@ double* readHighResImage () {
     //
     // Allocate memory for low res image
     //
-    ptrHighRes = malloc (sizeof(double) * HIGH_RES_SIZE);
+    ptrHighRes = malloc (sizeof(int) * HIGH_RES_SIZE);
 
     for (int i = 0; i < HIGH_RES_SIZE; ++i) {
         //
@@ -86,7 +86,7 @@ double* readHighResImage () {
     return ptrHighRes;
 }
 
-double* readLowResImage () {
+int* readLowResImage () {
 
     FILE *fp;
     FILE *fd;
@@ -100,7 +100,7 @@ double* readLowResImage () {
     //
     // Allocate memory for low res image
     //
-    ptrLowRes = malloc (sizeof(double) * LOW_RES_SIZE);
+    ptrLowRes = malloc (sizeof(int) * LOW_RES_SIZE);
     fd = fopen("debug_reader_lowres.txt","w");
     for (int i = 0; i < LOW_RES_SIZE; ++i) {
                 //
@@ -117,7 +117,7 @@ double* readLowResImage () {
                     uCharFloat.c[l] = c;
                 }
                 ptrLowRes[i] = uCharFloat.f;
-                fprintf(fd,"%d, %.3f\n", i, ptrLowRes[i]);
+                fprintf(fd,"%d, %d\n", i, ptrLowRes[i]);
     }
     fclose(fd);
 
