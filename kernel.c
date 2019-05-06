@@ -41,7 +41,7 @@ void init (int** sphere, double** ptrHighRes, double** ptrLowRes, double** rotat
     //
     *sphere = malloc( (sizeof (int)) * SPHERE_ARRAY_SIZE);
     createSphereMask(*sphere);
-    writeVTK(*sphere, HIGH_RES_VOXEL_SIZE, SPHERE_NDIM);
+    writeVTK(*sphere, HIGH_RES_VOXEL_SIZE, SPHERE_NDIM, SPHERE_NDIM, SPHERE_NDIM, "test/sphere.vtk");
     //
     // Read input images
     //
