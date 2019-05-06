@@ -41,7 +41,7 @@ using namespace std;
 #define EPS (1e-3)
 
 /* prototype of the function you need to optimize */
-typedef void(*comp_func)(int*, double*, double*, double*, double*);
+typedef void(*comp_func)(int*, int*, int*, double*, double*);
 
 //headers
 double get_perf_score(comp_func f);
@@ -59,12 +59,12 @@ vector<string> funcNames;
 vector<int> funcFlops;
 int numFuncs = 0;
 
-void build(int** sphere, double** ptrHighRes, double** ptrLowRes, double** rotation_matrix, double** ptrEvecOut)
+void build(int** sphere, int** ptrHighRes, int** ptrLowRes, double** rotation_matrix, double** ptrEvecOut)
 {
     init(sphere, ptrHighRes, ptrLowRes, rotation_matrix, ptrEvecOut);
 }
 
-void destroy(int* sphere, double* ptrHighRes, double* ptrLowRes, double* rotation_matrix, double* ptrEvecOut)
+void destroy(int* sphere, int* ptrHighRes, int* ptrLowRes, double* rotation_matrix, double* ptrEvecOut)
 {
     deInit(sphere, ptrHighRes, ptrLowRes, rotation_matrix, ptrEvecOut);
 }
@@ -136,8 +136,8 @@ double perf_test(comp_func f, string desc, int flops)
     myInt64 start, end;
 
     int*    sphere;
-    double* ptrHighRes;
-    double* ptrLowRes;
+    int* ptrHighRes;
+    int* ptrLowRes;
     double* rotation_matrix;
     double* ptrEvecOut;
 
@@ -223,9 +223,9 @@ int main(int argc, char **argv)
 }
 
 int simple_main () {
-    int*    sphere;
-    double* ptrHighRes;
-    double* ptrLowRes;
+    int* sphere;
+    int* ptrHighRes;
+    int* ptrLowRes;
     double* rotation_matrix;
     double* ptrEvecOut;
 

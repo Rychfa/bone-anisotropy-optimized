@@ -35,7 +35,7 @@
 #include "utils.h"
 #include "eigen.h"
 
-void init (int** sphere, double** ptrHighRes, double** ptrLowRes, double** rotation_matrix, double** ptrEvecOut) {
+void init (int** sphere, int** ptrHighRes, int** ptrLowRes, double** rotation_matrix, double** ptrEvecOut) {
     //
     // Create sphere mask
     //
@@ -66,7 +66,7 @@ void init (int** sphere, double** ptrHighRes, double** ptrLowRes, double** rotat
     *ptrEvecOut = calloc (sizeof(double), 3*3*LOW_RES_SIZE);
 }
 
-void deInit (int* sphere, double* ptrHighRes, double* ptrLowRes, double* rotation_matrix, double* ptrEvecOut) {
+void deInit (int* sphere, int* ptrHighRes, int* ptrLowRes, double* rotation_matrix, double* ptrEvecOut) {
     free(sphere);
     free(ptrHighRes);
     free(ptrLowRes);
@@ -74,7 +74,7 @@ void deInit (int* sphere, double* ptrHighRes, double* ptrLowRes, double* rotatio
     free(ptrEvecOut);
 }
 
-void kernel_basic (int* sphere, double* ptrHighRes, double* ptrLowRes, double* rotation_matrix, double* ptrEvecOut) {
+void kernel_basic (int* sphere, int* ptrHighRes, int* ptrLowRes, double* rotation_matrix, double* ptrEvecOut) {
     double ax, ay, az, xT, yT, zT, xC, yC, zC;
 
     ax = -0.000429;
