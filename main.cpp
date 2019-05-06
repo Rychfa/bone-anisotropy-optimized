@@ -223,14 +223,20 @@ int main(int argc, char **argv)
     }
     cout << numFuncs << " functions registered." << endl;
 
-    for (i =0; i < numFuncs; i++) {
-        int*    sphere;
-        int* ptrHighRes;
-        int* ptrLowRes;
-        double* rotation_matrix;
-        double* ptrEvecOut;
-        double* ptrEvalsOut;
+    /* generate the ground truth data. assumption: userFuncs[0] generates ground truth */
 
+    int*    sphere;
+    int* ptrHighRes;
+    int* ptrLowRes;
+    double* rotation_matrix;
+    double* ptrEvecOut;
+    double* ptrEvalsOut;
+
+    build(&sphere, &ptrHighRes, &ptrLowRes, &rotation_matrix, &ptrEvecOut, &ptrEvalsOut);
+    userFuncs[0](sphere, ptrHighRes, ptrLowRes, rotation_matrix, ptrEvecOut, ptrEvalsOut);
+    destroy(sphere, ptrHighRes, ptrLowRes, rotation_matrix, ptrEvecOut, ptrEvalsOut, true);
+
+    for (i =0; i < numFuncs; i++) {
         build(&sphere, &ptrHighRes, &ptrLowRes, &rotation_matrix, &ptrEvecOut, &ptrEvalsOut);
 
         comp_func f = userFuncs[i];
@@ -241,9 +247,7 @@ int main(int argc, char **argv)
         if (error > EPS) {
             cout << "ERROR: the results for function " << i << " are incorrect." << std::endl;
         }
-        printf(" ---> ERROR = %g\n", error);
-        /* assumption: f[0] is the ground truth generator */
-        destroy(sphere, ptrHighRes, ptrLowRes, rotation_matrix, ptrEvecOut, ptrEvalsOut, i==0);
+        destroy(sphere, ptrHighRes, ptrLowRes, rotation_matrix, ptrEvecOut, ptrEvalsOut, false);
     }
 
     for (i = 0; i < numFuncs; i++)

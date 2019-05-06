@@ -90,6 +90,7 @@ void deInit (int* sphere, int* ptrHighRes, int* ptrLowRes, double* rotation_matr
             }
        }
        fclose(fd);
+       printf("Generated ground truth file\n");
     }
 
     free(sphere);
@@ -252,7 +253,6 @@ void kernel_basic (int* sphere, int* ptrHighRes, int* ptrLowRes, double* rotatio
                     double Q[3][3];
                     fit_ellipsoid_mils(mils, Q);
 
-                    // eigen3(Q, eVecs, eVals); 
                     eigen3(Q, &ptrEvecOut[ii_lr*9], &ptrEvalsOut[ii_lr*3]);
                 }
             }
