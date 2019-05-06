@@ -37,6 +37,6 @@
 /// Function declarations
 ///
 void createSphereMask(int *sphere);
-void region_extraction (int i_hr, int j_hr, int k_hr, int *sphere, int *extracted_region, double *ptrHighRes);
+void region_extraction (int i_hr, int j_hr, int k_hr, int *sphere, int *extracted_region, int *ptrHighRes);
 
 #endif //BONEMAP_REGION_EXTRACTION_H

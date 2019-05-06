@@ -41,12 +41,13 @@ void init (int** sphere, int** ptrHighRes, int** ptrLowRes, double** rotation_ma
     //
     *sphere = malloc( (sizeof (int)) * SPHERE_ARRAY_SIZE);
     createSphereMask(*sphere);
-    writeVTK(*sphere, HIGH_RES_VOXEL_SIZE, SPHERE_NDIM, SPHERE_NDIM, SPHERE_NDIM, "test/sphere.vtk");
+    //writeVTK(*sphere, HIGH_RES_VOXEL_SIZE, SPHERE_NDIM, SPHERE_NDIM, SPHERE_NDIM, "test/sphere.vtk");
     //
     // Read input images
     //
     *ptrHighRes = readHighResImage();
     *ptrLowRes = readLowResImage();
+    //writeVTK(*ptrHighRes, HIGH_RES_VOXEL_SIZE, HIGH_RES_D1, HIGH_RES_D2, HIGH_RES_D3, "test/debug_hr_image.vtk");
     //
     // Init rotation matrix
     //
@@ -57,9 +58,9 @@ void init (int** sphere, int** ptrHighRes, int** ptrLowRes, double** rotation_ma
     (*rotation_matrix)[3] = -0.0259223;
     (*rotation_matrix)[4] =  0.99959159;
     (*rotation_matrix)[5] =  0.01202831;
-    (*rotation_matrix)[6] =  4.08444242e-01;
+    (*rotation_matrix)[6] =  0.40844424;
     (*rotation_matrix)[7] = -3.91584012e-04;
-    (*rotation_matrix)[8] =  9.12783188e-01;
+    (*rotation_matrix)[8] =  0.91278319;
     //
     // Allocate space for the output eigen vectors
     //
@@ -133,9 +134,16 @@ void kernel_basic (int* sphere, int* ptrHighRes, int* ptrLowRes, double* rotatio
     r21 = rotation_matrix[6];
     r22 = rotation_matrix[7];
 
-//    printf("coordMap: r [%.3f, %.3f, %.3f, %.3f, %.3f, %.3f, %.3f, %.3f, %.3f]\n", r00, r01, r02, r10, r11, r12, r20, r21, r22);
-//    printf("coordMap: center of rotation: %.3f ,%.3f, %.3f\n", xC, yC, zC);
-//    printf("coordMap: translation: %.3f ,%.3f, %.3f\n", xT, yT, zT);
+    printf("coordMap: r [%.3f, %.3f, %.3f]\n", r00, r01, r02);
+    printf("coordMap: r [%.3f, %.3f, %.3f]\n", r10, r11, r12);
+    printf("coordMap: r [%.3f, %.3f, %.3f]\n", r20, r21, r22);
+    printf("coordMap: center of rotation: %.3f ,%.3f, %.3f\n", xC, yC, zC);
+    printf("coordMap: translation: %.3f ,%.3f, %.3f\n", xT, yT, zT);
+
+     // debug
+     region_extraction(366, 341, 915, sphere, extracted_region, ptrHighRes); 
+     writeVTK(extracted_region, HIGH_RES_VOXEL_SIZE, SPHERE_NDIM, SPHERE_NDIM, SPHERE_NDIM, "test/region.vtk"); 
+    //
 
     fd = fopen("output.txt","w");
 
@@ -144,7 +152,7 @@ void kernel_basic (int* sphere, int* ptrHighRes, int* ptrLowRes, double* rotatio
     {
         // calculate vector from the center of the image
         // to the center of this voxel
-        z_lr = (float) k_lr*voxel_size_lr - zC + half_voxel_size_lr;
+        z_lr = k_lr*voxel_size_lr - zC + half_voxel_size_lr;
         // multiply the vector with the rotation matrix
         zDr02 = z_lr * r02;
         zDr12 = z_lr * r12;
@@ -154,7 +162,7 @@ void kernel_basic (int* sphere, int* ptrHighRes, int* ptrLowRes, double* rotatio
         {
             //calculate vector from the center of the image
             //to the center of this voxel
-            y_lr = (float) j_lr*voxel_size_lr - yC + half_voxel_size_lr;
+            y_lr = j_lr*voxel_size_lr - yC + half_voxel_size_lr;
             //multiply the vector with the rotation matrix
             yDr01 = y_lr * r01;
             yDr11 = y_lr * r11;
@@ -164,10 +172,11 @@ void kernel_basic (int* sphere, int* ptrHighRes, int* ptrLowRes, double* rotatio
             {
                 // calculate vector from the center of the image
                 // to the center of this voxel
-                x_lr = (float) i_lr*voxel_size_lr - xC + half_voxel_size_lr;
-                // check if this voxel inside the FE mask
+                x_lr = i_lr*voxel_size_lr - xC + half_voxel_size_lr;
+                // calculate index
                 ii_lr = i_lr + j_lr*LOW_RES_D1 + k_lr*LOW_RES_D1*LOW_RES_D2;
-                if (ptrLowRes[ii_lr] > 0.5)
+                // check if this voxel inside the FE mask
+                if (ptrLowRes[ii_lr] > 0)
                 {
                     // multiply the vector with the rotation matrix
                     xDr00 = x_lr * r00;
@@ -209,7 +218,7 @@ void kernel_basic (int* sphere, int* ptrHighRes, int* ptrLowRes, double* rotatio
                     //printf("coordMap: lr(%d ,%d, %d), hr(%d, %d, %d)\n", i_lr, j_lr, k_lr, i_hr, j_hr, k_hr);
 
                     // extract a sphere region
-                    // region_extraction(i_hr, j_hr, k_hr, sphere, extracted_region, ptrHighRes);
+                    //region_extraction(i_hr, j_hr, k_hr, sphere, extracted_region, ptrHighRes);
                     // compute fabric
                     double mils[NUM_DIRECTIONS];
                     mil( extracted_region, SPHERE_NDIM, DIRECTIONS, NUM_DIRECTIONS, mils);
