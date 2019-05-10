@@ -64,6 +64,10 @@ void init (int** sphere, int** ptrHighRes, int** ptrLowRes, double** rotation_ma
     //
     *ptrEvecOut = calloc (sizeof(double), 3*3*LOW_RES_SIZE);
     *ptrEvalsOut = calloc(sizeof(double), 3*LOW_RES_SIZE);
+
+#ifdef DEBUG
+    fit_ellipsoid_debug_init();
+#endif
 }
 
 void deInit (int* sphere, int* ptrHighRes, int* ptrLowRes, double* rotation_matrix, double* ptrEvecOut, double *ptrEvalsOut, bool generate_ground_truth) {
@@ -97,6 +101,10 @@ void deInit (int* sphere, int* ptrHighRes, int* ptrLowRes, double* rotation_matr
     free(rotation_matrix);
     free(ptrEvecOut);
     free(ptrEvalsOut);
+ 
+#ifdef DEBUG
+    fit_ellipsoid_debug_deinit();
+#endif
 }
 
 void kernel_basic (int* sphere, int* ptrHighRes, int* ptrLowRes, double* rotation_matrix, double* ptrEvecOut, double *ptrEvalsOut) {
@@ -240,5 +248,5 @@ void kernel_basic (int* sphere, int* ptrHighRes, int* ptrLowRes, double* rotatio
                 }
             }
         }
-    }
+    } /* main loop */
 }
