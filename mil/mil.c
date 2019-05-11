@@ -54,24 +54,21 @@ void randomly_generate_central_points(int *central_points, int n_central_point, 
 }
 
 int mil(int *hr_sphere_region, int n, double directions_vectors[][3], int n_vectors,
-         double *directions_vectors_mil) {
+        double *directions_vectors_mil) {
 //    validate_direction_vectors(directions_vectors, n_vectors, dimension);
 
     int flops_counter = 0;
 
-    double directions_vectors_bone_length[n_vectors], directions_vectors_intercepts[n_vectors];
-    for (int j = 0; j < n_vectors; ++j) {
-        directions_vectors_bone_length[j] = 0.0;
-        directions_vectors_intercepts[j] = 0.0;
-    }
-
-    // todo: for now, statically initialized, only one central Point.
-    //  Will be replaced by: randomly_generate_central_points(,). Deallocate memory at the end !
     int n_central_point = 10000;
-    int central_points[n_central_point * 3]; // = {{n / 2 - 1, n / 2 - 1, n / 2 - 1}};
-
+    int central_points[n_central_point * 3];
     randomly_generate_central_points(central_points, n_central_point, n);
 
+    double directions_vectors_bone_length[n_vectors], directions_vectors_intercepts[n_vectors];
+
+    for (int j = 0; j < n_vectors; ++j) {
+        directions_vectors_bone_length[j] = 0.0;
+        directions_vectors_intercepts[j] = n_central_point;
+    }
 
     for (int k = 0; k < n_central_point; k += 3) {
         int central_point[] = {central_points[k], central_points[k + 1], central_points[k + 2]};
@@ -114,14 +111,9 @@ int mil(int *hr_sphere_region, int n, double directions_vectors[][3], int n_vect
 
     for (int i = 0; i < n_vectors; ++i) {
 #if MIL_FLOPS_COUNT > 0
-        if (directions_vectors_intercepts[i] > 0.0) {
-            ++flops_counter;
-        }
+        ++flops_counter;
 #endif
-        directions_vectors_mil[i] =
-                directions_vectors_intercepts[i] > 0.0 ? (double) directions_vectors_bone_length[i] /
-                                                         directions_vectors_intercepts[i]
-                                                       : directions_vectors_bone_length[i];
+        directions_vectors_mil[i] = directions_vectors_bone_length[i] / directions_vectors_intercepts[i];
     }
 //    printf("MIL TOTAL FLOPS COUNT: %d\n", flops_counter);
     return flops_counter;
