@@ -27,10 +27,12 @@
 #ifndef BONEMAP_MIL_H
 #define BONEMAP_MIL_H
 
+#define MIL_FLOPS_COUNT 0
+
 ///
 /// Function declarations 
 /// 
-void mil(int *hr_sphere_region, int n, double directions_vectors[][3], int n_vectors, 
+int mil(int *hr_sphere_region, int n, double directions_vectors[][3], int n_vectors,
     double *directions_vectors_mil);
 
 
