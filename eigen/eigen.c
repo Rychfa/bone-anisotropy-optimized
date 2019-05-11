@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <math.h>
 
-#define TOLERANCE 1e-5
+#define TOLERANCE 1e-10
 
 void print_vec (double* v, int n) {
     for (int i = 0; i < n; ++i) {
@@ -170,14 +170,17 @@ void eigen3(double M[3][3], double *eVecPtr, double eVal[3]) {
     for (int i = 0; i < 3; ++i) {
         eVal[i] /= alpha;
     }
-
-
 }
 
 void eigen_test () {
-    double M[3][3] = { {1, 3, 6} ,
-                       {3,-5,-6} ,
-                       {6, -6, 4} };
+//    double M[3][3] = { {1, 3, 6} ,
+//                       {3,-5,-6} ,
+//                       {6, -6, 4} };
+
+    double M[3][3] = { {0.0080448181, -0.0000090143, 0.0000737971 },
+                       {-0.0000090143, 0.0080372948, -0.0000226798} ,
+                           {0.0000737971, -0.0000226798, 0.0080458715 } };
+
     double eVal[3];
     double eVec[3][3];
 
