@@ -31,6 +31,8 @@
 #include <stdio.h>
 #include "mil.h"
 
+#define N_CENTRAL_POINTS        10000
+
 ///
 /// Skeleton for MIL
 ///
@@ -38,7 +40,7 @@
 void randomly_generate_central_points(int *central_points, int n_central_point, int max_coordinate) {
 //    int **central_points = (int **) malloc(n_central_point * sizeof(int *));
 
-    for (int i = 0; i < n_central_point; i += 3) {
+    for (int i = 0; i < n_central_point*3; i += 3) {
 //        central_points[i] = (int *) malloc(3 * sizeof(int));
 
         int z = rand() % max_coordinate; //arc4random_uniform(max_coordinate);
@@ -58,20 +60,19 @@ int mil(int *hr_sphere_region, int n, double directions_vectors[][3], int n_vect
 //    validate_direction_vectors(directions_vectors, n_vectors, dimension);
 
     int flops_counter = 0;
+    static int central_points[N_CENTRAL_POINTS*3];
 
-    int n_central_point = 10000;
-    int central_points[n_central_point * 3];
-    randomly_generate_central_points(central_points, n_central_point, n);
+    randomly_generate_central_points(central_points, N_CENTRAL_POINTS, n);
 
     double directions_vectors_bone_length[n_vectors], directions_vectors_intercepts[n_vectors];
 
     for (int j = 0; j < n_vectors; ++j) {
         directions_vectors_bone_length[j] = 0.0;
-        directions_vectors_intercepts[j] = n_central_point;
+        directions_vectors_intercepts[j] = N_CENTRAL_POINTS;
     }
 
-    for (int k = 0; k < n_central_point; k += 3) {
-        int central_point[] = {central_points[k], central_points[k + 1], central_points[k + 2]};
+    for (int k = 0; k < N_CENTRAL_POINTS*3; k += 3) {
+        int central_point[3] = {central_points[k], central_points[k + 1], central_points[k + 2]};
 
         for (int i = 0; i < n_vectors; ++i) {
             double *direction_vector = directions_vectors[i];
