@@ -58,7 +58,12 @@ int normalize(double v[3]) {
 /// flop count (worst-case): 132 mults + 127 adds + 16 divs + 3 sqrts + 1*Cost_acos + 2*Cost_cos
 /// Implementation of cos in libm:
 /// https://sourceware.org/git/?p=glibc.git;a=blob;f=sysdeps/ieee754/dbl-64/s_sin.c;h=26799f1909b953cda9b0249cd61d15ccf42b51d4;hb=HEAD
-void eigen3(double M[3][3], double eVec[3][3], double eVal[3]) {
+void eigen3(double M[3][3], double *eVecPtr, double eVal[3]) {
+    //
+    // Cast eVecPtr to matrix
+    //
+    double (*eVec)[3] = (double (*)[3]) eVecPtr;
+
     //
     // Clean eVal and create 3x3 identity matrix
     //
@@ -155,6 +160,18 @@ void eigen3(double M[3][3], double eVec[3][3], double eVal[3]) {
         }
     }
 
+    //
+    // Normalize eigen-values using scalar vector alpha
+    // tr(M) = alpha * sum(  eVal[i] * || eVec[i] ||^2 ) = 3
+    //
+    double alpha;
+    double sumEigenVal = eVal[0] + eVal[1] + eVal[2];
+    alpha = 3 / sumEigenVal;
+    for (int i = 0; i < 3; ++i) {
+        eVal[i] /= alpha;
+    }
+
+
 }
 
 void eigen_test () {
@@ -164,7 +181,7 @@ void eigen_test () {
     double eVal[3];
     double eVec[3][3];
 
-    eigen3(M, eVec, eVal);
+    eigen3(M, (double*) eVec, eVal);
 
     print_vec(eVal, 3);
     print_matrix( eVec, 3, 3);

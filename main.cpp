@@ -48,17 +48,17 @@ typedef void(*comp_func)(int*, int*, int*, double*, double*, double *);
 //headers
 double get_perf_score(comp_func f);
 void register_functions();
-double perf_test(comp_func f, string desc, int flops);
+double perf_test(comp_func f, string desc, long flops);
 
 //You can delcare your functions here
 //void kernel_basic(int* sphere, double* ptrHighRes, double* ptrLowRes, double* rotation_matrix, double* ptrEvecOut);
 
-void add_function(comp_func f, string name, int flop);
+void add_function(comp_func f, string name, long flop);
 
 /* Global vars, used to keep track of student functions */
 vector<comp_func> userFuncs;
 vector<string> funcNames;
-vector<int> funcFlops;
+vector<long> funcFlops;
 int numFuncs = 0;
 
 void build(int** sphere, int** ptrHighRes, int** ptrLowRes, double** rotation_matrix, double** ptrEvecOut, double **ptrEvalsOut)
@@ -78,7 +78,7 @@ void destroy(int* sphere, int* ptrHighRes, int* ptrLowRes, double* rotation_matr
 void register_functions()
 {
     // TODO: Add correct number of flops
-    add_function(&kernel_basic, "Base kernel", 1572181);
+    add_function(&kernel_basic, "Base kernel", 1572181 + 126347988814);
     // Add your functions here. Don't modify the number of flops parameter.
 }
 
@@ -128,7 +128,7 @@ double checksum(double (*evals)[3], double (*evecs)[3][3], int n)
 * Registers a user function to be tested by the driver program. Registers a
 * string description of the function as well
 */
-void add_function(comp_func f, string name, int flops)
+void add_function(comp_func f, string name, long flops)
 {
     userFuncs.push_back(f);
     funcNames.emplace_back(name);
@@ -144,7 +144,7 @@ void add_function(comp_func f, string name, int flops)
 * Checks the given function for validity. If valid, then computes and
 * reports and returns the number of cycles required per iteration
 */
-double perf_test(comp_func f, string desc, int flops)
+double perf_test(comp_func f, string desc, long flops)
 {
     double cycles = 0.;
     long num_runs = 3;
