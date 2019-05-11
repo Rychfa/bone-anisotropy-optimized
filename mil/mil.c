@@ -30,7 +30,6 @@
 #include <assert.h>
 #include <stdio.h>
 #include "mil.h"
-#include "flops.h"
 
 ///
 /// Skeleton for MIL
@@ -68,7 +67,7 @@ int mil(int *hr_sphere_region, int n, double directions_vectors[][3], int n_vect
 
     // todo: for now, statically initialized, only one central Point.
     //  Will be replaced by: randomly_generate_central_points(,). Deallocate memory at the end !
-    int n_central_point = 100;
+    int n_central_point = 10000;
     int central_points[n_central_point * 3]; // = {{n / 2 - 1, n / 2 - 1, n / 2 - 1}};
 
     randomly_generate_central_points(central_points, n_central_point, n);
