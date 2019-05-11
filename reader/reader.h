@@ -27,21 +27,23 @@
 #ifndef BONEMAP_READER_H
 #define BONEMAP_READER_H
 
-#define LOW_RES_FILE "../images/LowRes_F16_R_stance_3p0_segmented/F16_R_stance_3p0_mask.raw"
-#define LOW_RES_D1 26
-#define LOW_RES_D2 16
-#define LOW_RES_D3 31
-#define LOW_RES_SIZE (LOW_RES_D1 * LOW_RES_D2 * LOW_RES_D3)
+#define NUMBER_OF_INPUTS 6
+#define LOW_RES_D1(index) (26 * scaleFactor[index])
+#define LOW_RES_D2(index) (16 * scaleFactor[index])
+#define LOW_RES_D3(index) (31 * scaleFactor[index])
+#define LOW_RES_SIZE(index) (LOW_RES_D1(index) * LOW_RES_D2(index) * LOW_RES_D3(index))
 #define HIGH_RES_FILE "../images/HighRes_F16_R_segmented/626_3776_F16_R_H_SEG_cov_crop_rotate.raw"
 #define HIGH_RES_D1 1079
 #define HIGH_RES_D2 809
 #define HIGH_RES_D3 1238
 #define HIGH_RES_SIZE (HIGH_RES_D1 * HIGH_RES_D2 * HIGH_RES_D3)
 
+extern int scaleFactor[];
+
 ///
 /// Function declarations
 ///
-int* readLowResImage ();
+int* readLowResImage (int);
 int* readHighResImage ();
 void destroyImageMatrices ();
 
