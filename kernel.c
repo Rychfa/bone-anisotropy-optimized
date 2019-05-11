@@ -244,7 +244,7 @@ void kernel_basic (int* sphere, int* ptrHighRes, int* ptrLowRes, double* rotatio
                     double Q[3][3];
                     fit_ellipsoid_mils(mils, Q);
 
-                    eigen3(Q, &ptrEvecOut[ii_lr*9], &ptrEvalsOut[ii_lr*3]); // TODO how to fix warning? 
+                    eigen3(Q, &ptrEvecOut[ii_lr*9], &ptrEvalsOut[ii_lr*3]);
                 }
             }
         }
