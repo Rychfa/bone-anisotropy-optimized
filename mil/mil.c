@@ -34,59 +34,30 @@
 ///
 /// Skeleton for MIL
 ///
-int find_maximum_absolute_value(int *array, int length) {
-    int max = -1;
-    for (int i = 0; i < length; ++i) {
-        if (max < abs(array[i])) {
-            max = abs(array[i]);
-        }
-    }
-    return max;
-}
 
-double *init_mil_vector(int n_vectors) {
-    double *directions_vectors_mil = (double *) malloc(n_vectors * sizeof(double));
-    for (int j = 0; j < n_vectors; ++j) {
-        directions_vectors_mil[j] = 0.0;
-    }
-    return directions_vectors_mil;
-}
+void randomly_generate_central_points(int *central_points, int n_central_point, int max_coordinate) {
+//    int **central_points = (int **) malloc(n_central_point * sizeof(int *));
 
-int **randomly_generate_central_points(int n_central_point, int max_coordinate) {
-    int **central_points = (int**)malloc(n_central_point * sizeof(int*));
-
-    for (int i = 0; i < n_central_point; ++i) {
-        central_points[i] = (int*)malloc(3 * sizeof(int));
-
+    for (int i = 0; i < n_central_point; i += 3) {
+//        central_points[i] = (int *) malloc(3 * sizeof(int));
 
         int z = rand() % max_coordinate; //arc4random_uniform(max_coordinate);
         int y = rand() % max_coordinate; //arc4random_uniform(max_coordinate);
         int x = rand() % max_coordinate; //arc4random_uniform(max_coordinate);
 
-        central_points[i] = (int[3]){z, y, x};
+        central_points[i] = z;
+        central_points[i + 1] = y;
+        central_points[i + 2] = x;
     }
 
-    return central_points;
+//    return central_points;
 }
 
-//double l1_norm(double *vector, int size) {
-//    double l1_norm = 0;
-//    for (int i = 0; i < size; ++i) {
-//        l1_norm += fabs(vector[i]);
-//    }
-//    return l1_norm;
-//}
-//
-//void validate_direction_vectors(double** direction_vectors, int n, int d) {
-//    for (int i = 0; i < n; ++i) {
-//        double direction_vector_l1_norm = l1_norm(direction_vectors[i], d);
-//        assert(direction_vector_l1_norm == 1.0);
-//    }
-//}
-
-void mil(int *hr_sphere_region, int n, double directions_vectors[][3], int n_vectors, 
-    double *directions_vectors_mil) {
+int mil(int *hr_sphere_region, int n, double directions_vectors[][3], int n_vectors,
+         double *directions_vectors_mil) {
 //    validate_direction_vectors(directions_vectors, n_vectors, dimension);
+
+    int flops_counter = 0;
 
     double directions_vectors_bone_length[n_vectors], directions_vectors_intercepts[n_vectors];
     for (int j = 0; j < n_vectors; ++j) {
@@ -96,33 +67,44 @@ void mil(int *hr_sphere_region, int n, double directions_vectors[][3], int n_vec
 
     // todo: for now, statically initialized, only one central Point.
     //  Will be replaced by: randomly_generate_central_points(,). Deallocate memory at the end !
-    int n_central_point = 1;
-    int central_points[1][3] = {{n / 2 - 1, n / 2 - 1, n / 2 - 1}};
+    int n_central_point = 10000;
+    int central_points[n_central_point * 3]; // = {{n / 2 - 1, n / 2 - 1, n / 2 - 1}};
 
-    for (int k = 0; k < n_central_point; ++k) {
-        int *central_point = central_points[k];
+    randomly_generate_central_points(central_points, n_central_point, n);
+
+
+    for (int k = 0; k < n_central_point; k += 3) {
+        int central_point[] = {central_points[k], central_points[k + 1], central_points[k + 2]};
 
         for (int i = 0; i < n_vectors; ++i) {
             double *direction_vector = directions_vectors[i];
 
             double z = central_point[0], y = central_point[1], x = central_point[2];
             int z_int = (int) z, y_int = (int) y, x_int = (int) x;
-            int vector_state = hr_sphere_region[z_int*n*n + y_int*n + x_int];
+            int vector_state = hr_sphere_region[z_int * n * n + y_int * n + x_int];
 
             while ((z < n && z >= 0) && (y < n && y >= 0) && (x < n && x >= 0)) {
                 z_int = (int) z, y_int = (int) y, x_int = (int) x;
 
-                int current_state = hr_sphere_region[z_int*n*n + y_int*n + x_int];
+                int current_state = hr_sphere_region[z_int * n * n + y_int * n + x_int];
 
                 if (current_state == 1) {
+#if MIL_FLOPS_COUNT > 0
+                    ++flops_counter;
+#endif
                     ++directions_vectors_bone_length[i];
                 }
 
                 if (current_state != vector_state) {
+#if MIL_FLOPS_COUNT > 0
+                    ++flops_counter;
+#endif
                     ++directions_vectors_intercepts[i];
                     vector_state = current_state;
                 }
-
+#if MIL_FLOPS_COUNT > 0
+                flops_counter += 3;
+#endif
                 z += direction_vector[0];
                 y += direction_vector[1];
                 x += direction_vector[2];
@@ -131,11 +113,18 @@ void mil(int *hr_sphere_region, int n, double directions_vectors[][3], int n_vec
     }
 
     for (int i = 0; i < n_vectors; ++i) {
+#if MIL_FLOPS_COUNT > 0
+        if (directions_vectors_intercepts[i] > 0.0) {
+            ++flops_counter;
+        }
+#endif
         directions_vectors_mil[i] =
                 directions_vectors_intercepts[i] > 0.0 ? (double) directions_vectors_bone_length[i] /
                                                          directions_vectors_intercepts[i]
                                                        : directions_vectors_bone_length[i];
     }
+//    printf("MIL TOTAL FLOPS COUNT: %d\n", flops_counter);
+    return flops_counter;
 }
 
 
@@ -199,3 +188,36 @@ void mil(int *hr_sphere_region, int n, double directions_vectors[][3], int n_vec
 
 //     return directions_vectors_mil;
 // }
+
+//int find_maximum_absolute_value(int *array, int length) {
+//    int max = -1;
+//    for (int i = 0; i < length; ++i) {
+//        if (max < abs(array[i])) {
+//            max = abs(array[i]);
+//        }
+//    }
+//    return max;
+//}
+//
+//double *init_mil_vector(int n_vectors) {
+//    double *directions_vectors_mil = (double *) malloc(n_vectors * sizeof(double));
+//    for (int j = 0; j < n_vectors; ++j) {
+//        directions_vectors_mil[j] = 0.0;
+//    }
+//    return directions_vectors_mil;
+//}
+
+//double l1_norm(double *vector, int size) {
+//    double l1_norm = 0;
+//    for (int i = 0; i < size; ++i) {
+//        l1_norm += fabs(vector[i]);
+//    }
+//    return l1_norm;
+//}
+//
+//void validate_direction_vectors(double** direction_vectors, int n, int d) {
+//    for (int i = 0; i < n; ++i) {
+//        double direction_vector_l1_norm = l1_norm(direction_vectors[i], d);
+//        assert(direction_vector_l1_norm == 1.0);
+//    }
+//}
