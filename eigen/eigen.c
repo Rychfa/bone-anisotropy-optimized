@@ -77,7 +77,7 @@ void eigen3(double M[3][3], double *eVecPtr, double eVal[3]) {
     }
 
     double p1 = M[0][1]*M[0][1] + M[0][2]*M[0][2] + M[1][2]*M[1][2];
-    if (p1 == 0) {
+    if (p1 < TOLERANCE && p1 > -TOLERANCE) {
         //
         // M is a diagonal matrix
         //
@@ -164,12 +164,12 @@ void eigen3(double M[3][3], double *eVecPtr, double eVal[3]) {
     // Normalize eigen-values using scalar vector alpha
     // tr(M) = alpha * sum(  eVal[i] * || eVec[i] ||^2 ) = 3
     //
-    double alpha;
-    double sumEigenVal = eVal[0] + eVal[1] + eVal[2];
-    alpha = 3 / sumEigenVal;
-    for (int i = 0; i < 3; ++i) {
-        eVal[i] /= alpha;
-    }
+//    double alpha;
+//    double sumEigenVal = eVal[0] + eVal[1] + eVal[2];
+//    alpha = 3 / sumEigenVal;
+//    for (int i = 0; i < 3; ++i) {
+//        eVal[i] /= alpha;
+//    }
 }
 
 void eigen_test () {
@@ -177,9 +177,9 @@ void eigen_test () {
 //                       {3,-5,-6} ,
 //                       {6, -6, 4} };
 
-    double M[3][3] = { {0.0080448181, -0.0000090143, 0.0000737971 },
-                       {-0.0000090143, 0.0080372948, -0.0000226798} ,
-                           {0.0000737971, -0.0000226798, 0.0080458715 } };
+    double M[3][3] = { {0.0008909377, -0.0000003687, 0.0000078405},
+                       {-0.0000003687, 0.0009016659, -0.0000145292 } ,
+                       {0.0000078405, -0.0000145292, 0.0008885839} };
 
     double eVal[3];
     double eVec[3][3];
