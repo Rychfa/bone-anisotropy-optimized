@@ -131,8 +131,8 @@ void fit_ellipsoid(const double (*p)[3], int n, double Q[3][3])
 
 
 #ifdef DEBUG
-		// ellipsoid_flop_count += n*(24+1+9+9*(2+1)); //TODO cleanup flop counts
-		ellipsoid_flop_count++;
+		ellipsoid_flop_count += n*(24+1+9+9*(2+1)); 
+		// ellipsoid_flop_count++;
 #endif
 
 		/* take step direction to be negative gradient */
@@ -144,7 +144,7 @@ void fit_ellipsoid(const double (*p)[3], int n, double Q[3][3])
 			}
 		}
 #ifdef DEBUG
-		// ellipsoid_flop_count += 9;
+		ellipsoid_flop_count += 9;
 #endif
 
 
@@ -165,8 +165,7 @@ void fit_ellipsoid(const double (*p)[3], int n, double Q[3][3])
 			}
 		}
 #ifdef DEBUG
-		// ellipsoid_flop_count += 9*(1+1) + 9*(1+1);
-		// long inner_iters = 0;
+		ellipsoid_flop_count += 9*(1+1) + 9*(1+1);
 #endif
 		while (_cost(p, n, Qk_plus_tstep) > _cost(p, n, Qk) + ALPHA*t*trace_gradstep) {
 			t = t*BETA;
@@ -177,13 +176,9 @@ void fit_ellipsoid(const double (*p)[3], int n, double Q[3][3])
 				}
 			}
 #ifdef DEBUG
-		// ellipsoid_flop_count += n*(3+1+2*24)*2 + 1+2 + 1 + 9*(1+1);
-			// inner_iters++;
+		ellipsoid_flop_count += n*(3+1+2*24)*2 + 1+2 + 1 + 9*(1+1);
 #endif
 		}
-#ifdef DEBUG
-		// printf("[ellipsoid] back tracing iters = %ld\n", inner_iters);
-#endif
 
 #else
 		/* exact line search */
@@ -224,7 +219,7 @@ void fit_ellipsoid_mils(const double *mils, double Q[3][3])
 		}
 	}
 #ifdef DEBUG
-		// ellipsoid_flop_count += NUM_DIRECTIONS*3;
+		ellipsoid_flop_count += NUM_DIRECTIONS*3;
 #endif
 
 	/* call the main routine */
