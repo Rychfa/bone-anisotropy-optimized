@@ -147,9 +147,11 @@ void fit_ellipsoid(const double (*p)[3], int n, double Q[3][3])
 		// ellipsoid_flop_count += 9;
 #endif
 
+
+#if 1
 		/* backtracking line search */
 		
-		double t = 1;
+		double t = 100;
 		double Qk_plus_tstep[3][3] = {{0}};
 		for (int i=0; i<3; i++) {
 			for (int j=0; j<3; j++) {
@@ -182,6 +184,25 @@ void fit_ellipsoid(const double (*p)[3], int n, double Q[3][3])
 #ifdef DEBUG
 		// printf("[ellipsoid] back tracing iters = %ld\n", inner_iters);
 #endif
+
+#else
+		/* exact line search */
+
+		double Qk_plus_tstep[3][3] = {{0}};
+		double trace_gradstep = 0;
+		for (int i=0; i<3; i++) {
+			for (int j=0; j<3; j++) {
+				trace_gradstep += grad[i][j]*step[j][i];
+			}
+		}
+		double t = -_cost(p, n, Qk)/trace_gradstep;
+		for (int i=0; i<3; i++) {
+			for (int j=0; j<3; j++) {
+				Qk_plus_tstep[i][j] = Qk[i][j] + t*step[i][j];
+			}
+		}
+#endif
+
 		memcpy(Qk, Qk_plus_tstep, sizeof(Qk));
 	} /* main while loop */
 
