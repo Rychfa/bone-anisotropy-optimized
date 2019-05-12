@@ -31,7 +31,7 @@
 #include <stdio.h>
 #include "mil.h"
 
-#define N_CENTRAL_POINTS        10000
+#define N_CENTRAL_POINTS        1000000
 
 ///
 /// Skeleton for MIL
@@ -77,6 +77,8 @@ int mil(int *hr_sphere_region, int n, double directions_vectors[][3], int n_vect
         for (int i = 0; i < n_vectors; ++i) {
             double *direction_vector = directions_vectors[i];
 
+            // printf("%f %f %f\n", direction_vector[0], direction_vector[1], direction_vector[2]);
+
             double z = central_point[0], y = central_point[1], x = central_point[2];
             int z_int = (int) z, y_int = (int) y, x_int = (int) x;
             int vector_state = hr_sphere_region[z_int * n * n + y_int * n + x_int];
@@ -103,9 +105,9 @@ int mil(int *hr_sphere_region, int n, double directions_vectors[][3], int n_vect
 #if MIL_FLOPS_COUNT > 0
                 flops_counter += 3;
 #endif
-                z += direction_vector[0];
+                z += direction_vector[2];
                 y += direction_vector[1];
-                x += direction_vector[2];
+                x += direction_vector[0];
             }
         }
     }
