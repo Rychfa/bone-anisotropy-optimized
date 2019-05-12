@@ -5,7 +5,7 @@
 #endif
 
 /* some parameters */
-static const double EPSILON = 1e-9;
+static const double EPSILON = 1e-3;
 static const double ALPHA   = 0.25;
 static const double BETA    = 0.5;
 
@@ -72,6 +72,20 @@ static double _cost(const double (*p)[3], int n, const double Q[3][3])
 	return ret;
 }
 
+/*
+ * ||A||_F
+ */
+static double _normFro(const double A[3][3])
+{
+	double ret = 0;
+	for (int i=0; i<3; i++) {
+		for (int j=0; j<3; j++) {
+			ret += (A[i][j])*(A[i][j]);
+		}
+	}
+	return sqrt(ret);
+}
+
 /**
  * Gradient descent with backtracking line search [Boyd Chapter 9] 
  * applied to the ellisoid fitting problem:
@@ -112,8 +126,13 @@ void fit_ellipsoid(const double (*p)[3], int n, double Q[3][3])
 				}
 			}
 		}
+
+		if (_normFro(grad) < EPSILON) break;
+
+
 #ifdef DEBUG
-		ellipsoid_flop_count += n*(24+1+9+9*(2+1));
+		// ellipsoid_flop_count += n*(24+1+9+9*(2+1)); //TODO cleanup flop counts
+		ellipsoid_flop_count++;
 #endif
 
 		/* take step direction to be negative gradient */
@@ -125,7 +144,7 @@ void fit_ellipsoid(const double (*p)[3], int n, double Q[3][3])
 			}
 		}
 #ifdef DEBUG
-		ellipsoid_flop_count += 9;
+		// ellipsoid_flop_count += 9;
 #endif
 
 		/* backtracking line search */
@@ -138,13 +157,14 @@ void fit_ellipsoid(const double (*p)[3], int n, double Q[3][3])
 			}
 		}
 		double trace_gradstep = 0;
-		for (int i=0; i<3; i++){
+		for (int i=0; i<3; i++) {
 			for (int j=0; j<3; j++) {
 				trace_gradstep += grad[i][j]*step[j][i];
 			}
 		}
 #ifdef DEBUG
-		ellipsoid_flop_count += 9*(1+1) + 9*(1+1);
+		// ellipsoid_flop_count += 9*(1+1) + 9*(1+1);
+		// long inner_iters = 0;
 #endif
 		while (_cost(p, n, Qk_plus_tstep) > _cost(p, n, Qk) + ALPHA*t*trace_gradstep) {
 			t = t*BETA;
@@ -155,25 +175,13 @@ void fit_ellipsoid(const double (*p)[3], int n, double Q[3][3])
 				}
 			}
 #ifdef DEBUG
-		ellipsoid_flop_count += n*(3+1+2*24)*2 + 1+2 + 1 + 9*(1+1);
+		// ellipsoid_flop_count += n*(3+1+2*24)*2 + 1+2 + 1 + 9*(1+1);
+			// inner_iters++;
 #endif
-		}
-
-
-		/* stopping critera check */
-
-		double normFro_tstep = 0;
-		for (int i=0; i<3; i++) {
-			for (int j=0; j<3; j++) {
-				normFro_tstep += (t*step[i][j])*(t*step[i][j]);
-			}
 		}
 #ifdef DEBUG
-		ellipsoid_flop_count += 9*(1+3);
+		// printf("[ellipsoid] back tracing iters = %ld\n", inner_iters);
 #endif
-
-		if (normFro_tstep < EPSILON) break;
-
 		memcpy(Qk, Qk_plus_tstep, sizeof(Qk));
 	} /* main while loop */
 
@@ -195,7 +203,7 @@ void fit_ellipsoid_mils(const double *mils, double Q[3][3])
 		}
 	}
 #ifdef DEBUG
-		ellipsoid_flop_count += NUM_DIRECTIONS*3;
+		// ellipsoid_flop_count += NUM_DIRECTIONS*3;
 #endif
 
 	/* call the main routine */
