@@ -4,7 +4,6 @@ project(bonemap)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_COMPILER "gcc")
 set(CMAKE_CXX_COMPILER "g++")
-#set(CMAKE_VERBOSE_MAKEFILE "ON")
 
 # ================================================================================
 # Reset the C/C++ flags, and take full control
@@ -51,7 +50,7 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 
     # GNU GCC - C++ flags
-    set(CMAKE_CXX_FLAGS "-O3 -std=c++11 -fno-tree-vectorize")
+    set(CMAKE_CXX_FLAGS "-O3 -std=c++11")
 
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
 
@@ -76,7 +75,7 @@ if (CMAKE_C_COMPILER_ID MATCHES "Clang")
 
 elseif ("${CMAKE_C_COMPILER_ID}" STREQUAL "GNU")
 
-    set(CMAKE_C_FLAGS "-O3 -fno-tree-vectorize")
+    set(CMAKE_C_FLAGS "-O3")
 
 elseif ("${CMAKE_C_COMPILER_ID}" STREQUAL "Intel")
 
@@ -97,35 +96,3 @@ add_executable(bonemap ${SOURCE_FILES})
 
 # Add math library for floating point environment
 target_link_libraries(bonemap m)
-
-#cmake_minimum_required(VERSION 3.13)
-#project(bonemap)
-#set(CMAKE_C_STANDARD 11)
-#set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
-#set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS}")
-##set(CMAKE_VERBOSE_MAKEFILE "ON")
-#
-#include_directories(
-#        reader
-#        mil
-#        regions
-#        ellipsoid
-#        utils
-#        eigen
-#)
-#
-#set(SOURCE_FILES
-#        main.cpp
-#        mil/mil.c
-#        mil/test_mil.c
-#        ellipsoid/ellipsoid.c
-#        reader/reader.c
-#        regions/region_extraction.c
-#        eigen/eigen.c
-#        utils/utils.c
-#        kernel.c)
-#
-#add_executable(bonemap ${SOURCE_FILES})
-#
-## Add math library for floating point environment
-#target_link_libraries(bonemap m)

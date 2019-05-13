@@ -3,7 +3,7 @@ import numpy as np
 # Get voxel size
 ldim = 3
 # Output voxelmodel in VTK format for paraview
-with open("/home/joao/Documents/courses/Student/FastCode/Project/bonemap/build-release/ground_truth.txt", "r") as g :
+with open("/home/jarunanp/Documents/myCourses/19_FS_How_to_Write_Fast_Numerical_Code/projects/bonemap/ground_truth.txt", "r") as g :
     data = g.readlines()
 
 # Open file to output
