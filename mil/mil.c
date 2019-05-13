@@ -31,7 +31,7 @@
 #include <stdio.h>
 #include "mil.h"
 
-#define N_CENTRAL_POINTS        1000000
+#define N_CENTRAL_POINTS        1000
 
 ///
 /// Skeleton for MIL

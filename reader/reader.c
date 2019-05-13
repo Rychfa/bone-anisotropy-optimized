@@ -28,7 +28,8 @@
 #include <stdlib.h>
 #include "reader.h"
 
-static char* inputFiles[NUMBER_OF_INPUTS] = {
+static char* inputFiles[] = {
+//        "../images/LowRes_F16_R_stance_3p0_segmented/only_center.raw",
         "../images/LowRes_F16_R_stance_3p0_segmented/F16_R_stance_3p0_mask.raw",
         "../images/LowRes_F16_R_stance_3p0_segmented/scaled2.raw",
         "../images/LowRes_F16_R_stance_3p0_segmented/scaled4.raw",
@@ -37,7 +38,7 @@ static char* inputFiles[NUMBER_OF_INPUTS] = {
         "../images/LowRes_F16_R_stance_3p0_segmented/scaled10.raw"
 };
 
-int scaleFactor[NUMBER_OF_INPUTS] = {
+int scaleFactor[] = {
         1, //"../images/LowRes_F16_R_stance_3p0_segmented/F16_R_stance_3p0_mask.raw",
         2, //"../images/LowRes_F16_R_stance_3p0_segmented/scaled2.raw",
         4, //"../images/LowRes_F16_R_stance_3p0_segmented/scaled4.raw",
@@ -114,7 +115,7 @@ int* readLowResImage (const int index) {
     //
     // Allocate memory for low res image
     //
-    ptrLowRes = malloc (sizeof(int) * LOW_RES_SIZE(index));
+    ptrLowRes = calloc (LOW_RES_SIZE(index), sizeof(int));
 
     for (int i = 0; i < LOW_RES_SIZE(index); ++i) {
                 //
@@ -134,7 +135,7 @@ int* readLowResImage (const int index) {
     }
 
     if (fgetc((FILE*)fp) == EOF) {
-        printf("Low res file read correctly!\n");
+//        printf("Low res file read correctly!\n");
     }
 
     return ptrLowRes;
