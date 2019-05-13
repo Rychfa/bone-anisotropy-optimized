@@ -1,9 +1,13 @@
+import os
 import numpy as np
 
+# python write_fabForVTK.py 
+filename_in = '/home/jarunanp/Documents/myCourses/19_FS_How_to_Write_Fast_Numerical_Code/projects/bonemap/ground_truth.txt'
+filename_out = 'ground_truth_fab.vtk'
 # Get voxel size
 ldim = 3
 # Output voxelmodel in VTK format for paraview
-with open("/home/jarunanp/Documents/myCourses/19_FS_How_to_Write_Fast_Numerical_Code/projects/bonemap/ground_truth.txt", "r") as g :
+with open(filename_in, "r") as g :
     data = g.readlines()
 
 # Open file to output
@@ -40,8 +44,6 @@ with open('fabForVTK.dat','w') as f:
             y = j * ldim
             z = k * ldim
 
-            count += 1
-            #scale_factor = 3.0/trace
             eval0 = eval0
             eval1 = eval1
             eval2 = eval2
@@ -61,7 +63,11 @@ with open('fabForVTK.dat','w') as f:
                 m2 = evec21
                 m3 = evec22
 
-            if (m1+m2+m3 > 0.0):
-               f.write('{:d} {:d} {:d} '.format(x, y, z))
-               f.write('{:f} {:f} {:f}\n'.format(m1, m2, m3))
-        
+            f.write('{:d} {:d} {:d} '.format(x, y, z))
+            f.write('{:f} {:f} {:f}\n'.format(m1, m2, m3))
+
+# Convert VTK file
+tensorimageview = '/home/jarunanp/Documents/myCourses/19_FS_How_to_Write_Fast_Numerical_Code/projects/bonemap/visual/TensorImageView/build/TensorImageView'
+lowres_mask_image = ' /home/jarunanp/Documents/myCourses/19_FS_How_to_Write_Fast_Numerical_Code/projects/images/LowRes_F16_R_stance_3p0_segmented/F16_R_stance_3p0_mask.mhd'
+command = "{} {} fabForVTK.dat {}".format(tensorimageview, lowres_mask_image, filename_out)
+os.system(command)
