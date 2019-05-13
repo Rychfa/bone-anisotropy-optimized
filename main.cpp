@@ -41,6 +41,7 @@ using namespace std;
 #define CYCLES_REQUIRED 1e7
 #define REP 3
 #define EPS (1e-3)
+#define CLOCK_FREQ 2.7
 
 /* prototype of the function you need to optimize */
 typedef void(*comp_func)(int*, int*, int*, double*, double*, double *, int);
@@ -147,7 +148,7 @@ void add_function(comp_func f, string name, long flops)
 double perf_test(comp_func f, string desc, long flops, int input)
 {
     double cycles = 0.;
-    long num_runs = 3;
+    long num_runs = 1;
     double multiplier = 1;
     myInt64 start, end;
 
@@ -196,7 +197,7 @@ double perf_test(comp_func f, string desc, long flops, int input)
     destroy(sphere, ptrHighRes, ptrLowRes, rotation_matrix, ptrEvecOut, ptrEvalsOut, false);
     cyclesList.sort();
     cycles = cyclesList.front();
-    return  (1.0 * flops) / cycles;
+    return cycles;
 }
 
 /*
@@ -206,7 +207,7 @@ double perf_test(comp_func f, string desc, long flops, int input)
 int main(int argc, char **argv)
 {
     cout << "Starting program. ";
-    double perf;
+    double cycles;
     int i;
 
     register_functions();
@@ -256,10 +257,11 @@ int main(int argc, char **argv)
     {
         /* Iterate through all inputs */
         for (int j = 0; j < NUMBER_OF_INPUTS; ++j) {
-            cout << "Running: " << funcNames[i] << " with input " << j << endl;
-            perf = perf_test(userFuncs[i], funcNames[i], funcFlops[i], j);
-            cout << perf << " floats/cycle" << endl;
-
+            cout << endl << "*** Running " << funcNames[i] << " with input " << j << " ***" << endl;
+            cycles = perf_test(userFuncs[i], funcNames[i], funcFlops[i], j);
+            cout << "Runtime:     " << cycles << " cycles" << endl;
+            cout << "Runtime:     " << cycles / CLOCK_FREQ / 1e6 << " msec" << endl;
+            cout << "Performance: " << funcFlops[i] / cycles << " flops/cycle" << endl;
         }
     }
     cout << endl;
