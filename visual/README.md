@@ -1,11 +1,4 @@
-### Create a file with coordinates and main eigen vectors ###
-* Open write_fabForVTK.py
-* Adapt the path to ground_truth.txt
-* Run `$ python write_fabForVTK.py`
-* A file "fabForVTK.dat" is created.
-
-### Convert fabForVTK.dat to a VTK file ###
-* Compile TensorImageView
+### Compile TensorImageView ###
 ```
 $ cd TensorImageView
 $ mkdir build
@@ -13,7 +6,14 @@ $ cd build
 $ cmake ..
 $ make
 ```
-* Convert fabForVTK.dat to a VTK file
+
+### Convert ground_truth.txt to a VTK file ###
+* Open *write_fabForVTK.py* with a text editor
+* Modify the path to *ground_truth.txt* in the variable `filename_in`
+* `filename_out` is given as *ground_truth.txt*. Rename it as you wish
+* Run `$ python write_fabForVTK.py`. This will create *fabForVTK.dat* and call `TensorImageView`
+* A file `filename_out` is created.
+* *fabForVTK.dat* can be converted separately to a VTK file
 ```
 $ \path\to\TensorImageView \path\to\F16_R_stance_3p0_mask.mhd fabForVTK.dat ground_truth_fab.vtk
 ```
