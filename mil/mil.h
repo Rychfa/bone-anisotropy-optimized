@@ -28,6 +28,8 @@
 #define BONEMAP_MIL_H
 
 #define MIL_FLOPS_COUNT 0
+#define N_CENTRAL_POINTS 1000000
+
 
 ///
 /// Function declarations 
