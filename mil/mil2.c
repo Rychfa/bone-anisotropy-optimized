@@ -52,7 +52,7 @@ int get_iterator_vectors (int directionVector[3], int iteratorVectors[][3]) {
     return n;
 }
 
-void mil2(int *hr_sphere_region, int n, double *directions_vectors_mil) {
+void mil2(const int *hr_sphere_region, int n, double *directions_vectors_mil) {
 
     const int n_vectors = NUM_DIRECTIONS;
 
