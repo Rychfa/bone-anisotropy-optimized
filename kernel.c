@@ -30,6 +30,7 @@
 #include "reader.h"
 #include "region_extraction.h"
 #include "mil.h"
+#include "mil2.h"
 #include "test_mil.h"
 #include "ellipsoid.h"
 #include "utils.h"
@@ -243,7 +244,7 @@ void kernel_basic (int* sphere, int* ptrHighRes, int* ptrLowRes, double* rotatio
 
                     // compute fabric
                     double mils[NUM_DIRECTIONS];
-                    mil( extracted_region, SPHERE_NDIM, DIRECTIONS, NUM_DIRECTIONS, mils);
+                    mil2(extracted_region, SPHERE_NDIM, mils);
                     //print_vector(mils, NUM_DIRECTIONS);
 
                     double Q[3][3];

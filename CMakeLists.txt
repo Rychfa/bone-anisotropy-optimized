@@ -29,8 +29,8 @@ include_directories(
 
 set(SOURCE_FILES
         main.cpp
-        mil/mil.c
-        mil/test_mil.c
+        mil/mil2.c
+#        mil/test_mil.c
         ellipsoid/ellipsoid.c
         reader/reader.c
         regions/region_extraction.c
