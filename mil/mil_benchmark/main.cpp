@@ -51,7 +51,7 @@ using namespace std;
 #define MAX_SIZE  300
 
 /* prototype of the function you need to optimize */
-typedef void(*comp_func)( const int*, int, double* );
+typedef void(*comp_func)( const double*, int, double* );
 
 //headers
 double get_perf_score(comp_func f);
@@ -59,12 +59,14 @@ void register_functions();
 double perf_test(comp_func f, int n);
 
 //You can delcare your functions here
-extern "C" void mil2(const int *hr_sphere_region, int n, double *directions_vectors_mil);
-//void complex_conversion_unrolled(const double *complex_a, double *complex_b, int n);
-//void complex_conversion_o1(const double *complex_a, double *complex_b, int n);
-//void complex_conversion_o2(const double *complex_a, double *complex_b, int n);
+extern "C" void mil2_baseline(const double *hr_sphere_region, int n, double *directions_vectors_mil);
+extern "C" void mil2_o1(const double *hr_sphere_region, int n, double *directions_vectors_mil);
+//extern "C" void mil2_o2(const int *hr_sphere_region, int n, double *directions_vectors_mil);
+extern "C" void dummy1(const double *hr_sphere_region, int n, double *directions_vectors_mil);
+//extern "C" void dummy2(const int *hr_sphere_region, int n, double *directions_vectors_mil);
+//extern "C" void dummy3(const int *hr_sphere_region, int n, double *directions_vectors_mil);
 
-void add_function(comp_func f, string name, double flop);
+void add_function(comp_func f, const string& name, double flop);
 
 /* Global vars, used to keep track of student functions */
 vector<comp_func> userFuncs;
@@ -72,8 +74,8 @@ vector<string> funcNames;
 vector<double> funcFlops;
 int numFuncs = 0;
 
-
-void rands(int * m, size_t n)
+template <typename T>
+void rands(T * m, size_t n)
 {
     std::random_device rd;
     std::mt19937 gen{rd()};
@@ -91,6 +93,7 @@ void build(int **a, int n)
 void build(double **a, int n)
 {
     *a = static_cast<double *>(aligned_alloc(32, n * sizeof(double)));
+    rands(*a, n);
 }
 
 void destroy(void * m)
@@ -104,8 +107,12 @@ void destroy(void * m)
 */
 void register_functions()
 {
-    add_function(&mil2, "Base line", 6.5);
-//    add_function(&mil2, "Base line 2", 6.5);
+    add_function(&mil2_baseline, "Base line", 3.25);
+    add_function(&mil2_o1, "Base opt1", 3.25);
+//    add_function(&mil2_o2, "Base opt2", 6.5);
+//    add_function(&dummy1, "Dummy 1", 3.25);
+//    add_function(&dummy2,   "Dummy 2", 3.25);
+//    add_function(&dummy3,   "Dummy 3", 3.25);
 }
 
 bool checksum(const double* a, const double* b, int n) {
@@ -144,7 +151,7 @@ int main(int argc, char **argv)
 
     //Check validity of functions. 
 //    int n = 30;
-    int *region;
+    double *region;
     double* output;
     double* outputBaseline;
 
@@ -193,7 +200,7 @@ int main(int argc, char **argv)
 * Registers a user function to be tested by the driver program. Registers a
 * string description of the function as well
 */
-void add_function(comp_func f, string name, double flops)
+void add_function(comp_func f, const string& name, double flops)
 {
     userFuncs.push_back(f);
     funcNames.emplace_back(name);
@@ -208,12 +215,12 @@ void add_function(comp_func f, string name, double flops)
 */
 double perf_test(comp_func f, int n)
 {
-    double cycles = 0.0;
+    double cycles;
     long num_runs = 10;
     double multiplier = 1;
     myInt64 start, end;
 
-    int *region;
+    double *region;
     double* output;
     build(&region, n*n*n);
     build(&output, 13);

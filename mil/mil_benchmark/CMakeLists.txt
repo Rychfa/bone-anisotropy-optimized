@@ -27,6 +27,7 @@ project(mil_benchmark)
 set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_COMPILER "gcc")
 set(CMAKE_CXX_COMPILER "g++")
+#set(CMAKE_VERBOSE_MAKEFILE "ON")
 
 # ================================================================================
 # Reset the C/C++ flags, and take full control
@@ -57,12 +58,12 @@ set(SOURCE_FILES
 if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 
     # clang - C++ flags
-    set(CMAKE_CXX_FLAGS "-O3 -std=c++11 -fno-tree-vectorize")
+    set(CMAKE_CXX_FLAGS "-O3 -std=c++11")
 
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 
     # GNU GCC - C++ flags
-    set(CMAKE_CXX_FLAGS "-O3 -std=c++11")
+    set(CMAKE_CXX_FLAGS "-O3 -std=c++11 -fno-tree-vectorize -mavx2")
 
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
 
@@ -87,7 +88,7 @@ if (CMAKE_C_COMPILER_ID MATCHES "Clang")
 
 elseif ("${CMAKE_C_COMPILER_ID}" STREQUAL "GNU")
 
-    set(CMAKE_C_FLAGS "-O3 -fno-tree-vectorize")
+    set(CMAKE_C_FLAGS "-O3 -fno-tree-vectorize -mavx2")
 
 elseif ("${CMAKE_C_COMPILER_ID}" STREQUAL "Intel")
 
