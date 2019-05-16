@@ -137,7 +137,7 @@ static const double DIRECTIONS_NORMALIZED[][3] =
 
 
 
-static const int NUM_DIRECTIONS = sizeof(DIRECTIONS)/sizeof(double)/3;
+static const int NUM_DIRECTIONS = sizeof(DIRECTIONS)/sizeof(int)/3;
 
 ///
 /// Function declarations
