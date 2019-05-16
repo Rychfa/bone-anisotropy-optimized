@@ -116,13 +116,38 @@ void fit_ellipsoid(const double (*p)[3], int n, double Q[3][3])
 			for (int j=0; j<3; j++) {
 				for (int k=0; k<3; k++) {
 					jacobian_i[j][k] = p[i][j]*p[i][k];
+          // temporal and spatial locality
+          // scalr replacement
+          // p_i0 = p[i][0]
+          // p_i1 = p[i][1]
+          // p_i2 = p[i][2]
+          // jacobian_i00 = p_i0 * p_i0
+          // jacobian_i01 = p_i0 * p_i1
+          // jacobian_i02 = p_i0 * p_i2
+          // jacobian_i10 = p_i1 * p_i0
+          // jacobian_i11 = p_i1 * p_i1
+          // jacobian_i12 = p_i1 * p_i2
+          // jacobian_i20 = p_i2 * p_i0
+          // jacobian_i21 = p_i2 * p_i1
+          // jacobian_i22 = p_i2 * p_i2
+					// jacobian_i[0][0] = jacobian_i00
+					// jacobian_i[0][1] = jacobian_i01
+					// jacobian_i[0][2] = jacobian_i02
+					// jacobian_i[1][0] = jacobian_i10
+					// jacobian_i[1][1] = jacobian_i11
+					// jacobian_i[1][2] = jacobian_i12
+					// jacobian_i[2][0] = jacobian_i20
+					// jacobian_i[2][1] = jacobian_i21
+					// jacobian_i[2][2] = jacobian_i22
 				}
 			}
 
 			/* grad += 2*residual_i*jacobian_i */
+			// coeff = 2*residual_i
 			for (int j=0; j<3; j++) {
 				for (int k=0; k<3; k++) {
 					grad[j][k] += 2*residual_i*jacobian_i[j][k];
+					// grad[j][k] += coeff*jacobian_i[j][k];
 				}
 			}
 		}

@@ -39,9 +39,9 @@
 using namespace std;
 
 #define CYCLES_REQUIRED 1e7
-#define REP 3
+#define REP 1
 #define EPS (1e-3)
-#define CLOCK_FREQ 2.7
+#define CLOCK_FREQ 2.8
 
 /* prototype of the function you need to optimize */
 typedef void(*comp_func)(int*, int*, int*, double*, double*, double *, int);
