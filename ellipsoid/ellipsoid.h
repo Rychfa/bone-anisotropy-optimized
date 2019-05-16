@@ -33,6 +33,8 @@
 /// Pre-processor 
 ///
 
+// #define DEBUG  // TODO move somewhere more centralized?
+
 #ifdef linux
 #define M_SQRT3 1.7320508075688772935
 #endif
@@ -41,65 +43,99 @@
 /// Public data
 ///
 
-static double DIRECTIONS[][3] =
+static int DIRECTIONS[][3] =
 	{
-		{ 0,  0, -1},
-		{ 0,  0,  1},
-		{ 0, -1,  0},
-		{ 0, -1, -1},
-		{ 0, -1,  1},
-		{ 0,  1,  0},
-		{ 0,  1, -1},
-		{ 0,  1,  1},
-		{-1,  0,  0},
-		{-1,  0, -1},
-		{-1,  0,  1},
-		{-1, -1,  0},
-		{-1, -1, -1},
-		{-1, -1,  1},
-		{-1,  1,  0},
-		{-1,  1, -1},
-		{-1,  1,  1},
-		{ 1,  0,  0},
-		{ 1,  0, -1},
-		{ 1,  0,  1},
-		{ 1, -1,  0},
-		{ 1, -1, -1},
-		{ 1, -1,  1},
-		{ 1,  1,  0},
-		{ 1,  1, -1},
-		{ 1,  1,  1},
+//		{ 0,  0, -1},
+//		{ 0,  0,  1},
+//		{ 0, -1,  0},
+//		{ 0, -1, -1},
+//		{ 0, -1,  1},
+//		{ 0,  1,  0},
+//		{ 0,  1, -1},
+//		{ 0,  1,  1},
+//		{-1,  0,  0},
+//		{-1,  0, -1},
+//		{-1,  0,  1},
+//		{-1, -1,  0},
+//		{-1, -1, -1},
+//		{-1, -1,  1},
+//		{-1,  1,  0},
+//		{-1,  1, -1},
+//		{-1,  1,  1},
+//		{ 1,  0,  0},
+//		{ 1,  0, -1},
+//		{ 1,  0,  1},
+//		{ 1, -1,  0},
+//		{ 1, -1, -1},
+//		{ 1, -1,  1},
+//		{ 1,  1,  0},
+//		{ 1,  1, -1},
+//		{ 1,  1,  1},
+
+        { 0,  0,  1},
+        { 0,  1,  0},
+        { 1,  0,  0},
+
+        { 0,  1,  1},
+        { 0,  1, -1},
+        { 1,  0,  1},
+        { 1,  0, -1},
+        { 1,  1,  0},
+        {-1,  1,  0},
+
+        { 1,  1,  1},
+        { 1,  1, -1},
+        { 1, -1,  1},
+        {-1,  1,  1},
 	};
 
 static const double DIRECTIONS_NORMALIZED[][3] = 
 	{
-		{ 0,  0, -1},
-		{ 0,  0,  1},
-		{ 0, -1,  0},
-		{ 0, -1/M_SQRT2, -1/M_SQRT2},
-		{ 0, -1/M_SQRT2,  1/M_SQRT2},
-		{ 0,  1,  0},
-		{ 0,  1/M_SQRT2, -1/M_SQRT2},
-		{ 0,  1/M_SQRT2,  1/M_SQRT2},
-		{-1,  0,  0},
-		{-1/M_SQRT2,  0, -1/M_SQRT2},
-		{-1/M_SQRT2,  0,  1/M_SQRT2},
-		{-1/M_SQRT2, -1/M_SQRT2,  0},
-		{-1/M_SQRT3, -1/M_SQRT3, -1/M_SQRT3},
-		{-1/M_SQRT3, -1/M_SQRT3,  1/M_SQRT3},
-		{-1/M_SQRT2,  1/M_SQRT2,  0},
-		{-1/M_SQRT3,  1/M_SQRT3, -1/M_SQRT3},
-		{-1/M_SQRT3,  1/M_SQRT3,  1/M_SQRT3},
-		{ 1,  0,  0},
-		{ 1/M_SQRT2,  0, -1/M_SQRT2},
-		{ 1/M_SQRT2,  0,  1/M_SQRT2},
-		{ 1/M_SQRT2, -1/M_SQRT2,  0},
-		{ 1/M_SQRT3, -1/M_SQRT3, -1/M_SQRT3},
-		{ 1/M_SQRT3, -1/M_SQRT3,  1/M_SQRT3},
-		{ 1/M_SQRT2,  1/M_SQRT2,  0},
-		{ 1/M_SQRT3,  1/M_SQRT3, -1/M_SQRT3},
-		{ 1/M_SQRT3,  1/M_SQRT3,  1/M_SQRT3},
+//		{ 0,  0, -1},
+//		{ 0,  0,  1},
+//		{ 0, -1,  0},
+//		{ 0, -1/M_SQRT2, -1/M_SQRT2},
+//		{ 0, -1/M_SQRT2,  1/M_SQRT2},
+//		{ 0,  1,  0},
+//		{ 0,  1/M_SQRT2, -1/M_SQRT2},
+//		{ 0,  1/M_SQRT2,  1/M_SQRT2},
+//		{-1,  0,  0},
+//		{-1/M_SQRT2,  0, -1/M_SQRT2},
+//		{-1/M_SQRT2,  0,  1/M_SQRT2},
+//		{-1/M_SQRT2, -1/M_SQRT2,  0},
+//		{-1/M_SQRT3, -1/M_SQRT3, -1/M_SQRT3},
+//		{-1/M_SQRT3, -1/M_SQRT3,  1/M_SQRT3},
+//		{-1/M_SQRT2,  1/M_SQRT2,  0},
+//		{-1/M_SQRT3,  1/M_SQRT3, -1/M_SQRT3},
+//		{-1/M_SQRT3,  1/M_SQRT3,  1/M_SQRT3},
+//		{ 1,  0,  0},
+//		{ 1/M_SQRT2,  0, -1/M_SQRT2},
+//		{ 1/M_SQRT2,  0,  1/M_SQRT2},
+//		{ 1/M_SQRT2, -1/M_SQRT2,  0},
+//		{ 1/M_SQRT3, -1/M_SQRT3, -1/M_SQRT3},
+//		{ 1/M_SQRT3, -1/M_SQRT3,  1/M_SQRT3},
+//		{ 1/M_SQRT2,  1/M_SQRT2,  0},
+//		{ 1/M_SQRT3,  1/M_SQRT3, -1/M_SQRT3},
+//		{ 1/M_SQRT3,  1/M_SQRT3,  1/M_SQRT3},
+
+        { 0,          0,          1/M_SQRT2},
+        { 0,          1/M_SQRT2,  0},
+        { 1/M_SQRT2,  0,          0},
+
+        { 0,          1/M_SQRT2,  1/M_SQRT2},
+        { 0,          1/M_SQRT2, -1/M_SQRT2},
+        { 1/M_SQRT2,  0,          1/M_SQRT2},
+        { 1/M_SQRT2,  0,         -1/M_SQRT2},
+        { 1/M_SQRT2,  1/M_SQRT2,  0},
+        {-1/M_SQRT2,  1/M_SQRT2,  0},
+
+        { 1/M_SQRT3,  1/M_SQRT3,  1/M_SQRT3},
+        { 1/M_SQRT3,  1/M_SQRT3, -1/M_SQRT3},
+        { 1/M_SQRT3, -1/M_SQRT3,  1/M_SQRT3},
+        {-1/M_SQRT3,  1/M_SQRT3,  1/M_SQRT3},
 	};
+
+
 
 static const int NUM_DIRECTIONS = sizeof(DIRECTIONS)/sizeof(double)/3;
 
@@ -119,5 +155,14 @@ void fit_ellipsoid(const double (*p)[3], int n, double Q[3][3]);
  *
  */
 void fit_ellipsoid_mils(const double *mils, double Q[3][3]);
+
+/*
+ * debugging tools
+ */
+#ifdef DEBUG
+	void fit_ellipsoid_debug_init(void);
+	void fit_ellipsoid_debug_deinit(void);
+#endif
+
 
 #endif //BONEMAP_ELLIPSOID_H

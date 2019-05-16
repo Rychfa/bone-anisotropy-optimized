@@ -39,31 +39,32 @@
 using namespace std;
 
 #define CYCLES_REQUIRED 1e7
-#define REP 25
+#define REP 3
 #define EPS (1e-3)
+#define CLOCK_FREQ 2.7
 
 /* prototype of the function you need to optimize */
-typedef void(*comp_func)(int*, int*, int*, double*, double*, double *);
+typedef void(*comp_func)(int*, int*, int*, double*, double*, double *, int);
 
 //headers
 double get_perf_score(comp_func f);
 void register_functions();
-double perf_test(comp_func f, string desc, int flops);
+double perf_test(comp_func f, string desc, long flops, int);
 
 //You can delcare your functions here
 //void kernel_basic(int* sphere, double* ptrHighRes, double* ptrLowRes, double* rotation_matrix, double* ptrEvecOut);
 
-void add_function(comp_func f, string name, int flop);
+void add_function(comp_func f, string name, long flop);
 
 /* Global vars, used to keep track of student functions */
 vector<comp_func> userFuncs;
 vector<string> funcNames;
-vector<int> funcFlops;
+vector<long> funcFlops;
 int numFuncs = 0;
 
-void build(int** sphere, int** ptrHighRes, int** ptrLowRes, double** rotation_matrix, double** ptrEvecOut, double **ptrEvalsOut)
+void build(int** sphere, int** ptrHighRes, int** ptrLowRes, double** rotation_matrix, double** ptrEvecOut, double **ptrEvalsOut, int index)
 {
-    init(sphere, ptrHighRes, ptrLowRes, rotation_matrix, ptrEvecOut, ptrEvalsOut);
+    init(sphere, ptrHighRes, ptrLowRes, rotation_matrix, ptrEvecOut, ptrEvalsOut, index);
 }
 
 void destroy(int* sphere, int* ptrHighRes, int* ptrLowRes, double* rotation_matrix, double* ptrEvecOut, double *ptrEvalsOut, bool generate_ground_truth)
@@ -78,7 +79,7 @@ void destroy(int* sphere, int* ptrHighRes, int* ptrLowRes, double* rotation_matr
 void register_functions()
 {
     // TODO: Add correct number of flops
-    add_function(&kernel_basic, "Base kernel", 100);
+    add_function(&kernel_basic, "Base kernel", 1572181 + 126347988814);
     // Add your functions here. Don't modify the number of flops parameter.
 }
 
@@ -128,7 +129,7 @@ double checksum(double (*evals)[3], double (*evecs)[3][3], int n)
 * Registers a user function to be tested by the driver program. Registers a
 * string description of the function as well
 */
-void add_function(comp_func f, string name, int flops)
+void add_function(comp_func f, string name, long flops)
 {
     userFuncs.push_back(f);
     funcNames.emplace_back(name);
@@ -144,21 +145,21 @@ void add_function(comp_func f, string name, int flops)
 * Checks the given function for validity. If valid, then computes and
 * reports and returns the number of cycles required per iteration
 */
-double perf_test(comp_func f, string desc, int flops)
+double perf_test(comp_func f, string desc, long flops, int input)
 {
     double cycles = 0.;
-    long num_runs = 5;
+    long num_runs = 1;
     double multiplier = 1;
     myInt64 start, end;
 
-    int*    sphere;
+    int* sphere;
     int* ptrHighRes;
     int* ptrLowRes;
     double* rotation_matrix;
     double* ptrEvecOut;
     double* ptrEvalsOut;
 
-    build(&sphere, &ptrHighRes, &ptrLowRes, &rotation_matrix, &ptrEvecOut, &ptrEvalsOut);
+    build(&sphere, &ptrHighRes, &ptrLowRes, &rotation_matrix, &ptrEvecOut, &ptrEvalsOut, input);
 
     // Warm-up phase: we determine a number of executions that allows
     // the code to be executed for at least CYCLES_REQUIRED cycles.
@@ -167,7 +168,7 @@ double perf_test(comp_func f, string desc, int flops)
         num_runs = num_runs * multiplier;
         start = start_tsc();
         for (size_t i = 0; i < num_runs; i++) {
-            f(sphere, ptrHighRes, ptrLowRes, rotation_matrix, ptrEvecOut, ptrEvalsOut);
+            f(sphere, ptrHighRes, ptrLowRes, rotation_matrix, ptrEvecOut, ptrEvalsOut, input);
         }
         end = stop_tsc(start);
 
@@ -184,7 +185,7 @@ double perf_test(comp_func f, string desc, int flops)
 
         start = start_tsc();
         for (size_t i = 0; i < num_runs; ++i) {
-            f(sphere, ptrHighRes, ptrLowRes, rotation_matrix, ptrEvecOut, ptrEvalsOut);
+            f(sphere, ptrHighRes, ptrLowRes, rotation_matrix, ptrEvecOut, ptrEvalsOut, input);
         }
         end = stop_tsc(start);
 
@@ -196,8 +197,7 @@ double perf_test(comp_func f, string desc, int flops)
     destroy(sphere, ptrHighRes, ptrLowRes, rotation_matrix, ptrEvecOut, ptrEvalsOut, false);
     cyclesList.sort();
     cycles = cyclesList.front();
-    return  cycles;
-//    return  (1.0 * flops) / cycles;
+    return cycles;
 }
 
 /*
@@ -207,7 +207,7 @@ double perf_test(comp_func f, string desc, int flops)
 int main(int argc, char **argv)
 {
     cout << "Starting program. ";
-    double perf;
+    double cycles;
     int i;
 
     register_functions();
@@ -232,32 +232,41 @@ int main(int argc, char **argv)
     double* ptrEvecOut;
     double* ptrEvalsOut;
 
-    build(&sphere, &ptrHighRes, &ptrLowRes, &rotation_matrix, &ptrEvecOut, &ptrEvalsOut);
-    userFuncs[0](sphere, ptrHighRes, ptrLowRes, rotation_matrix, ptrEvecOut, ptrEvalsOut);
+    build(&sphere, &ptrHighRes, &ptrLowRes, &rotation_matrix, &ptrEvecOut, &ptrEvalsOut, 0);
+    userFuncs[0](sphere, ptrHighRes, ptrLowRes, rotation_matrix, ptrEvecOut, ptrEvalsOut, 0);
     destroy(sphere, ptrHighRes, ptrLowRes, rotation_matrix, ptrEvecOut, ptrEvalsOut, true);
 
     for (i =0; i < numFuncs; i++) {
-        build(&sphere, &ptrHighRes, &ptrLowRes, &rotation_matrix, &ptrEvecOut, &ptrEvalsOut);
+        build(&sphere, &ptrHighRes, &ptrLowRes, &rotation_matrix, &ptrEvecOut, &ptrEvalsOut, 0);
 
         comp_func f = userFuncs[i];
-        f(sphere, ptrHighRes, ptrLowRes, rotation_matrix, ptrEvecOut, ptrEvalsOut);
+        f(sphere, ptrHighRes, ptrLowRes, rotation_matrix, ptrEvecOut, ptrEvalsOut, 0);
         double error = checksum((double (*)[3]) ptrEvalsOut, 
                                 (double (*)[3][3]) ptrEvecOut, 
-                                LOW_RES_SIZE);
+                                LOW_RES_SIZE(0));
         if (error > EPS) {
-            cout << "ERROR: the results for function " << i << " are incorrect." << std::endl;
+            cout << "ERROR: the results for function " << i << " are incorrect -> ";
+            printf(" %g\n", error);
+        } else {
+            printf("userFuncs[%d] is correct!\n", i);
         }
         destroy(sphere, ptrHighRes, ptrLowRes, rotation_matrix, ptrEvecOut, ptrEvalsOut, false);
     }
 
     for (i = 0; i < numFuncs; i++)
     {
-        perf = perf_test(userFuncs[i], funcNames[i], funcFlops[i]);
-        cout << "Running: " << funcNames[i] << endl;
-        cout << perf << " cycles" << endl;
+        /* Iterate through all inputs */
+        for (int j = 0; j < NUMBER_OF_INPUTS; ++j) {
+            cout << endl << "*** Running " << funcNames[i] << " with input " << j << " ***" << endl;
+            cycles = perf_test(userFuncs[i], funcNames[i], funcFlops[i], j);
+            cout << "Runtime:     " << cycles << " cycles" << endl;
+            cout << "Runtime:     " << cycles / CLOCK_FREQ / 1e6 << " msec" << endl;
+            cout << "Performance: " << funcFlops[i] / cycles << " flops/cycle" << endl;
+        }
     }
     cout << endl;
 
+    free(ptrHighRes);
     return 0;
 }
 
@@ -269,8 +278,8 @@ int simple_main () {
     double* ptrEvecOut;
     double* ptrEvalsOut;
 
-    init(&sphere, &ptrHighRes, &ptrLowRes, &rotation_matrix, &ptrEvecOut, &ptrEvalsOut);
-    kernel_basic(sphere, ptrHighRes, ptrLowRes, rotation_matrix, ptrEvecOut, ptrEvalsOut);
+    init(&sphere, &ptrHighRes, &ptrLowRes, &rotation_matrix, &ptrEvecOut, &ptrEvalsOut, 0);
+    kernel_basic(sphere, ptrHighRes, ptrLowRes, rotation_matrix, ptrEvecOut, ptrEvalsOut, 0);
     deInit(sphere, ptrHighRes, ptrLowRes, rotation_matrix, ptrEvecOut, ptrEvalsOut, false);
 
     printf("\nDone\n");

@@ -28,9 +28,24 @@
 #include <stdlib.h>
 #include "reader.h"
 
-//
-// TODO: What datatype for input arrays? (double, float or int)
-//
+static char* inputFiles[NUMBER_OF_INPUTS] = {
+        "../images/LowRes_F16_R_stance_3p0_segmented/F16_R_stance_3p0_mask.raw",
+        "../images/LowRes_F16_R_stance_3p0_segmented/scaled2.raw",
+        "../images/LowRes_F16_R_stance_3p0_segmented/scaled4.raw",
+        "../images/LowRes_F16_R_stance_3p0_segmented/scaled6.raw",
+        "../images/LowRes_F16_R_stance_3p0_segmented/scaled8.raw",
+        "../images/LowRes_F16_R_stance_3p0_segmented/scaled10.raw"
+};
+
+int scaleFactor[NUMBER_OF_INPUTS] = {
+        1, //"../images/LowRes_F16_R_stance_3p0_segmented/F16_R_stance_3p0_mask.raw",
+        2, //"../images/LowRes_F16_R_stance_3p0_segmented/scaled2.raw",
+        4, //"../images/LowRes_F16_R_stance_3p0_segmented/scaled4.raw",
+        6, //"../images/LowRes_F16_R_stance_3p0_segmented/scaled6.raw",
+        8, //"../images/LowRes_F16_R_stance_3p0_segmented/scaled8.raw",
+        10 //"../images/LowRes_F16_R_stance_3p0_segmented/scaled10.raw"
+};
+
 
 typedef union {
     float f;
@@ -86,23 +101,22 @@ int* readHighResImage () {
     return ptrHighRes;
 }
 
-int* readLowResImage () {
+int* readLowResImage (const int index) {
 
     FILE *fp;
-    FILE *fd;
     charFloat_t uCharFloat;
-    fp = fopen(LOW_RES_FILE, "r");
+    fp = fopen(inputFiles[index], "r");
     if (fp == NULL) {
-        printf("Error while reading low resolution image.\n");
+        printf("Error while reading low resolution image %d.\n", index);
         return NULL;
     }
 
     //
     // Allocate memory for low res image
     //
-    ptrLowRes = malloc (sizeof(int) * LOW_RES_SIZE);
-    fd = fopen("debug_reader_lowres.txt","w");
-    for (int i = 0; i < LOW_RES_SIZE; ++i) {
+    ptrLowRes = malloc (sizeof(int) * LOW_RES_SIZE(index));
+
+    for (int i = 0; i < LOW_RES_SIZE(index); ++i) {
                 //
                 // Read bytes and convert to float
                 // Bytes are in little endian.
@@ -110,16 +124,14 @@ int* readLowResImage () {
                 for (int l = 0; l < 4; l++) {
                     char c = fgetc((FILE*)fp);
                     if (c == EOF) {
-                        printf("Error while reading low resolution image.\n");
+                        printf("Error while reading low resolution image %d.\n", index);
                         free(ptrLowRes);
                         return NULL;
                     }
                     uCharFloat.c[l] = c;
                 }
-                ptrLowRes[i] = uCharFloat.f;
-                fprintf(fd,"%d, %d\n", i, ptrLowRes[i]);
+                ptrLowRes[i] = (int) uCharFloat.f;
     }
-    fclose(fd);
 
     if (fgetc((FILE*)fp) == EOF) {
         printf("Low res file read correctly!\n");

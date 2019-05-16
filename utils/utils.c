@@ -107,7 +107,6 @@ void writeVTK(int *image, double voxelsize, int dim1, int dim2, int dim3, char f
         for (int j=0; j < dim2; j++){
             for (int i=0; i < dim1; i++){
                 ii = i + j*dim1 + k*dim1*dim2;
-                //printf("writeVTK: %d %d\n", ii, image[ii]);
                 fprintf(fptr,"%d ", image[ii]);
             }
         }
