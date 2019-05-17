@@ -44,14 +44,14 @@
 using namespace std;
 
 #define CYCLES_REQUIRED 1e7
-#define REP 20
+#define REP 100
 #define EPS (1e-3)
 #define FREQ 2.7
 #define TOLERANCE 1e-8
 #define MAX_SIZE  300
 
 /* prototype of the function you need to optimize */
-typedef void(*comp_func)( const double*, int, double* );
+typedef void(*comp_func)( const float*, int, float* );
 
 //headers
 double get_perf_score(comp_func f);
@@ -62,7 +62,8 @@ double perf_test(comp_func f, int n);
 extern "C" void mil2_baseline(const double *hr_sphere_region, int n, double *directions_vectors_mil);
 extern "C" void mil2_o1(const double *hr_sphere_region, int n, double *directions_vectors_mil);
 //extern "C" void mil2_o2(const int *hr_sphere_region, int n, double *directions_vectors_mil);
-extern "C" void dummy1(const double *hr_sphere_region, int n, double *directions_vectors_mil);
+extern "C" void dummy0(const float *hr_sphere_region, int n, float *directions_vectors_mil);
+//extern "C" void dummy1(const double *hr_sphere_region, int n, double *directions_vectors_mil);
 //extern "C" void dummy2(const int *hr_sphere_region, int n, double *directions_vectors_mil);
 //extern "C" void dummy3(const int *hr_sphere_region, int n, double *directions_vectors_mil);
 
@@ -90,9 +91,9 @@ void build(int **a, int n)
     rands(*a, n);
 }
 
-void build(double **a, int n)
+void build(float **a, int n)
 {
-    *a = static_cast<double *>(aligned_alloc(32, n * sizeof(double)));
+    *a = static_cast<float *>(aligned_alloc(32, n * sizeof(float)));
     rands(*a, n);
 }
 
@@ -107,17 +108,18 @@ void destroy(void * m)
 */
 void register_functions()
 {
-    add_function(&mil2_baseline, "Base line", 3.25);
-    add_function(&mil2_o1, "Base opt1", 3.25);
+//    add_function(&mil2_baseline, "Base line", 3.25);
+//    add_function(&mil2_o1, "Base opt1", 3.25);
 //    add_function(&mil2_o2, "Base opt2", 6.5);
-//    add_function(&dummy1, "Dummy 1", 3.25);
+    add_function(&dummy0, "Dummy 0", 3.25);
 //    add_function(&dummy2,   "Dummy 2", 3.25);
 //    add_function(&dummy3,   "Dummy 3", 3.25);
 }
 
-bool checksum(const double* a, const double* b, int n) {
+bool checksum(const float* a, const float* b, int n) {
 
     for(int i = 0; i < n; i++) {
+//        cout << a[i] << " " << b[i] << endl;
         if ( (b[i] < a[i] - TOLERANCE) || (b[i] > a[i] + TOLERANCE)) {
             return true;
         }
@@ -151,11 +153,12 @@ int main(int argc, char **argv)
 
     //Check validity of functions. 
 //    int n = 30;
-    double *region;
-    double* output;
-    double* outputBaseline;
+    float*region;
+    float* output;
+    float* outputBaseline;
 
-    for (int n = 20; n <= MAX_SIZE; n += 20) {
+    for (int n = 16; n <= 96; n += 16) {
+//    for (int n = 20; n <= MAX_SIZE; n += 20) {
         cout << endl << "Testing size " << n << endl;
 
         // Compute with base line first.
@@ -216,12 +219,12 @@ void add_function(comp_func f, const string& name, double flops)
 double perf_test(comp_func f, int n)
 {
     double cycles;
-    long num_runs = 10;
+    long num_runs = 20;
     double multiplier = 1;
     myInt64 start, end;
 
-    double *region;
-    double* output;
+    float* region;
+    float* output;
     build(&region, n*n*n);
     build(&output, 13);
 

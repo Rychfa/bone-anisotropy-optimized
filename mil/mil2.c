@@ -226,6 +226,103 @@ void mil2_o1(const double *hr_sphere_region, int n, double *directions_vectors_m
 
 }
 
+#define BLOCK_SIZE 16
+#define NUM_ACC 8
+void dummy0(const float *hr_sphere_region, int n, float *directions_vectors_mil) {
+
+    const int n_vectors = NUM_DIRECTIONS;
+    int count = 0;
+
+#if 1
+    for (int kk = 0; kk < n; kk+=BLOCK_SIZE) {
+        for (int jj = 0; jj < n; jj+=BLOCK_SIZE) {
+            for (int ii = 0; ii < n; ii+=BLOCK_SIZE) {
+                /* for every direction vector */
+                for (int v = 0; v < 1; ++v) {
+                    float acc1 = 0.0;  float acc5 = 0.0;
+                    float acc2 = 0.0;  float acc6 = 0.0;
+                    float acc3 = 0.0;  float acc7 = 0.0;
+                    float acc4 = 0.0;  float acc8 = 0.0;
+
+                    for (int k = kk; k < kk + BLOCK_SIZE; k += STRIDE) {
+                        for (int j = jj; j < jj + BLOCK_SIZE; j += STRIDE) {
+                            for (int i = ii; i < ii + BLOCK_SIZE; i += NUM_ACC) {
+                                acc1 += hr_sphere_region[ k*n*n + j*n + i];
+                                acc2 += hr_sphere_region[ k*n*n + j*n + i + 1];
+                                acc3 += hr_sphere_region[ k*n*n + j*n + i + 2];
+                                acc4 += hr_sphere_region[ k*n*n + j*n + i + 3];
+                                acc5 += hr_sphere_region[ k*n*n + j*n + i + 4];
+                                acc6 += hr_sphere_region[ k*n*n + j*n + i + 5];
+                                acc7 += hr_sphere_region[ k*n*n + j*n + i + 6];
+                                acc8 += hr_sphere_region[ k*n*n + j*n + i + 7];
+                            }
+                        }
+                    }
+
+                    acc1 += acc2;
+                    acc3 += acc4;
+                    acc5 += acc6;
+                    acc7 += acc8;
+                    acc1 += acc3;
+                    acc5 += acc7;
+                    directions_vectors_mil[v] = acc1 + acc5;
+                }
+            }
+        }
+    }
+
+
+#else
+
+    /* for every direction vector */
+    for (int v = 0; v < n_vectors; ++v) {
+        double acc1 = 0.0;  double acc5 = 0.0;
+        double acc2 = 0.0;  double acc6 = 0.0;
+        double acc3 = 0.0;  double acc7 = 0.0;
+        double acc4 = 0.0;  double acc8 = 0.0;
+
+        for (int kk = 0; kk < n; kk += STRIDE) {
+            for (int jj = 0; jj < n; jj += STRIDE) {
+                for (int i = 0; i < n; i += NUM_ACC) {
+                    acc1 += hr_sphere_region[kk * n * n + jj * n + i];
+                    acc2 += hr_sphere_region[kk * n * n + jj * n + i + 1];
+                    acc3 += hr_sphere_region[kk * n * n + jj * n + i + 2];
+                    acc4 += hr_sphere_region[kk * n * n + jj * n + i + 3];
+                    acc5 += hr_sphere_region[kk * n * n + jj * n + i + 4];
+                    acc6 += hr_sphere_region[kk * n * n + jj * n + i + 5];
+                    acc7 += hr_sphere_region[kk * n * n + jj * n + i + 6];
+                    acc8 += hr_sphere_region[kk * n * n + jj * n + i + 7];
+//                    count++;
+                }
+            }
+        }
+//
+//        for (int i = 0; i < n*n*n/(STRIDE*STRIDE); i += NUM_ACC) {
+//            acc1 += hr_sphere_region[i];
+//            acc2 += hr_sphere_region[i + 1];
+//            acc3 += hr_sphere_region[i + 2];
+//            acc4 += hr_sphere_region[i + 3];
+//            acc5 += hr_sphere_region[i + 4];
+//            acc6 += hr_sphere_region[i + 5];
+//            acc7 += hr_sphere_region[i + 6];
+//            acc8 += hr_sphere_region[i + 7];
+////            count++;
+//        }
+
+        acc1 += acc2;
+        acc3 += acc4;
+        acc5 += acc6;
+        acc7 += acc8;
+        acc1 += acc3;
+        acc5 += acc7;
+        directions_vectors_mil[v] = acc1 + acc5;
+    }
+
+//    printf("%d\n", count);
+#endif
+
+}
+
 
 void dummy1(const double *hr_sphere_region, int n, double *directions_vectors_mil) {
 
