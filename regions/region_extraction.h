@@ -29,7 +29,7 @@
 
 #define SPHERE_DIAMETER 6.6
 #define HIGH_RES_VOXEL_SIZE 0.082
-#define SPHERE_NDIM  (int) (SPHERE_DIAMETER /HIGH_RES_VOXEL_SIZE + 1)
+#define SPHERE_NDIM  (int) (SPHERE_DIAMETER /HIGH_RES_VOXEL_SIZE)
 #define SPHERE_HALF_NDIM ((int) (SPHERE_NDIM/2))
 #define SPHERE_ARRAY_SIZE (SPHERE_NDIM * SPHERE_NDIM * SPHERE_NDIM)
  
@@ -38,5 +38,7 @@
 ///
 void createSphereMask(int *sphere);
 void region_extraction (int i_hr, int j_hr, int k_hr, int *sphere, int *extracted_region, int *ptrHighRes);
+void region_extraction_opt1 (int i_hr, int j_hr, int k_hr, int *sphere, int *extracted_region, int *ptrHighRes);
+void region_extraction_opt2 (int i_hr, int j_hr, int k_hr, int *sphere, int *extracted_region, int *ptrHighRes);
 
 #endif //BONEMAP_REGION_EXTRACTION_H
