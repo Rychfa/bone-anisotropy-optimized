@@ -323,6 +323,93 @@ void dummy0(const float *hr_sphere_region, int n, float *directions_vectors_mil)
 
 }
 
+void mil_block1(const float *hr_sphere_region, int n, float *directions_vectors_mil) {
+
+    const int n_vectors = NUM_DIRECTIONS;
+    float directions_vectors_bone_length[n_vectors];
+    unsigned int directions_vectors_intercepts[n_vectors];
+    int count = 0;
+
+    for (int kk = 0; kk < n; kk+=BLOCK_SIZE) {
+        for (int jj = 0; jj < n; jj+=BLOCK_SIZE) {
+            for (int ii = 0; ii < n; ii+=BLOCK_SIZE) {
+                /* for every direction vector */
+                for (int v = 0; v < n_vectors; ++v) {
+
+                    /* Init accumulators */
+                    float acc1 = 0.0, acc5 = 0.0;
+                    float acc2 = 0.0, acc6 = 0.0;
+                    float acc3 = 0.0, acc7 = 0.0;
+                    float acc4 = 0.0, acc8 = 0.0;
+
+                    unsigned int edge_count1 = 1, edge_count5 = 1;
+                    unsigned int edge_count2 = 1, edge_count6 = 1;
+                    unsigned int edge_count3 = 1, edge_count7 = 1;
+                    unsigned int edge_count4 = 1, edge_count8 = 1;
+
+                    unsigned int prev_mask = hr_sphere_region[0] > 0.5;
+
+                    for (int k = kk; k < kk + BLOCK_SIZE; k += STRIDE) {
+                        for (int j = jj; j < jj + BLOCK_SIZE; j += STRIDE) {
+                            for (int i = ii; i < ii + BLOCK_SIZE; i += NUM_ACC) {
+
+                                unsigned int curr_mask1; //, curr_mask5;
+                                unsigned int curr_mask2; //, curr_mask6;
+                                unsigned int curr_mask3; //, curr_mask7;
+                                unsigned int curr_mask4; //, curr_mask8;
+
+                                /* Load working set */
+                                const float* ptr_hr = &hr_sphere_region[ k*n*n + j*n + i];
+                                float r1 = *ptr_hr++;  //float r5 = *ptr_hr++;
+                                float r2 = *ptr_hr++;  //float r6 = *ptr_hr++;
+                                float r3 = *ptr_hr++;  //float r7 = *ptr_hr++;
+                                float r4 = *ptr_hr++;  //float r8 = *ptr_hr;
+
+                                /* Perform computation */
+                                acc1 += r1;  //acc5 += r5;
+                                acc2 += r2;  //acc6 += r6;
+                                acc3 += r3;  //acc7 += r7;
+                                acc4 += r4;  //acc8 += r8;
+
+                                /* Calculate masks */
+                                curr_mask1 = r1 > 0.5;  //curr_mask5 = r5 > 0.5;
+                                curr_mask2 = r2 > 0.5;  //curr_mask6 = r6 > 0.5;
+                                curr_mask3 = r3 > 0.5;  //curr_mask7 = r7 > 0.5;
+                                curr_mask4 = r4 > 0.5;  //curr_mask8 = r8 > 0.5;
+
+                                /* Detect edge and add to counter */
+                                edge_count1 += curr_mask1 ^ prev_mask;   //edge_count5 += curr_mask5 ^ curr_mask4;
+                                edge_count2 += curr_mask2 ^ curr_mask1;  //edge_count6 += curr_mask6 ^ curr_mask5;
+                                edge_count3 += curr_mask3 ^ curr_mask2;  //edge_count7 += curr_mask7 ^ curr_mask6;
+                                edge_count4 += curr_mask4 ^ curr_mask3;  //edge_count8 += curr_mask8 ^ curr_mask7;
+
+                                /* Update state of prev_mask */
+                                prev_mask = curr_mask4;
+                            }
+                        }
+                    }
+
+                    acc1 += acc2;   edge_count1 += edge_count2;
+                    acc3 += acc4;   edge_count3 += edge_count4;
+                    acc5 += acc6;   edge_count5 += edge_count6;
+                    acc7 += acc8;   edge_count7 += edge_count8;
+                    acc1 += acc3;   edge_count1 += edge_count3;
+                    acc5 += acc7;   edge_count5 += edge_count7;
+                    directions_vectors_bone_length[v] = acc1 + acc5;
+                    directions_vectors_intercepts[v]  = edge_count1 + edge_count5;
+                }
+            }
+        }
+    }
+
+
+    for (int v = 0; v < n_vectors; ++v) {
+        directions_vectors_mil[v] = directions_vectors_bone_length[v] / directions_vectors_intercepts[v];
+    }
+
+
+}
+
 
 void dummy1(const double *hr_sphere_region, int n, double *directions_vectors_mil) {
 
