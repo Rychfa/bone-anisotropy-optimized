@@ -323,6 +323,106 @@ void dummy0(const float *hr_sphere_region, int n, float *directions_vectors_mil)
 
 }
 
+///
+/// Blocking version for first vector only.
+/// Using accumulators and unrolling over dimension y.
+///
+void mil_block2(const float *hr_sphere_region, int n, float *directions_vectors_mil) {
+
+    const int n_vectors = NUM_DIRECTIONS;
+    float directions_vectors_bone_length[n_vectors];
+    unsigned int directions_vectors_intercepts[n_vectors];
+
+    for (int kk = 0; kk < n; kk+=BLOCK_SIZE) {
+        for (int jj = 0; jj < n; jj+=BLOCK_SIZE) {
+            for (int ii = 0; ii < n; ii+=BLOCK_SIZE) {
+                /* for every direction vector */
+                for (int v = 0; v < n_vectors; ++v) {
+
+                    /* Init accumulators */
+                    float acc1 = 0.0, acc5 = 0.0;
+                    float acc2 = 0.0, acc6 = 0.0;
+                    float acc3 = 0.0, acc7 = 0.0;
+                    float acc4 = 0.0, acc8 = 0.0;
+
+                    unsigned int edge_count1 = 1, edge_count5 = 1;
+                    unsigned int edge_count2 = 1, edge_count6 = 1;
+                    unsigned int edge_count3 = 1, edge_count7 = 1;
+                    unsigned int edge_count4 = 1, edge_count8 = 1;
+
+                    for (int k = kk; k < kk + BLOCK_SIZE; k += STRIDE) {
+                        for (int j = jj; j < jj + BLOCK_SIZE; j += STRIDE*NUM_ACC) {
+
+                            //unsigned int i_prev = (ii > 0) ? ii - 1 : 0;
+
+                            unsigned int prev_mask1 = 0; //hr_sphere_region[ k*n*n + (j+0*STRIDE)*n + i_prev ]  > 0.5;
+                            unsigned int prev_mask2 = 0; //hr_sphere_region[ k*n*n + (j+1*STRIDE)*n + i_prev ]  > 0.5;
+                            unsigned int prev_mask3 = 0; //hr_sphere_region[ k*n*n + (j+2*STRIDE)*n + i_prev ]  > 0.5;
+                            unsigned int prev_mask4 = 0; //hr_sphere_region[ k*n*n + (j+3*STRIDE)*n + i_prev ]  > 0.5;
+
+                            for (int i = ii; i < ii + BLOCK_SIZE; ++i) {
+
+                                unsigned int curr_mask1; //, curr_mask5;
+                                unsigned int curr_mask2; //, curr_mask6;
+                                unsigned int curr_mask3; //, curr_mask7;
+                                unsigned int curr_mask4; //, curr_mask8;
+
+                                /* Load working set */
+                                float r1 = hr_sphere_region[ k*n*n + (j+0*STRIDE)*n + i];  //float r5 = *ptr_hr++;
+                                float r2 = hr_sphere_region[ k*n*n + (j+1*STRIDE)*n + i];  //float r6 = *ptr_hr++;
+                                float r3 = hr_sphere_region[ k*n*n + (j+2*STRIDE)*n + i];  //float r7 = *ptr_hr++;
+                                float r4 = hr_sphere_region[ k*n*n + (j+3*STRIDE)*n + i];  //float r8 = *ptr_hr;
+
+                                /* Perform computation */
+                                acc1 += r1;  //acc5 += r5;
+                                acc2 += r2;  //acc6 += r6;
+                                acc3 += r3;  //acc7 += r7;
+                                acc4 += r4;  //acc8 += r8;
+
+                                /* Calculate masks */
+                                curr_mask1 = r1 > 0.5;  //curr_mask5 = r5 > 0.5;
+                                curr_mask2 = r2 > 0.5;  //curr_mask6 = r6 > 0.5;
+                                curr_mask3 = r3 > 0.5;  //curr_mask7 = r7 > 0.5;
+                                curr_mask4 = r4 > 0.5;  //curr_mask8 = r8 > 0.5;
+
+                                /* Detect edge and add to counter */
+                                edge_count1 += curr_mask1 ^ prev_mask1;  //edge_count5 += curr_mask5 ^ curr_mask4;
+                                edge_count2 += curr_mask2 ^ prev_mask2;  //edge_count6 += curr_mask6 ^ curr_mask5;
+                                edge_count3 += curr_mask3 ^ prev_mask3;  //edge_count7 += curr_mask7 ^ curr_mask6;
+                                edge_count4 += curr_mask4 ^ prev_mask4;  //edge_count8 += curr_mask8 ^ curr_mask7;
+
+                                /* Update state of prev_mask */
+                                prev_mask1 = curr_mask1;
+                                prev_mask2 = curr_mask2;
+                                prev_mask3 = curr_mask3;
+                                prev_mask4 = curr_mask4;
+                            }
+                        }
+                    }
+
+                    acc1 += acc2;   edge_count1 += edge_count2;
+                    acc3 += acc4;   edge_count3 += edge_count4;
+                    acc5 += acc6;   edge_count5 += edge_count6;
+                    acc7 += acc8;   edge_count7 += edge_count8;
+                    acc1 += acc3;   edge_count1 += edge_count3;
+                    acc5 += acc7;   edge_count5 += edge_count7;
+                    directions_vectors_bone_length[v] = acc1 + acc5;
+                    directions_vectors_intercepts[v]  = edge_count1 + edge_count5;
+                }
+            }
+        }
+    }
+
+    for (int v = 0; v < n_vectors; ++v) {
+        directions_vectors_mil[v] = directions_vectors_bone_length[v] / directions_vectors_intercepts[v];
+    }
+}
+
+
+///
+/// Blocking version for first vector only.
+/// Using accumulators and unrolling over dimension x.
+///
 void mil_block1(const float *hr_sphere_region, int n, float *directions_vectors_mil) {
 
     const int n_vectors = NUM_DIRECTIONS;
