@@ -26,9 +26,12 @@
 */
 #include "mil2.h"
 #include "ellipsoid.h"
+#include <stdio.h>
 
 #define STRIDE 2
 #define DEBUG
+unsigned int count = 0;
+unsigned int already_tested[13] = {0};
 
 static int facesVectors[3][3] =
         {
@@ -374,13 +377,159 @@ void dummy0(const float *hr_sphere_region, int n, float *directions_vectors_mil)
 
 }
 
-#define LOAD_WORKING_SET \
-        if (vecID == 1) {                                        \
-            r1 = hr_sphere_region[ k*n*n + (j+0*STRIDE)*n + i];  \
-            r2 = hr_sphere_region[ k*n*n + (j+1*STRIDE)*n + i];  \
-            r3 = hr_sphere_region[ k*n*n + (j+2*STRIDE)*n + i];  \
-            r4 = hr_sphere_region[ k*n*n + (j+3*STRIDE)*n + i];  \
+void working (int vecID, int* hr_sphere_region) {
+    switch (vecID) {
+//        case 1: /* Vector (1,0,0) */
+//            /* Unroll over dimension y */
+//            r1 = hr_sphere_region[ k*n*n + (j+0*STRIDE)*n + i];
+//            r2 = hr_sphere_region[ k*n*n + (j+1*STRIDE)*n + i];
+//            r3 = hr_sphere_region[ k*n*n + (j+2*STRIDE)*n + i];
+//            r4 = hr_sphere_region[ k*n*n + (j+3*STRIDE)*n + i];
+//            break;
+//        case 2: /* Vector (0,1,0) */
+//            /* Unroll over dimension x */
+//            r1 = hr_sphere_region[ k*n*n + i*n + (j+0*STRIDE)];
+//            r2 = hr_sphere_region[ k*n*n + i*n + (j+1*STRIDE)];
+//            r3 = hr_sphere_region[ k*n*n + i*n + (j+2*STRIDE)];
+//            r4 = hr_sphere_region[ k*n*n + i*n + (j+3*STRIDE)];
+//            break;
+//        case 3: /* Vector (0,0,1) */
+//            /* Unroll over dimension x */
+//            r1 = hr_sphere_region[ i*n*n + k*n + (j+0*STRIDE)];
+//            r2 = hr_sphere_region[ i*n*n + k*n + (j+1*STRIDE)];
+//            r3 = hr_sphere_region[ i*n*n + k*n + (j+2*STRIDE)];
+//            r4 = hr_sphere_region[ i*n*n + k*n + (j+3*STRIDE)];
+//            break;
+//        case 4: /* Vector (1,1,0) */
+//            /* Unroll over dimensions x,y */
+//            r1 = hr_sphere_region[ k*n*n + j1*n + (i1+1+0*STRIDE) ];
+//            r2 = hr_sphere_region[ k*n*n + (j2+1+0*STRIDE)*n + i2 ];
+//            if (i1+1+1*STRIDE < ii + BLOCK_SIZE) {
+//                r3 = hr_sphere_region[ k*n*n + j1*n + (i1+1+1*STRIDE) ];
+//                r4 = hr_sphere_region[ k*n*n + (j2+1+1*STRIDE)*n + i2 ];
+//            } else {
+//                r3 = 0.0f;
+//                r4 = 0.0f;
+//            }
+//            break;
+
+//        r1 = hr_sphere_region[ k*n*n + j1*n + (i1-1-0*STRIDE) ];
+//        r2 = hr_sphere_region[ k*n*n + (j2+1+0*STRIDE)*n + i2 ];
+//        if (j2+1+1*STRIDE < jj + BLOCK_SIZE) {
+//            r3 = hr_sphere_region[ k*n*n + j1*n + (i1-1-1*STRIDE) ];
+//            r4 = hr_sphere_region[ k*n*n + (j2+1+1*STRIDE)*n + i2 ];
+//        } else {
+//            r3 = 0.0f;
+//            r4 = 0.0f;
+//        }
+
+        default: ;
+    }
+}
+
+#define LOAD_DATA_SET_1D                                            \
+        switch (vecID) {                                            \
+            case 1: /* Vector (1,0,0) */                            \
+                /* Unroll over dimension y */                       \
+                r1 = hr_sphere_region[ k*n*n + (j+0*STRIDE)*n + i]; \
+                r2 = hr_sphere_region[ k*n*n + (j+1*STRIDE)*n + i]; \
+                r3 = hr_sphere_region[ k*n*n + (j+2*STRIDE)*n + i]; \
+                r4 = hr_sphere_region[ k*n*n + (j+3*STRIDE)*n + i]; \
+                break;                                              \
+            case 2: /* Vector (0,1,0) */                            \
+                /* Unroll over dimension x */                       \
+                r1 = hr_sphere_region[ k*n*n + i*n + (j+0*STRIDE)]; \
+                r2 = hr_sphere_region[ k*n*n + i*n + (j+1*STRIDE)]; \
+                r3 = hr_sphere_region[ k*n*n + i*n + (j+2*STRIDE)]; \
+                r4 = hr_sphere_region[ k*n*n + i*n + (j+3*STRIDE)]; \
+                break;                                              \
+            case 3: /* Vector (0,0,1) */                            \
+                /* Unroll over dimension x */                       \
+                r1 = hr_sphere_region[ i*n*n + k*n + (j+0*STRIDE)]; \
+                r2 = hr_sphere_region[ i*n*n + k*n + (j+1*STRIDE)]; \
+                r3 = hr_sphere_region[ i*n*n + k*n + (j+2*STRIDE)]; \
+                r4 = hr_sphere_region[ i*n*n + k*n + (j+3*STRIDE)]; \
+                break;                                              \
+            default: ;                                              \
         }
+
+#define LOAD_DATA_SET_2D                                                 \
+    switch (vecID) {                                                     \
+        case 4: /* Vector (1,1,0) */                                     \
+            /* Unroll over dimensions x,y */                             \
+            r1 = hr_sphere_region[ k*n*n + j1*n + (i1+1+0*STRIDE) ];     \
+            r2 = hr_sphere_region[ k*n*n + (j2+1+0*STRIDE)*n + i2 ];     \
+            if (i1+1+1*STRIDE < ii + BLOCK_SIZE) {                       \
+                r3 = hr_sphere_region[ k*n*n + j1*n + (i1+1+1*STRIDE) ]; \
+                r4 = hr_sphere_region[ k*n*n + (j2+1+1*STRIDE)*n + i2 ]; \
+            } else {                                                     \
+                r3 = 0.0f;                                               \
+                r4 = 0.0f;                                               \
+            }                                                            \
+            break;                                                       \
+        case 5: /* Vector (1,0,1) */                                     \
+            /* Unroll over dimensions x,z */                             \
+            r1 = hr_sphere_region[ j1*n*n + k*n + (i1+1+0*STRIDE) ];     \
+            r2 = hr_sphere_region[ (j2+1+0*STRIDE)*n*n + k*n + i2 ];     \
+            if (i1+1+1*STRIDE < ii + BLOCK_SIZE) {                       \
+                r3 = hr_sphere_region[ j1*n*n + k*n + (i1+1+1*STRIDE) ]; \
+                r4 = hr_sphere_region[ (j2+1+1*STRIDE)*n*n + k*n + i2 ]; \
+            } else {                                                     \
+                r3 = 0.0f;                                               \
+                r4 = 0.0f;                                               \
+            }                                                            \
+            break;                                                       \
+        case 6: /* Vector (0,1,1) */                                     \
+            /* Unroll over dimensions y,z */                             \
+            r1 = hr_sphere_region[ (i1+1+0*STRIDE)*n*n + j1*n + k ];     \
+            r2 = hr_sphere_region[ i2*n*n + (j2+1+0*STRIDE)*n + k ];     \
+            if (i1+1+1*STRIDE < ii + BLOCK_SIZE) {                       \
+                r3 = hr_sphere_region[ (i1+1+1*STRIDE)*n*n + j1*n + k ]; \
+                r4 = hr_sphere_region[ i2*n*n + (j2+1+1*STRIDE)*n + k ]; \
+            } else {                                                     \
+                r3 = 0.0f;                                               \
+                r4 = 0.0f;                                               \
+            }                                                            \
+            break;                                                       \
+        case 7: /* Vector (-1,1,0) */                                    \
+            /* Unroll over dimensions x,y */                             \
+            r1 = hr_sphere_region[ k*n*n + j1*n + (i1-1-0*STRIDE) ];     \
+            r2 = hr_sphere_region[ k*n*n + (j2+1+0*STRIDE)*n + i2 ];     \
+            if (j2+1+1*STRIDE < jj + BLOCK_SIZE) {                       \
+                r3 = hr_sphere_region[ k*n*n + j1*n + (i1-1-1*STRIDE) ]; \
+                r4 = hr_sphere_region[ k*n*n + (j2+1+1*STRIDE)*n + i2 ]; \
+            } else {                                                     \
+                r3 = 0.0f;                                               \
+                r4 = 0.0f;                                               \
+            }                                                            \
+            break;                                                       \
+        case 8: /* Vector (-1,0,1) */                                    \
+            /* Unroll over dimensions x,y */                             \
+            r1 = hr_sphere_region[ j1*n*n + k*n + (i1-1-0*STRIDE) ];     \
+            r2 = hr_sphere_region[ (j2+1+0*STRIDE)*n*n + k*n + i2 ];     \
+            if (j2+1+1*STRIDE < jj + BLOCK_SIZE) {                       \
+                r3 = hr_sphere_region[ j1*n*n + k*n + (i1-1-1*STRIDE) ]; \
+                r4 = hr_sphere_region[ (j2+1+1*STRIDE)*n*n + k*n + i2 ]; \
+            } else {                                                     \
+                r3 = 0.0f;                                               \
+                r4 = 0.0f;                                               \
+            }                                                            \
+            break;                                                       \
+        case 9: /* Vector (0,1,-1) */                                    \
+            /* Unroll over dimensions x,y */                             \
+            r1 = hr_sphere_region[ (i1-1-0*STRIDE)*n*n + j1*n + k ];     \
+            r2 = hr_sphere_region[ i2*n*n + (j2+1+0*STRIDE)*n + k ];     \
+            if (j2+1+1*STRIDE < jj + BLOCK_SIZE) {                       \
+                r3 = hr_sphere_region[ (i1-1-1*STRIDE)*n*n + j1*n + k ]; \
+                r4 = hr_sphere_region[ i2*n*n + (j2+1+1*STRIDE)*n + k ]; \
+            } else {                                                     \
+                r3 = 0.0f;                                               \
+                r4 = 0.0f;                                               \
+            }                                                            \
+            break;                                                       \
+        default: ;                                                       \
+    }
+
 
 #define COMPUTATION \
         unsigned int curr_mask1;                \
@@ -408,11 +557,9 @@ void dummy0(const float *hr_sphere_region, int n, float *directions_vectors_mil)
 /// Blocking version for vectors (1,0,0), (0,1,0), (0,0,1).
 /// Using accumulators and unrolling.
 ///
-inline float mil_v1(const float *hr_sphere_region, const int n, const int kk, const int jj, const int ii, const int vecID) {
+inline float mil_1D(const float *hr_sphere_region, const int n, const int kk, const int jj, const int ii, const int vecID) {
     float bone_length;
     unsigned int intercepts;
-    unsigned int count = 0;
-    static unsigned int flag = 0;
 
     /* Init accumulators */
     float acc1 = 0.0, acc5 = 0.0;
@@ -439,7 +586,7 @@ inline float mil_v1(const float *hr_sphere_region, const int n, const int kk, co
                 float r1, r2, r3, r4;
 
                 /* Load working set */
-                LOAD_WORKING_SET
+                LOAD_DATA_SET_1D
 
                 /* Perform computation */
                 COMPUTATION
@@ -449,7 +596,9 @@ inline float mil_v1(const float *hr_sphere_region, const int n, const int kk, co
                 prev_mask2 = curr_mask2;
                 prev_mask3 = curr_mask3;
                 prev_mask4 = curr_mask4;
+#ifdef  DEBUG
                 count++;
+#endif
             }
         }
     }
@@ -464,10 +613,11 @@ inline float mil_v1(const float *hr_sphere_region, const int n, const int kk, co
     intercepts  = edge_count1 + edge_count5;
 
 #ifdef  DEBUG
-    if (!flag) {
+    if (!already_tested[vecID]) {
         printf("%d\n", count);
-        flag = 1;
+        already_tested[vecID] = 1;
     }
+    count = 0;
 #endif
 
     return bone_length / intercepts;
@@ -475,20 +625,341 @@ inline float mil_v1(const float *hr_sphere_region, const int n, const int kk, co
 }
 
 ///
-/// Blocking version for first vector only (1,0,0).
-/// Using accumulators and unrolling over dimension y.
+/// Blocking version for vectors (1,1,0), (0,1,1), (1,0,1).
+/// Using accumulators and unrolling.
+///
+inline float mil_2D_pos(const float *hr_sphere_region, const int n, const int kk, const int jj, const int ii, const int vecID) {
+    float bone_length;
+    unsigned int intercepts;
+
+    /* Init accumulators */
+    float acc1 = 0.0, acc5 = 0.0;
+    float acc2 = 0.0, acc6 = 0.0;
+    float acc3 = 0.0, acc7 = 0.0;
+    float acc4 = 0.0, acc8 = 0.0;
+
+    unsigned int edge_count1 = 1, edge_count5 = 1;
+    unsigned int edge_count2 = 1, edge_count6 = 1;
+    unsigned int edge_count3 = 1, edge_count7 = 1;
+    unsigned int edge_count4 = 1, edge_count8 = 1;
+
+    for (int k = kk; k < kk + BLOCK_SIZE; k += STRIDE) {
+        for (int ij = 0; ij < BLOCK_SIZE; ij += STRIDE*NUM_ACC/2) {
+
+            unsigned int prev_mask1 = 0; // change this to previous of the initial val
+            unsigned int prev_mask2 = 0;
+            unsigned int prev_mask3 = 0;
+            unsigned int prev_mask4 = 0;
+            int i1 = ii + ij;
+            int j1 = jj;
+            int i2 = ii;
+            int j2 = jj + ij;
+            while (i1 + 1 < ii + BLOCK_SIZE /*&& j2+1 < jj + BLOCK_SIZE - 1*/) {
+                float r1, r2, r3, r4;
+
+                /* Load working set */
+                LOAD_DATA_SET_2D
+
+                /* Perform computation */
+                COMPUTATION
+
+                /* Update state of prev_mask */
+                prev_mask1 = curr_mask1;
+                prev_mask2 = curr_mask2;
+                if (i1+1+1*STRIDE < ii + BLOCK_SIZE) {
+                    prev_mask3 = curr_mask3;
+                    prev_mask4 = curr_mask4;
+                }
+                count++;
+
+
+                ++i1;
+                ++j1;
+                ++i2;
+                ++j2;
+            }
+        }
+    } /* End iteration over dimension k */
+
+    acc1 += acc2;   edge_count1 += edge_count2;
+    acc3 += acc4;   edge_count3 += edge_count4;
+    acc5 += acc6;   edge_count5 += edge_count6;
+    acc7 += acc8;   edge_count7 += edge_count8;
+    acc1 += acc3;   edge_count1 += edge_count3;
+    acc5 += acc7;   edge_count5 += edge_count7;
+    bone_length = acc1 + acc5;
+    intercepts  = edge_count1 + edge_count5;
+
+#ifdef  DEBUG
+    if (!already_tested[vecID]) {
+        printf("%d\n", count);
+        already_tested[vecID] = 1;
+    }
+    count = 0;
+#endif
+
+    return bone_length / intercepts;
+
+}
+
+///
+/// Blocking version for vectors (-1,1,0), (0,-1,1), (-1,0,1).
+/// Using accumulators and unrolling.
+///
+inline float mil_2D_neg(const float *hr_sphere_region, const int n, const int kk, const int jj, const int ii, const int vecID) {
+    float bone_length;
+    unsigned int intercepts;
+
+    /* Init accumulators */
+    float acc1 = 0.0, acc5 = 0.0;
+    float acc2 = 0.0, acc6 = 0.0;
+    float acc3 = 0.0, acc7 = 0.0;
+    float acc4 = 0.0, acc8 = 0.0;
+
+    unsigned int edge_count1 = 1, edge_count5 = 1;
+    unsigned int edge_count2 = 1, edge_count6 = 1;
+    unsigned int edge_count3 = 1, edge_count7 = 1;
+    unsigned int edge_count4 = 1, edge_count8 = 1;
+
+    for (int k = kk; k < kk + BLOCK_SIZE; k += STRIDE) {
+        for (int ij = 0; ij < BLOCK_SIZE; ij += STRIDE*NUM_ACC/2) {
+
+            unsigned int prev_mask1 = 0; // change this to previous of the initial val
+            unsigned int prev_mask2 = 0;
+            unsigned int prev_mask3 = 0;
+            unsigned int prev_mask4 = 0;
+            int i1 = ii + (BLOCK_SIZE-1) - ij;  /* Start at the end of the row in the block */
+            int j1 = jj;
+            int i2 = ii + (BLOCK_SIZE-1);
+            int j2 = jj + ij;
+            while (j2 + 1 < jj + BLOCK_SIZE) {
+                float r1, r2, r3, r4;
+
+                /* Load working set */
+                LOAD_DATA_SET_2D
+
+                /* Perform computation */
+                COMPUTATION
+
+                /* Update state of prev_mask */
+                prev_mask1 = curr_mask1;
+                prev_mask2 = curr_mask2;
+                if (j2+1+1*STRIDE < jj + BLOCK_SIZE) {
+                    prev_mask3 = curr_mask3;
+                    prev_mask4 = curr_mask4;
+                }
+                count++;
+
+
+                --i1;
+                ++j1;
+                --i2;
+                ++j2;
+            }
+        }
+    } /* End iteration over dimension k */
+
+    acc1 += acc2;   edge_count1 += edge_count2;
+    acc3 += acc4;   edge_count3 += edge_count4;
+    acc5 += acc6;   edge_count5 += edge_count6;
+    acc7 += acc8;   edge_count7 += edge_count8;
+    acc1 += acc3;   edge_count1 += edge_count3;
+    acc5 += acc7;   edge_count5 += edge_count7;
+    bone_length = acc1 + acc5;
+    intercepts  = edge_count1 + edge_count5;
+
+#ifdef  DEBUG
+    if (!already_tested[vecID]) {
+        printf("%d\n", count);
+        already_tested[vecID] = 1;
+    }
+    count = 0;
+#endif
+
+    return bone_length / intercepts;
+
+}
+
+///
+/// Test for first vector only (1,0,0).
 ///
 void mil_test_v1(const float *hr_sphere_region, int n, float *directions_vectors_mil) {
 
     const int n_vectors = NUM_DIRECTIONS;
-
     for (int kk = 0; kk < n; kk+=BLOCK_SIZE) {
         for (int jj = 0; jj < n; jj+=BLOCK_SIZE) {
             for (int ii = 0; ii < n; ii+=BLOCK_SIZE) {
                 /* for every direction vector */
                 for (int v = 0; v < n_vectors; ++v) {
 
-                    directions_vectors_mil[v] = mil_v1(hr_sphere_region, n, kk, jj, ii, 1);
+                    directions_vectors_mil[v] = mil_1D(hr_sphere_region, n, kk, jj, ii, 1);
+
+                }
+            }
+        }
+    }
+}
+
+///
+/// Test second vector (0,1,0).
+///
+void mil_test_v2(const float *hr_sphere_region, int n, float *directions_vectors_mil) {
+
+    const int n_vectors = NUM_DIRECTIONS;
+    for (int kk = 0; kk < n; kk+=BLOCK_SIZE) {
+        for (int jj = 0; jj < n; jj+=BLOCK_SIZE) {
+            for (int ii = 0; ii < n; ii+=BLOCK_SIZE) {
+                /* for every direction vector */
+                for (int v = 0; v < n_vectors; ++v) {
+
+                    directions_vectors_mil[v] = mil_1D(hr_sphere_region, n, kk, jj, ii, 2);
+
+                }
+            }
+        }
+    }
+
+}
+
+///
+/// Test third vector (0,0,1).
+///
+void mil_test_v3(const float *hr_sphere_region, int n, float *directions_vectors_mil) {
+
+    const int n_vectors = NUM_DIRECTIONS;
+    for (int kk = 0; kk < n; kk+=BLOCK_SIZE) {
+        for (int jj = 0; jj < n; jj+=BLOCK_SIZE) {
+            for (int ii = 0; ii < n; ii+=BLOCK_SIZE) {
+                /* for every direction vector */
+                for (int v = 0; v < n_vectors; ++v) {
+
+                    directions_vectors_mil[v] = mil_1D(hr_sphere_region, n, kk, jj, ii, 3);
+
+                }
+            }
+        }
+    }
+
+}
+
+///
+/// Test third vector (1,1,0).
+///
+void mil_test_v4(const float *hr_sphere_region, int n, float *directions_vectors_mil) {
+
+    const int n_vectors = NUM_DIRECTIONS;
+    for (int kk = 0; kk < n; kk+=BLOCK_SIZE) {
+        for (int jj = 0; jj < n; jj+=BLOCK_SIZE) {
+            for (int ii = 0; ii < n; ii+=BLOCK_SIZE) {
+                /* for every direction vector */
+                for (int v = 0; v < n_vectors; ++v) {
+
+                    directions_vectors_mil[v] = mil_2D_pos(hr_sphere_region, n, kk, jj, ii, 4);
+
+                }
+            }
+        }
+    }
+
+}
+
+///
+/// Test third vector (1,0,1).
+///
+void mil_test_v5(const float *hr_sphere_region, int n, float *directions_vectors_mil) {
+
+    const int n_vectors = NUM_DIRECTIONS;
+    for (int kk = 0; kk < n; kk+=BLOCK_SIZE) {
+        for (int jj = 0; jj < n; jj+=BLOCK_SIZE) {
+            for (int ii = 0; ii < n; ii+=BLOCK_SIZE) {
+                /* for every direction vector */
+                for (int v = 0; v < n_vectors; ++v) {
+
+                    directions_vectors_mil[v] = mil_2D_pos(hr_sphere_region, n, kk, jj, ii, 5);
+
+                }
+            }
+        }
+    }
+
+}
+
+///
+/// Test third vector (0,1,1).
+///
+void mil_test_v6(const float *hr_sphere_region, int n, float *directions_vectors_mil) {
+
+    const int n_vectors = NUM_DIRECTIONS;
+    for (int kk = 0; kk < n; kk+=BLOCK_SIZE) {
+        for (int jj = 0; jj < n; jj+=BLOCK_SIZE) {
+            for (int ii = 0; ii < n; ii+=BLOCK_SIZE) {
+                /* for every direction vector */
+                for (int v = 0; v < n_vectors; ++v) {
+
+                    directions_vectors_mil[v] = mil_2D_pos(hr_sphere_region, n, kk, jj, ii, 6);
+
+                }
+            }
+        }
+    }
+
+}
+
+///
+/// Test third vector (-1,1,0).
+///
+void mil_test_v7(const float *hr_sphere_region, int n, float *directions_vectors_mil) {
+
+    const int n_vectors = NUM_DIRECTIONS;
+    for (int kk = 0; kk < n; kk+=BLOCK_SIZE) {
+        for (int jj = 0; jj < n; jj+=BLOCK_SIZE) {
+            for (int ii = 0; ii < n; ii+=BLOCK_SIZE) {
+                /* for every direction vector */
+                for (int v = 0; v < n_vectors; ++v) {
+
+                    directions_vectors_mil[v] = mil_2D_neg(hr_sphere_region, n, kk, jj, ii, 7);
+
+                }
+            }
+        }
+    }
+
+}
+
+///
+/// Test third vector (-1,0,1).
+///
+void mil_test_v8(const float *hr_sphere_region, int n, float *directions_vectors_mil) {
+
+    const int n_vectors = NUM_DIRECTIONS;
+    for (int kk = 0; kk < n; kk+=BLOCK_SIZE) {
+        for (int jj = 0; jj < n; jj+=BLOCK_SIZE) {
+            for (int ii = 0; ii < n; ii+=BLOCK_SIZE) {
+                /* for every direction vector */
+                for (int v = 0; v < n_vectors; ++v) {
+
+                    directions_vectors_mil[v] = mil_2D_neg(hr_sphere_region, n, kk, jj, ii, 8);
+
+                }
+            }
+        }
+    }
+
+}
+
+///
+/// Test third vector (0,1,-1).
+///
+void mil_test_v9(const float *hr_sphere_region, int n, float *directions_vectors_mil) {
+
+    const int n_vectors = NUM_DIRECTIONS;
+    for (int kk = 0; kk < n; kk+=BLOCK_SIZE) {
+        for (int jj = 0; jj < n; jj+=BLOCK_SIZE) {
+            for (int ii = 0; ii < n; ii+=BLOCK_SIZE) {
+                /* for every direction vector */
+                for (int v = 0; v < n_vectors; ++v) {
+
+                    directions_vectors_mil[v] = mil_2D_neg(hr_sphere_region, n, kk, jj, ii, 9);
 
                 }
             }

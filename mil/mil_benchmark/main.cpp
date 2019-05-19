@@ -63,12 +63,14 @@ extern "C" void mil2_baseline(const float *hr_sphere_region, int n, float *direc
 extern "C" void mil2_o1(const double *hr_sphere_region, int n, double *directions_vectors_mil);
 extern "C" void mil_block1(const float *hr_sphere_region, int n, float *directions_vectors_mil);
 extern "C" void mil_test_v1(const float *hr_sphere_region, int n, float *directions_vectors_mil);
-extern "C" void mil_block_v2(const float *hr_sphere_region, int n, float *directions_vectors_mil);
-extern "C" void mil_block_v3(const float *hr_sphere_region, int n, float *directions_vectors_mil);
-extern "C" void mil_block_v4(const float *hr_sphere_region, int n, float *directions_vectors_mil);
-extern "C" void mil_block_v5(const float *hr_sphere_region, int n, float *directions_vectors_mil);
-extern "C" void mil_block_v6(const float *hr_sphere_region, int n, float *directions_vectors_mil);
-extern "C" void mil_block_v7(const float *hr_sphere_region, int n, float *directions_vectors_mil);
+extern "C" void mil_test_v2(const float *hr_sphere_region, int n, float *directions_vectors_mil);
+extern "C" void mil_test_v3(const float *hr_sphere_region, int n, float *directions_vectors_mil);
+extern "C" void mil_test_v4(const float *hr_sphere_region, int n, float *directions_vectors_mil);
+extern "C" void mil_test_v5(const float *hr_sphere_region, int n, float *directions_vectors_mil);
+extern "C" void mil_test_v6(const float *hr_sphere_region, int n, float *directions_vectors_mil);
+extern "C" void mil_test_v7(const float *hr_sphere_region, int n, float *directions_vectors_mil);
+extern "C" void mil_test_v8(const float *hr_sphere_region, int n, float *directions_vectors_mil);
+extern "C" void mil_test_v9(const float *hr_sphere_region, int n, float *directions_vectors_mil);
 
 void add_function(comp_func f, const string& name, double flop);
 
@@ -116,13 +118,14 @@ void register_functions()
 //    add_function(&mil2_o2, "Base opt2", 6.5);
 //    add_function(&mil_block1,  "MIL block 1", 6.5);
     add_function(&mil_test_v1, "MIL block vector (1,0,0)", 3.25*2);
-    add_function(&mil_block_v2, "MIL block vector (0,1,0)", 3.25*2);
-    add_function(&mil_block_v3, "MIL block vector (0,0,1)", 3.25*2);
-    add_function(&mil_block_v4, "MIL block vector (1,1,0)", 3.25*2);
-    add_function(&mil_block_v5, "MIL block vector (-1,1,0)", 3.25*2);
-    add_function(&mil_block_v6, "MIL block vector (1,0,1)", 3.25*2);
-    add_function(&mil_block_v7, "MIL block vector (1,0,1)", 3.25*2);
-//    add_function(&dummy3,   "Dummy 3", 3.25);
+    add_function(&mil_test_v2, "MIL block vector (0,1,0)", 3.25*2);
+    add_function(&mil_test_v3, "MIL block vector (0,0,1)", 3.25*2);
+    add_function(&mil_test_v4, "MIL block vector (1,1,0)", 3.25*2);
+    add_function(&mil_test_v5, "MIL block vector (1,0,1)", 3.25*2);
+    add_function(&mil_test_v6, "MIL block vector (0,1,1)", 3.25*2);
+    add_function(&mil_test_v7, "MIL block vector (-1,1,0)", 3.25*2);
+    add_function(&mil_test_v8, "MIL block vector (-1,0,1)", 3.25*2);
+    add_function(&mil_test_v9, "MIL block vector (0,1,-1)", 3.25*2);
 }
 
 bool checksum(const float* a, const float* b, int n) {
