@@ -59,13 +59,16 @@ void register_functions();
 double perf_test(comp_func f, int n);
 
 //You can delcare your functions here
-extern "C" void mil2_baseline(const double *hr_sphere_region, int n, double *directions_vectors_mil);
+extern "C" void mil2_baseline(const float *hr_sphere_region, int n, float *directions_vectors_mil);
 extern "C" void mil2_o1(const double *hr_sphere_region, int n, double *directions_vectors_mil);
-//extern "C" void mil2_o2(const int *hr_sphere_region, int n, double *directions_vectors_mil);
-extern "C" void dummy0(const float *hr_sphere_region, int n, float *directions_vectors_mil);
-//extern "C" void dummy1(const double *hr_sphere_region, int n, double *directions_vectors_mil);
-//extern "C" void dummy2(const int *hr_sphere_region, int n, double *directions_vectors_mil);
-//extern "C" void dummy3(const int *hr_sphere_region, int n, double *directions_vectors_mil);
+extern "C" void mil_block1(const float *hr_sphere_region, int n, float *directions_vectors_mil);
+extern "C" void mil_test_v1(const float *hr_sphere_region, int n, float *directions_vectors_mil);
+extern "C" void mil_block_v2(const float *hr_sphere_region, int n, float *directions_vectors_mil);
+extern "C" void mil_block_v3(const float *hr_sphere_region, int n, float *directions_vectors_mil);
+extern "C" void mil_block_v4(const float *hr_sphere_region, int n, float *directions_vectors_mil);
+extern "C" void mil_block_v5(const float *hr_sphere_region, int n, float *directions_vectors_mil);
+extern "C" void mil_block_v6(const float *hr_sphere_region, int n, float *directions_vectors_mil);
+extern "C" void mil_block_v7(const float *hr_sphere_region, int n, float *directions_vectors_mil);
 
 void add_function(comp_func f, const string& name, double flop);
 
@@ -111,8 +114,14 @@ void register_functions()
 //    add_function(&mil2_baseline, "Base line", 3.25);
 //    add_function(&mil2_o1, "Base opt1", 3.25);
 //    add_function(&mil2_o2, "Base opt2", 6.5);
-    add_function(&dummy0, "Dummy 0", 3.25);
-//    add_function(&dummy2,   "Dummy 2", 3.25);
+//    add_function(&mil_block1,  "MIL block 1", 6.5);
+    add_function(&mil_test_v1, "MIL block vector (1,0,0)", 3.25*2);
+    add_function(&mil_block_v2, "MIL block vector (0,1,0)", 3.25*2);
+    add_function(&mil_block_v3, "MIL block vector (0,0,1)", 3.25*2);
+    add_function(&mil_block_v4, "MIL block vector (1,1,0)", 3.25*2);
+    add_function(&mil_block_v5, "MIL block vector (-1,1,0)", 3.25*2);
+    add_function(&mil_block_v6, "MIL block vector (1,0,1)", 3.25*2);
+    add_function(&mil_block_v7, "MIL block vector (1,0,1)", 3.25*2);
 //    add_function(&dummy3,   "Dummy 3", 3.25);
 }
 
@@ -157,7 +166,7 @@ int main(int argc, char **argv)
     float* output;
     float* outputBaseline;
 
-    for (int n = 16; n <= 96; n += 16) {
+    for (int n = 64; n <= 64; n += 16) {
 //    for (int n = 20; n <= MAX_SIZE; n += 20) {
         cout << endl << "Testing size " << n << endl;
 
