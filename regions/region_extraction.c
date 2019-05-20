@@ -33,7 +33,7 @@
 ///
 /// Write a sphere mask
 ///
-void createSphereMask(int *sphere) {
+void createSphereMask(double *sphere) {
 
     double radius = SPHERE_DIAMETER/2.0;
     double distance, xc, yc, zc;
@@ -57,9 +57,9 @@ void createSphereMask(int *sphere) {
                 distance = sqrt(pow(x-xc, 2) + pow(y-yc, 2) + pow(z-zc, 2));
                 ii = i + j*SPHERE_NDIM + k*SPHERE_NDIM*SPHERE_NDIM;
                 if (distance <= radius) {
-                    sphere[ii] = 1; 
+                    sphere[ii] = 1.0; 
                 } else {
-                    sphere[ii] = 0; 
+                    sphere[ii] = 0.0; 
                 }
             }
         }
@@ -84,7 +84,7 @@ void region_extraction_debug_deinit(void)
 ///
 /// Skeleton for region extraction
 ///
-void region_extraction (int i_hr, int j_hr, int k_hr, int *sphere, int *extracted_region, int *ptrHighRes) {
+void region_extraction (int i_hr, int j_hr, int k_hr, double *sphere, double *extracted_region, double *ptrHighRes) {
 
     int ihr_min, jhr_min, khr_min;
     int ii;
@@ -123,14 +123,14 @@ void region_extraction (int i_hr, int j_hr, int k_hr, int *sphere, int *extracte
 ///
 /// Skeleton for region extraction
 ///
-void region_extraction_opt1 (int i_hr, int j_hr, int k_hr, int *sphere, int *extracted_region, int *ptrHighRes) {
+void region_extraction_opt1 (int i_hr, int j_hr, int k_hr, double *sphere, double *extracted_region, double *ptrHighRes) {
 
     int ihr_min, jhr_min, khr_min;
     int ii;
     int ihr, jhr, khr, ii_hr;
-    int hr_voxel0, hr_voxel1, hr_voxel2, hr_voxel3;
-    int sp_voxel0, sp_voxel1, sp_voxel2, sp_voxel3;
-    int ex_voxel0, ex_voxel1, ex_voxel2, ex_voxel3;
+    double hr_voxel0, hr_voxel1, hr_voxel2, hr_voxel3;
+    double sp_voxel0, sp_voxel1, sp_voxel2, sp_voxel3;
+    double ex_voxel0, ex_voxel1, ex_voxel2, ex_voxel3;
 
     // find min for sphere
     ihr_min = i_hr - SPHERE_HALF_NDIM;
@@ -195,7 +195,7 @@ void region_extraction_opt1 (int i_hr, int j_hr, int k_hr, int *sphere, int *ext
 ///
 /// Skeleton for region extraction
 ///
-void region_extraction_opt2 (int i_hr, int j_hr, int k_hr, int *sphere, int *extracted_region, int *ptrHighRes) {
+void region_extraction_opt2 (int i_hr, int j_hr, int k_hr, double *sphere, double *extracted_region, double *ptrHighRes) {
 
     int ihr_min, jhr_min, khr_min;
     int isp, jsp, ksp, jksp, ii;
@@ -246,7 +246,7 @@ void region_extraction_opt2 (int i_hr, int j_hr, int k_hr, int *sphere, int *ext
 ///
 /// blocking, loop unrolling and scalar replacement
 ///
-void region_extraction_opt3 (int i_hr, int j_hr, int k_hr, int *sphere, int *extracted_region, int *ptrHighRes) {
+void region_extraction_opt3 (int i_hr, int j_hr, int k_hr, double *sphere, double *extracted_region, double *ptrHighRes) {
 
     int ihr_min, jhr_min, khr_min;
     int isp, jsp, ksp, jksp, ii;
@@ -254,9 +254,9 @@ void region_extraction_opt3 (int i_hr, int j_hr, int k_hr, int *sphere, int *ext
 
     int inb, jnb, knb;
     int inb_start, jnb_start, knb_start;
-    int hr_voxel0, hr_voxel1, hr_voxel2, hr_voxel3;
-    int sp_voxel0, sp_voxel1, sp_voxel2, sp_voxel3;
-    int ex_voxel0, ex_voxel1, ex_voxel2, ex_voxel3;
+    double hr_voxel0, hr_voxel1, hr_voxel2, hr_voxel3;
+    double sp_voxel0, sp_voxel1, sp_voxel2, sp_voxel3;
+    double ex_voxel0, ex_voxel1, ex_voxel2, ex_voxel3;
     int BLOCK_SIZE = 16;
     int NBLOCKS = SPHERE_NDIM/BLOCK_SIZE;
 
