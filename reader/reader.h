@@ -27,7 +27,7 @@
 #ifndef BONEMAP_READER_H
 #define BONEMAP_READER_H
 
-#define NUMBER_OF_INPUTS 6
+#define NUMBER_OF_INPUTS 1
 #define LOW_RES_D1(index) (26 * scaleFactor[index])
 #define LOW_RES_D2(index) (16 * scaleFactor[index])
 #define LOW_RES_D3(index) (31 * scaleFactor[index])
