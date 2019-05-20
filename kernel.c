@@ -254,7 +254,7 @@ void kernel_basic (double* sphere, double* ptrHighRes, double* ptrLowRes, double
                     //print_vector(mils, NUM_DIRECTIONS);
 
                     double Q[3][3];
-                    fit_ellipsoid_mils(mils, Q);
+                    fit_ellipsoid_mils(mils, (double (*)[3][3])Q);
 
                     eigen3(Q, &ptrEvecOut[ii_lr*9], &ptrEvalsOut[ii_lr*3]);
                 }

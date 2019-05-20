@@ -147,21 +147,25 @@ static const int NUM_DIRECTIONS = sizeof(DIRECTIONS)/sizeof(int)/3;
  * The raw ellipsoid fitting routine
  * @p : pointer to an array of length 3, the points in 3D space on which to fit
  */
-void fit_ellipsoid(const double (*p)[3], int n, double Q[3][3]);
+void fit_ellipsoid(const double (*p)[3], int n, double (*Q)[3][3]);
+void fit_ellipsoid_opt(const double (*p)[3], int n, double (*Q)[3][3]);
+void fit_ellipsoid_simd(const double (*p)[3], int n, double (*Q)[3][3]);
 
 /*
  * convenience function, wraps fit_ellipsoid above, given the mils (lengths) along
  * each of the DIRECTIONS defined above
  *
  */
-void fit_ellipsoid_mils(const double *mils, double Q[3][3]);
+void fit_ellipsoid_mils(const double *mils, double (*Q)[3][3]);
+void fit_ellipsoid_mils_opt(const double *mils, double (*Q)[3][3]);
+void fit_ellipsoid_mils_simd(const double *mils, double (*Q)[3][3]);
 
 /*
  * debugging tools
  */
 #ifdef DEBUG
 	void fit_ellipsoid_debug_init(void);
-	void fit_ellipsoid_debug_deinit(void);
+	long fit_ellipsoid_debug_deinit(void);
 #endif
 
 
