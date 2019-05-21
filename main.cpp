@@ -79,10 +79,21 @@ void destroy(double* sphere, double* ptrHighRes, double* ptrLowRes, double* rota
 void register_functions()
 {
     long int flops = 126921;
-
+    //flops += 19691008; //16
+    flops += 157471744; //32
+    //flops += 531295488; //48
+    //flops += 1258770432; //64
+    //flops += 2457100800; //80
+    //flops += 4243037184; //96
+    //flops += 6732803840; //112
+    //flops += 10041868288; //128
+    //
     // TODO: Add correct number of flops
     add_function(&kernel_basic, "Base kernel", flops);
     //
+    add_function(&kernel_opt1, "[regions] opt1", flops);
+    //
+    add_function(&kernel_opt2, "[regions] opt2", flops);
 }
 
 
@@ -150,7 +161,7 @@ void add_function(comp_func f, string name, long flops)
 double perf_test(comp_func f, string desc, long flops)
 {
     double cycles = 0.;
-    long num_runs = 1;
+    long num_runs = 3;
     double multiplier = 1;
     myInt64 start, end;
 

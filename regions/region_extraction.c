@@ -68,16 +68,19 @@ void createSphereMask(double *sphere) {
 }
 #ifdef DEBUG
 static long region_extraction_flop_count = 0;
+static long region_extraction_call_count = 0;
 void region_extraction_debug_init(void)
     {
       region_extraction_flop_count = 0;
+      region_extraction_call_count = 0;
     }
 void region_extraction_debug_deinit(void)
     {
       printf("[regions] flop count = %ld\n", region_extraction_flop_count);
-      long int readwrite_bytes = SPHERE_NDIM*SPHERE_NDIM*SPHERE_NDIM*3*(sizeof(int));
-      printf("region_extraction: read & write  %ld bytes \n", readwrite_bytes);
-      printf("region_extraction: opt intensity  %f flops/bytes \n", (float) region_extraction_flop_count/readwrite_bytes);
+      printf("[regions] call count = %ld\n", region_extraction_call_count);
+      long int readwrite_bytes = SPHERE_NDIM*SPHERE_NDIM*SPHERE_NDIM*3*(sizeof(double));
+      printf("[regions] read & write  %ld bytes \n", readwrite_bytes);
+      printf("[regions] opt intensity  %f flops/bytes \n", (float) region_extraction_flop_count/(readwrite_bytes*region_extraction_call_count));
     }
 #endif
 
@@ -90,6 +93,9 @@ void region_extraction (int i_hr, int j_hr, int k_hr, double *sphere, double *ex
     int ii;
     int ihr, jhr, khr, ii_hr;
 
+#ifdef DEBUG
+    region_extraction_call_count += 1;
+#endif
     // find min for sphere
     ihr_min = i_hr - SPHERE_HALF_NDIM;
     jhr_min = j_hr - SPHERE_HALF_NDIM;
@@ -257,7 +263,7 @@ void region_extraction_opt3 (int i_hr, int j_hr, int k_hr, double *sphere, doubl
     double hr_voxel0, hr_voxel1, hr_voxel2, hr_voxel3;
     double sp_voxel0, sp_voxel1, sp_voxel2, sp_voxel3;
     double ex_voxel0, ex_voxel1, ex_voxel2, ex_voxel3;
-    int BLOCK_SIZE = 16;
+    int BLOCK_SIZE = 8;
     int NBLOCKS = SPHERE_NDIM/BLOCK_SIZE;
 
     // find min for sphere
