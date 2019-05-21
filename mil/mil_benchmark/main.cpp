@@ -184,7 +184,7 @@ int main(int argc, char **argv)
     double* output;
     double* outputBaseline;
 
-    for (int n = 80; n <= 80; n += 16) {
+    for (int n = 32; n <= 96; n += 32) {
 //    for (int n = 20; n <= MAX_SIZE; n += 20) {
         cout << endl << "Testing size " << n << endl;
 

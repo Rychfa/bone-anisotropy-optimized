@@ -125,8 +125,7 @@ void fit_ellipsoid(const double (*p)[3], int n, double (*Q)[3][3])
 				for (int k=0; k<3; k++) {
 					jacobian_i[j][k] = p[i][j]*p[i][k];
 				} 
-			} // dont count these flops, compiler might remove them since can be computed in 
-			  // _quadratic form
+			} 
 
 			/* grad += 2*residual_i*jacobian_i */
 			for (int j=0; j<3; j++) {
@@ -138,7 +137,7 @@ void fit_ellipsoid(const double (*p)[3], int n, double (*Q)[3][3])
 
 #ifdef DEBUG
 		ellipsoid_flop_count += n*(20+1 + 9+1+9*2 +2); 
-		// ellipsoid_flop_count += 9*(1+1) + 1; 
+		ellipsoid_flop_count += 9*(1+1) + 1; 
 		ellipsoid_outer_iters++;
 #endif
 
@@ -166,7 +165,7 @@ void fit_ellipsoid(const double (*p)[3], int n, double (*Q)[3][3])
 			}
 		}
 #ifdef DEBUG
-		// ellipsoid_flop_count += 9*(1+1);
+		ellipsoid_flop_count += 9*(1+1);
 #endif
 
 		double trace_gradstep = 0;
