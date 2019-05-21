@@ -116,7 +116,7 @@ void mil2(const int *hr_sphere_region, int n, double *directions_vectors_mil) {
 
 }
 
-void mil2_baseline(const float *hr_sphere_region, int n, float *directions_vectors_mil) {
+void mil2_baseline(const double *hr_sphere_region, int n, double *directions_vectors_mil) {
 
     const int n_vectors = NUM_DIRECTIONS;
 
@@ -243,14 +243,14 @@ void mil2_o1(const double *hr_sphere_region, int n, double *directions_vectors_m
 /// Blocking version for vectors (1,0,0), (0,1,0), (0,0,1).
 /// Using accumulators and unrolling.
 ///
-inline float mil_1D(const float *hr_sphere_region, int* intercepts, int n, const int kk, const int jj, const int ii,  const int vecID) {
-    float bone_length;
+inline double mil_1D(const double *hr_sphere_region, int* intercepts, int n, const int kk, const int jj, const int ii,  const int vecID) {
+    double bone_length;
 
     /* Init accumulators */
-    float acc1 = 0.0, acc5 = 0.0;
-    float acc2 = 0.0, acc6 = 0.0;
-    float acc3 = 0.0, acc7 = 0.0;
-    float acc4 = 0.0, acc8 = 0.0;
+    double acc1 = 0.0, acc5 = 0.0;
+    double acc2 = 0.0, acc6 = 0.0;
+    double acc3 = 0.0, acc7 = 0.0;
+    double acc4 = 0.0, acc8 = 0.0;
 
     unsigned int edge_count1 = 0, edge_count5 = 0;
     unsigned int edge_count2 = 0, edge_count6 = 0;
@@ -263,7 +263,7 @@ inline float mil_1D(const float *hr_sphere_region, int* intercepts, int n, const
             LOAD_PREV_1D
 
             for (int i = ii; i < ii + BLOCK_SIZE; ++i) {
-                float r1, r2, r3, r4;
+                double r1, r2, r3, r4;
 
                 /* Load working set */
                 LOAD_DATA_SET_1D
@@ -309,14 +309,14 @@ inline float mil_1D(const float *hr_sphere_region, int* intercepts, int n, const
 /// Blocking version for vectors (1,1,0), (0,1,1), (1,0,1).
 /// Using accumulators and unrolling.
 ///
-inline float mil_2D_pos(const float *hr_sphere_region, int* intercepts, int n, const int kk, const int jj, const int ii,  const int vecID) {
-    float bone_length;
+inline double mil_2D_pos(const double *hr_sphere_region, int* intercepts, int n, const int kk, const int jj, const int ii,  const int vecID) {
+    double bone_length;
 
     /* Init accumulators */
-    float acc1 = 0.0, acc5 = 0.0;
-    float acc2 = 0.0, acc6 = 0.0;
-    float acc3 = 0.0, acc7 = 0.0;
-    float acc4 = 0.0, acc8 = 0.0;
+    double acc1 = 0.0, acc5 = 0.0;
+    double acc2 = 0.0, acc6 = 0.0;
+    double acc3 = 0.0, acc7 = 0.0;
+    double acc4 = 0.0, acc8 = 0.0;
 
     unsigned int edge_count1 = 0, edge_count5 = 0;
     unsigned int edge_count2 = 0, edge_count6 = 0;
@@ -335,7 +335,7 @@ inline float mil_2D_pos(const float *hr_sphere_region, int* intercepts, int n, c
             int i2 = ii;
             int j2 = jj + ij;
             while (i1 + 1 < ii + BLOCK_SIZE /*&& j2+1 < jj + BLOCK_SIZE - 1*/) {
-                float r1, r2, r3, r4;
+                double r1, r2, r3, r4;
 
                 /* Load working set */
                 LOAD_DATA_SET_2D
@@ -384,14 +384,14 @@ inline float mil_2D_pos(const float *hr_sphere_region, int* intercepts, int n, c
 /// Blocking version for vectors (-1,1,0), (0,-1,1), (-1,0,1).
 /// Using accumulators and unrolling.
 ///
-inline float mil_2D_neg(const float *hr_sphere_region, int* intercepts, int n, const int kk, const int jj, const int ii,  const int vecID) {
-    float bone_length;
+inline double mil_2D_neg(const float *hr_sphere_region, int* intercepts, int n, const int kk, const int jj, const int ii,  const int vecID) {
+    double bone_length;
 
     /* Init accumulators */
-    float acc1 = 0.0, acc5 = 0.0;
-    float acc2 = 0.0, acc6 = 0.0;
-    float acc3 = 0.0, acc7 = 0.0;
-    float acc4 = 0.0, acc8 = 0.0;
+    double acc1 = 0.0, acc5 = 0.0;
+    double acc2 = 0.0, acc6 = 0.0;
+    double acc3 = 0.0, acc7 = 0.0;
+    double acc4 = 0.0, acc8 = 0.0;
 
     unsigned int edge_count1 = 0, edge_count5 = 0;
     unsigned int edge_count2 = 0, edge_count6 = 0;
@@ -410,7 +410,7 @@ inline float mil_2D_neg(const float *hr_sphere_region, int* intercepts, int n, c
             int i2 = ii + (BLOCK_SIZE-1);
             int j2 = jj + ij;
             while (j2 + 1 < jj + BLOCK_SIZE) {
-                float r1, r2, r3, r4;
+                double r1, r2, r3, r4;
 
                 /* Load working set */
                 LOAD_DATA_SET_2D
@@ -648,13 +648,13 @@ void mil_test_v9(const float *hr_sphere_region, int n, float *directions_vectors
 ///
 /// Test all vectors
 ///
-void mil_test_all(const float *hr_sphere_region, int n, float *directions_vectors_mil) {
+void mil_test_all(const double *hr_sphere_region, int n, double *directions_vectors_mil) {
 
-    float bone_length[NUM_DIRECTIONS];
+    double bone_length[NUM_DIRECTIONS];
     int intercepts[NUM_DIRECTIONS];
 
     for (int i = 0; i < NUM_DIRECTIONS; ++i) {
-        bone_length[i] = 0.0f;
+        bone_length[i] = 0.0;
         intercepts[i]  = 0;
     }
 

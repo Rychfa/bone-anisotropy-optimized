@@ -251,7 +251,7 @@ int main(int argc, char **argv)
     destroy(sphere, ptrHighRes, ptrLowRes, rotation_matrix, ptrEvecOut, ptrEvalsOut, true);
     cout << endl;
 
-    for (i =0; i < numFuncs; i++) {
+    for (i =1; i < numFuncs; i++) {
         cout << endl << "*** Check results of " << funcNames[0] << " ***" << endl;
         build(&sphere, &ptrHighRes, &ptrLowRes, &rotation_matrix, &ptrEvecOut, &ptrEvalsOut);
 

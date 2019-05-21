@@ -39,7 +39,7 @@
 #include <time.h>
 #include <math.h>
 #include <string.h>
-#include "tsc_x86.h"
+#include "..\utils\tsc_x86.h"
 
 using namespace std;
 
@@ -51,7 +51,7 @@ using namespace std;
 #define MAX_SIZE  300
 
 /* prototype of the function you need to optimize */
-typedef void(*comp_func)( const float*, int, float* );
+typedef void(*comp_func)( const double*, int, double* );
 
 //headers
 double get_perf_score(comp_func f);
@@ -60,7 +60,7 @@ double perf_test(comp_func f, int n);
 
 //You can delcare your functions here
 extern int gBone1, gBone2, gInter1, gInter2;
-extern "C" void mil2_baseline(const float *hr_sphere_region, int n, float *directions_vectors_mil);
+extern "C" void mil2_baseline(const double *hr_sphere_region, int n, double *directions_vectors_mil);
 extern "C" void mil2_o1(const double *hr_sphere_region, int n, double *directions_vectors_mil);
 extern "C" void mil_test_v1(const float *hr_sphere_region, int n, float *directions_vectors_mil);
 extern "C" void mil_test_v2(const float *hr_sphere_region, int n, float *directions_vectors_mil);
@@ -71,7 +71,8 @@ extern "C" void mil_test_v6(const float *hr_sphere_region, int n, float *directi
 extern "C" void mil_test_v7(const float *hr_sphere_region, int n, float *directions_vectors_mil);
 extern "C" void mil_test_v8(const float *hr_sphere_region, int n, float *directions_vectors_mil);
 extern "C" void mil_test_v9(const float *hr_sphere_region, int n, float *directions_vectors_mil);
-extern "C" void mil_test_all(const float *hr_sphere_region, int n, float *directions_vectors_mil);
+extern "C" void mil_test_all(const double *hr_sphere_region, int n, double *directions_vectors_mil);
+extern "C" void mil_test_all_simd(const double *hr_sphere_region, int n, double *directions_vectors_mil);
 
 void add_function(comp_func f, const string& name, double flop);
 
@@ -111,6 +112,12 @@ void build(float **a, int n)
     rands(*a, n);
 }
 
+void build(double **a, int n)
+{
+    *a = static_cast<double *>(aligned_alloc(32, n * sizeof(double)));
+    rands(*a, n);
+}
+
 void destroy(void * m)
 {
     free(m);
@@ -136,7 +143,7 @@ void register_functions()
     add_function(&mil_test_all, "MIL all vectors", (6.0/4.0)*2);
 }
 
-bool checksum(const float* a, const float* b, int n) {
+bool checksum(const double* a, const double* b, int n) {
 
     for(int i = 0; i < n; i++) {
 //        cout << a[i] << " " << b[i] << endl;
@@ -173,9 +180,9 @@ int main(int argc, char **argv)
 
     //Check validity of functions. 
 //    int n = 30;
-    float*region;
-    float* output;
-    float* outputBaseline;
+    double* region;
+    double* output;
+    double* outputBaseline;
 
     for (int n = 80; n <= 80; n += 16) {
 //    for (int n = 20; n <= MAX_SIZE; n += 20) {
@@ -246,8 +253,8 @@ double perf_test(comp_func f, int n)
     double multiplier = 1;
     myInt64 start, end;
 
-    float* region;
-    float* output;
+    double* region;
+    double* output;
     build(&region, n*n*n);
     build(&output, 13);
 
