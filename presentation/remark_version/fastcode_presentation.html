@@ -32,9 +32,7 @@ Project Presentation, How to Write Fast Numerical Code, 27 May 2019
 
 Coordinate mapping
 
----
-### Algorithms
-![:scale 100%](figs/algo0.png)
+![:scale 100%](figs/coord_map.png)
 
 ---
 ### Algorithms
@@ -129,14 +127,59 @@ m_{7} & m_{8} & m_{9}\\
 
 ---
 ### Algorithms summary
-![:scale 90%](figs/algorithms.jpg)
+
+.center[
+![:scale 80%](figs/algorithms.png)]
 
 ---
 ### Region extraction
-* Cost analysis
-* Basic implementation
-* Optimization
-* Performance and roofline plots
+Basic implementation
+```
+    for (int k=0; k < SPHERE_NDIM; k++) {
+        khr = k + khr_min;
+        for (int j=0; j < SPHERE_NDIM; j++) {
+            jhr = j + jhr_min;
+            for (int i=0; i < SPHERE_NDIM; i++) {
+                ihr = i + ihr_min;
+                // calculate index
+                ii = i + j*SPHERE_NDIM + k*SPHERE_NDIM*SPHERE_NDIM;
+                ii_hr = ihr + jhr*HIGH_RES_D1 + khr*HIGH_RES_D1*HIGH_RES_D2;
+    
+                if (ii_hr < HIGH_RES_SIZE) {
+                    extracted_region[ii] = sphere[ii] * ptrHighRes[ii_hr];
+                } else {
+                    extracted_region[ii] = 0;
+                }
+            }
+        }
+    }
+```
+
+---
+### Region extraction
+Cost measure
+  `\[ C(n) = flmults(n) = n^{3} \]`
+Operational intensity
+   `\[W(n) = n^{3} \]`
+   `\[ Q(n) = 8 \cdot 3 \cdot n^{3} \]`
+   `\[ I(n) = 1/24  \]`
+
+---
+### Region extraction
+  
+Optimization
+  - Loop unrolling
+  - Blocking
+
+
+---
+### Region extraction
+![:scale 90%](figs/regions_performance_labelled.png)
+
+---
+### Region extraction
+![:scale 90%](figs/regions_roofline_bounds_labelled.png)
+
 
 ---
 ### MIL calculation
@@ -155,6 +198,11 @@ m_{7} & m_{8} & m_{9}\\
 ---
 ### Overall performance
 * Performance and roofline plots
+
+---
+### Results
+.center[![:scale 50%](figs/LowResImage_fab.png)]
+
 
 <!-- End text area -->
 
