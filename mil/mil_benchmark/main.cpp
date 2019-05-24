@@ -39,9 +39,6 @@
 #include <time.h>
 #include <math.h>
 #include <string.h>
-
-#include <immintrin.h>
-
 #include "..\utils\tsc_x86.h"
 
 using namespace std;
@@ -58,15 +55,12 @@ typedef void(*comp_func)(const double *, int, double *);
 
 //headers
 double get_perf_score(comp_func f);
-
 void register_functions();
-
 double perf_test(comp_func f, int n);
 
 //You can delcare your functions here
 extern int gBone1, gBone2, gInter1, gInter2;
 extern "C" void mil2_baseline(const double *hr_sphere_region, int n, double *directions_vectors_mil);
-extern "C" void mil2(const double *hr_sphere_region, int n, double *directions_vectors_mil);
 extern "C" void mil2_o1(const double *hr_sphere_region, int n, double *directions_vectors_mil);
 extern "C" void mil_test_v1(const float *hr_sphere_region, int n, float *directions_vectors_mil);
 extern "C" void mil_test_v2(const float *hr_sphere_region, int n, float *directions_vectors_mil);
@@ -155,13 +149,6 @@ bool checksum(const double *a, const double *b, int n) {
     }
 
     return false;
-}
-
-void print_vector(int data[], int n) {
-    for (unsigned int i = 0; i < n; ++i) {
-        printf("%d ", data[i]);
-    }
-    printf("\n");
 }
 
 /*

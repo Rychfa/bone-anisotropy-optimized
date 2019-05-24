@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>FastCode Presentation</title>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+        <link rel="stylesheet" type="text/css" href="css/common.css">
+        <link rel="icon" href="content/ethz_icon.jpg">
+   </head>
+    <body>
+        <textarea id="source">
+
+class: title, middle
+
+<!-- Title slide -->
+
+# Bone Anisotropy Mapping
+Jarunan Panyasantisuk<br/>
+Joao Rivera<br/>
+Rajan Gill<br/>
+Ryan Cherifa<br/>
+
+<br/>
+<br/>
+Project Presentation, How to Write Fast Numerical Code, 27 May 2019
+<br/>
+<br/>
+<br/>
+![:scale 30%](figs/ETH_logo.png)
+
+---
+class: middle
+
+# Algorithms
+
+---
+### Algorithms
+
+Coordinate mapping
+
+![:scale 100%](figs/coord_map.png)
+
+---
+### Algorithms
+
+Region extraction
+
+.margin[![:scale 100%](figs/algo1.png)]
+
+---
+### Algorithms
+
+Region extraction
+
+.margin[![:scale 100%](figs/algo2.png)]
+
+---
+### Algorithms
+
+Mean intercept length (MIL) method
+
+.margin[![:scale 100%](figs/algo3.png)]
+
+---
+### Algorithms
+
+Mean intercept length (MIL) method
+
+.margin[![:scale 100%](figs/algo4.png)]
+
+---
+### Algorithms
+
+Ellipsoid fitting
+
+.margin[![:scale 100%](figs/algo5.png)]
+
+---
+### Algorithms
+
+Ellipsoid fitting
+
+.margin[![:scale 100%](figs/algo6.png)]
+
+---
+### Algorithms
+
+Ellipsoid fitting
+
+.column[
+.margin[![:scale 90%](figs/ellipsoid.png)]
+]
+
+.column[
+Fabric Tensor:
+`\[ \begin{pmatrix}
+q_{1} & q_{2} & q_{3}\\
+q_{4} & q_{5} & q_{6}\\
+q_{7} & q_{8} & q_{9}\\
+\end{pmatrix}
+\]`
+]
+
+---
+### Algorithms
+
+Eigendecomposition
+
+.column[
+.margin[![:scale 90%](figs/ellipsoid.png)]
+]
+
+.column[
+Fabric Tensor:
+`\[ \begin{pmatrix}
+q_{1} & q_{2} & q_{3}\\
+q_{4} & q_{5} & q_{6}\\
+q_{7} & q_{8} & q_{9}\\
+\end{pmatrix}
+\]`
+
+Eigenvalues:
+`\[ l_{1}, l_{2}, l_{3} \]`
+
+Eigenvectors:
+`\[ \begin{pmatrix}
+m_{1} & m_{2} & m_{3}\\
+m_{4} & m_{5} & m_{6}\\
+m_{7} & m_{8} & m_{9}\\
+\end{pmatrix}\]`
+
+]
+
+---
+### Algorithms summary
+
+.center[
+![:scale 80%](figs/algorithms.png)]
+
+---
+class: middle
+
+# Region extraction
+
+---
+### Region extraction
+![:scale 90%](figs/regions_performance_labelled.png)
+
+---
+### Region extraction
+![:scale 90%](figs/regions_roofline_bounds_labelled.png)
+
+
+---
+class: middle
+
+# MIL calculation
+
+---
+### MIL calculation
+* Cost analysis
+* Basic implementation
+* Optimization
+* Performance and roofline plots
+
+---
+### Ellipsoid fitting
+* Cost analysis
+* Basic implementation
+* Optimization
+  - SIMD vector instruction
+  - Removing loop invariant code
+
+---
+class: middle
+
+# Ellipsoid fitting
+
+---
+### Ellipsoid fitting
+.margin[![:scale 100%](figs/ellipsoid_performance.png)]
+
+---
+class: middle
+
+# Overall performance <br> and results
+
+---
+### Overall performance
+* Performance and roofline plots
+
+---
+### Results
+.center[![:scale 50%](figs/LowResImage_fab.png)]
+
+
+<!-- End text area -->
+
+        </textarea>
+        <script src="js/remark-0.14.0.min.js"></script>
+        <script src="js/jquery-3.3.1.min.js"></script>
+        <script src="js/terminal.language.js"></script>
+        <script type="text/javascript" src="MathJax/MathJax.js?config=TeX-MML-AM_HTMLorMML" ></script>
+        <script>
+        // Setup MathJax
+        MathJax.Hub.Config({
+          tex2jax: {
+            skipTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+          }
+        });
+        MathJax.Hub.Queue(function() {
+          $(MathJax.Hub.getAllJax()).map(function(index, elem) {
+            return(elem.SourceElement());
+          }).parent().addClass('has-jax');
+        });
+
+        MathJax.Hub.Configured();
+        </script>
+        <script src="js/common.js"></script>
+    </body>
+</html>

@@ -33,7 +33,7 @@
 /// Pre-processor 
 ///
 
-// #define DEBUG  // TODO move somewhere more centralized?
+//#define DEBUG  // TODO move somewhere more centralized?
 
 #ifdef linux
 #define M_SQRT3 1.7320508075688772935
@@ -161,7 +161,20 @@ static const int NUM_DIRECTIONS = sizeof(DIRECTIONS)/sizeof(int)/3;
  */
 void fit_ellipsoid(const double (*p)[3], int n, double (*Q)[3][3]);
 void fit_ellipsoid_opt(const double (*p)[3], int n, double (*Q)[3][3]);
-void fit_ellipsoid_simd(const double (*p)[3], int n, double (*Q)[3][3]);
+
+#define MAX_ARRAY_DIM (2<<20) /* change if doing ellipsoid benchmarking */
+void fit_ellipsoid_simd_precompute(const double (*p)[3], int n, double (*Q)[3][3]);
+void fit_ellipsoid_simd_precompute_init(void);
+
+void fit_ellipsoid_simd_points_shuffles(const double (*p)[3], int n, double (*Q)[3][3]); // right only for 4 divides n
+void fit_ellipsoid_simd_points_shuffles_init(void);
+
+void fit_ellipsoid_simd_points(const double (*p)[3], int n, double (*Q)[3][3]);
+void fit_ellipsoid_simd_points_init(void);
+
+void fit_ellipsoid_simd_points_precompute(const double (*p)[3], int n, double (*Q)[3][3]);
+void fit_ellipsoid_simd_points_precompute_init(void);
+
 
 /*
  * convenience function, wraps fit_ellipsoid above, given the mils (lengths) along
@@ -176,8 +189,8 @@ void fit_ellipsoid_mils_simd(const double *mils, double (*Q)[3][3]);
  * debugging tools
  */
 #ifdef DEBUG
-	void fit_ellipsoid_debug_init(void);
-	long fit_ellipsoid_debug_deinit(void);
+void fit_ellipsoid_debug_init(void);
+long fit_ellipsoid_debug_deinit(void);
 #endif
 
 

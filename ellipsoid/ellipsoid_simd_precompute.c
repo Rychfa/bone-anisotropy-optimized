@@ -9,7 +9,6 @@
 #include <stdlib.h>
 
 /* some parameters */
-#define MAX_ARRAY_DIM 100 /* change if doing ellipsoid benchmarking */
 static const double EPSILON = 1e-3;
 static const double ALPHA   = 0.25;
 static const double BETA    = 0.5;
@@ -138,25 +137,28 @@ static double _cost(const double (*ppT0)[4], const double (*ppT1)[4],const doubl
  *	where iters_bt = number of back tracking iterations
  */
 
+void fit_ellipsoid_simd_precompute_init(void)
+{
+	vMASK = _mm256_setr_epi64x(0xffffffffffffffff, 0xffffffffffffffff, 0xffffffffffffffff, 0);
+	vBETA = _mm256_set1_pd(BETA);
+	vONES = _mm256_set1_pd(1);
+	vTWOS = _mm256_set1_pd(2);
+}
 
-
-void fit_ellipsoid_simd(const double (*p)[3], int n, double (*Q)[3][3])
+void fit_ellipsoid_simd_precompute(const double (*p)[3], int n, double (*Q)[3][3])
 {
 	__m256d Q0, Q1, Q2;
 	Q0 = _mm256_setr_pd(1, 0, 0, 0);
 	Q1 = _mm256_setr_pd(0, 1, 0, 0);
 	Q2 = _mm256_setr_pd(0, 0, 1, 0);
-	
-	vMASK = _mm256_setr_epi64x(0xffffffffffffffff, 0xffffffffffffffff, 0xffffffffffffffff, 0);
-	vBETA = _mm256_set1_pd(BETA);
-	vONES = _mm256_set1_pd(1);
-	vTWOS = _mm256_set1_pd(2);
 
-	/* pre compute reused variables and put on stack */
+	/* pre compute reused variables and put on stack. note this modifies the 
+	 * flop count!!
+	 */
 	static double ppT0[MAX_ARRAY_DIM][4] = {{0}};
 	static double ppT1[MAX_ARRAY_DIM][4] = {{0}};
 	static double ppT2[MAX_ARRAY_DIM][4] = {{0}};
-
+	
 	for (int i=0; i<n; i++) {
 		__m256d p_i, p0, p1, p2;
 		p_i = _mm256_maskload_pd(&p[i][0], vMASK);

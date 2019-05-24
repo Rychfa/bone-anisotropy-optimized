@@ -51,7 +51,7 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
 
     # GNU GCC - C++ flags
-    set(CMAKE_CXX_FLAGS "-O3 -std=c++11 -mavx2 -mfma")
+    set(CMAKE_CXX_FLAGS "-O3 -std=c++11 -mavx2 -mfma -fno-tree-vectorize")
 
 elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Intel")
 
@@ -76,7 +76,7 @@ if (CMAKE_C_COMPILER_ID MATCHES "Clang")
 
 elseif ("${CMAKE_C_COMPILER_ID}" STREQUAL "GNU")
 
-    set(CMAKE_C_FLAGS "-O3 -mavx2 -mfma")
+    set(CMAKE_C_FLAGS "-O3 -mavx2 -mfma -fno-tree-vectorize")
 
 elseif ("${CMAKE_C_COMPILER_ID}" STREQUAL "Intel")
 
