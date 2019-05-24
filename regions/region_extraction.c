@@ -108,13 +108,13 @@ void region_extraction (int i_hr, int j_hr, int k_hr, double *sphere, double *ex
             for (int i=0; i < SPHERE_NDIM; i++) {
                 ihr = i + ihr_min;
                 // calculate index
-                ii = i + j*SPHERE_NDIM + k*SPHERE_NDIM*SPHERE_NDIM;
-                ii_hr = ihr + jhr*HIGH_RES_D1 + khr*HIGH_RES_D1*HIGH_RES_D2;
+                ii =  i + j*SPHERE_NDIM + k*SPHERE_NDIM*SPHERE_NDIM;
+                ii_hr =  ihr + jhr*HIGH_RES_D1 + khr*HIGH_RES_D1*HIGH_RES_D2;
     
-                //
-                // sign(ii_hr - HIGH_RES_SIZE);
+                // 
                 if (ii_hr < HIGH_RES_SIZE) {
                     extracted_region[ii] = sphere[ii] * ptrHighRes[ii_hr];
+
 #ifdef DEBUG
     region_extraction_flop_count += 1;
 #endif
@@ -123,7 +123,6 @@ void region_extraction (int i_hr, int j_hr, int k_hr, double *sphere, double *ex
                 }
     }}}
 }
-
 
 
 ///
@@ -135,8 +134,12 @@ void region_extraction_opt1 (int i_hr, int j_hr, int k_hr, double *sphere, doubl
     int ii;
     int ihr, jhr, khr, ii_hr;
     double hr_voxel0, hr_voxel1, hr_voxel2, hr_voxel3;
+    double hr_voxel4, hr_voxel5, hr_voxel6, hr_voxel7;
     double sp_voxel0, sp_voxel1, sp_voxel2, sp_voxel3;
+    double sp_voxel4, sp_voxel5, sp_voxel6, sp_voxel7;
     double ex_voxel0, ex_voxel1, ex_voxel2, ex_voxel3;
+    double ex_voxel4, ex_voxel5, ex_voxel6, ex_voxel7;
+    int NUM_ACC = 4;
 
     // find min for sphere
     ihr_min = i_hr - SPHERE_HALF_NDIM;
@@ -147,7 +150,7 @@ void region_extraction_opt1 (int i_hr, int j_hr, int k_hr, double *sphere, doubl
         khr = k + khr_min;
         for (int j=0; j < SPHERE_NDIM; j++) {
             jhr = j + jhr_min;
-            for (int i=0; i < SPHERE_NDIM; i+=4) {
+            for (int i=0; i < SPHERE_NDIM; i+=NUM_ACC) {
                 ihr = i + ihr_min;
                 // calculate index
                 ii = i + j*SPHERE_NDIM + k*SPHERE_NDIM*SPHERE_NDIM;
@@ -158,27 +161,27 @@ void region_extraction_opt1 (int i_hr, int j_hr, int k_hr, double *sphere, doubl
                 sp_voxel2 = sphere[ii+2];
                 sp_voxel3 = sphere[ii+3];
                 //
-                hr_voxel0 = 0;
-                hr_voxel1 = 0;
-                hr_voxel2 = 0;
-                hr_voxel3 = 0;
+                hr_voxel0 = 0.0;
+                hr_voxel1 = 0.0;
+                hr_voxel2 = 0.0;
+                hr_voxel3 = 0.0;
+                //
                 // 0
                 if (ii_hr < HIGH_RES_SIZE) {
                     hr_voxel0 = ptrHighRes[ii_hr];
-                } //else { hr_voxel0 = 0; }
+                }
                 // 1
                 if (ii_hr + 1 < HIGH_RES_SIZE) {
                     hr_voxel1 = ptrHighRes[ii_hr + 1];
-                } //else { hr_voxel1 = 0; }
+                }
                 // 2
                 if (ii_hr + 2 < HIGH_RES_SIZE) {
                     hr_voxel2 = ptrHighRes[ii_hr + 2];
-                } //else { hr_voxel2 = 0; }
+                }
                 // 3
                 if (ii_hr + 3 < HIGH_RES_SIZE) {
                     hr_voxel3 = ptrHighRes[ii_hr + 3];
-                } //else { hr_voxel = 0; }
-
+                }
                 //
                 ex_voxel0 = sp_voxel0 * hr_voxel0;
                 ex_voxel1 = sp_voxel1 * hr_voxel1;
@@ -194,143 +197,4 @@ void region_extraction_opt1 (int i_hr, int j_hr, int k_hr, double *sphere, doubl
 #endif
 
     }}}
-}
-
-
-
-///
-/// Skeleton for region extraction
-///
-void region_extraction_opt2 (int i_hr, int j_hr, int k_hr, double *sphere, double *extracted_region, double *ptrHighRes) {
-
-    int ihr_min, jhr_min, khr_min;
-    int isp, jsp, ksp, jksp, ii;
-    int ihr, jhr, khr, jkhr, ii_hr;
-
-    int inb, jnb, knb;
-    int inb_start, jnb_start, knb_start;
-    int BLOCK_SIZE = 16;
-    int NBLOCKS = SPHERE_NDIM/BLOCK_SIZE;
-
-    // find min for sphere
-    ihr_min = i_hr - SPHERE_HALF_NDIM;
-    jhr_min = j_hr - SPHERE_HALF_NDIM;
-    khr_min = k_hr - SPHERE_HALF_NDIM;
-
-    for (int knb=0; knb < NBLOCKS; knb++) {
-        knb_start = knb*BLOCK_SIZE;
-        for (int jnb=0; jnb < NBLOCKS; jnb++) {
-            jnb_start = jnb*BLOCK_SIZE;
-            for (int inb=0; inb < NBLOCKS; inb++) {
-                inb_start = inb*BLOCK_SIZE;
-                //
-                for (int k=knb_start; k < knb_start+BLOCK_SIZE; k++) {
-                    khr = k + khr_min;
-                    for (int j=jnb_start; j < jnb_start+BLOCK_SIZE; j++) {
-                        jhr = j + jhr_min;
-                        for (int i=inb_start; i < inb_start+BLOCK_SIZE; i++) {
-                            ihr = i + ihr_min;
-                            // calculate index
-                            ii = i + j*SPHERE_NDIM + k*SPHERE_NDIM*SPHERE_NDIM;
-                            ii_hr = ihr + jhr*HIGH_RES_D1 + khr*HIGH_RES_D1*HIGH_RES_D2;
-                            //
-                            // extract region with a sphere mask
-                            if (ii_hr < HIGH_RES_SIZE) {
-                                extracted_region[ii] = sphere[ii] * ptrHighRes[ii_hr];
-#ifdef DEBUG
-    region_extraction_flop_count += 1;
-#endif
-                            } else {
-                                extracted_region[ii] = 0;
-                            }
-        }}} // mini block loop
-    }}} // Block number loop
-}
-
-
-
-///
-/// blocking, loop unrolling and scalar replacement
-///
-void region_extraction_opt3 (int i_hr, int j_hr, int k_hr, double *sphere, double *extracted_region, double *ptrHighRes) {
-
-    int ihr_min, jhr_min, khr_min;
-    int isp, jsp, ksp, jksp, ii;
-    int ihr, jhr, khr, jkhr, ii_hr;
-
-    int inb, jnb, knb;
-    int inb_start, jnb_start, knb_start;
-    double hr_voxel0, hr_voxel1, hr_voxel2, hr_voxel3;
-    double sp_voxel0, sp_voxel1, sp_voxel2, sp_voxel3;
-    double ex_voxel0, ex_voxel1, ex_voxel2, ex_voxel3;
-    int BLOCK_SIZE = 8;
-    int NBLOCKS = SPHERE_NDIM/BLOCK_SIZE;
-
-    // find min for sphere
-    ihr_min = i_hr - SPHERE_HALF_NDIM;
-    jhr_min = j_hr - SPHERE_HALF_NDIM;
-    khr_min = k_hr - SPHERE_HALF_NDIM;
-
-    for (int knb=0; knb < NBLOCKS; knb++) {
-        knb_start = knb*BLOCK_SIZE;
-        for (int jnb=0; jnb < NBLOCKS; jnb++) {
-            jnb_start = jnb*BLOCK_SIZE;
-            for (int inb=0; inb < NBLOCKS; inb++) {
-                inb_start = inb*BLOCK_SIZE;
-                //
-                for (int k=knb_start; k < knb_start+BLOCK_SIZE; k++) {
-                    khr = k + khr_min;
-                    for (int j=jnb_start; j < jnb_start+BLOCK_SIZE; j++) {
-                        jhr = j + jhr_min;
-                        for (int i=inb_start; i < inb_start+BLOCK_SIZE; i+=4) {
-                            ihr = i + ihr_min;
-                            // calculate index
-                            ii = i + j*SPHERE_NDIM + k*SPHERE_NDIM*SPHERE_NDIM;
-                            ii_hr = ihr + jhr*HIGH_RES_D1 + khr*HIGH_RES_D1*HIGH_RES_D2;
-                            //
-
-                // 
-                sp_voxel0 = sphere[ii];
-                sp_voxel1 = sphere[ii+1];
-                sp_voxel2 = sphere[ii+2];
-                sp_voxel3 = sphere[ii+3];
-                //
-                hr_voxel0 = 0;
-                hr_voxel1 = 0;
-                hr_voxel2 = 0;
-                hr_voxel3 = 0;
-                // 0
-                if (ii_hr < HIGH_RES_SIZE) {
-                    hr_voxel0 = ptrHighRes[ii_hr];
-                } 
-                // 1
-                if (ii_hr + 1 < HIGH_RES_SIZE) {
-                    hr_voxel1 = ptrHighRes[ii_hr + 1];
-                } 
-                // 2
-                if (ii_hr + 2 < HIGH_RES_SIZE) {
-                    hr_voxel2 = ptrHighRes[ii_hr + 2];
-                } 
-                // 3
-                if (ii_hr + 3 < HIGH_RES_SIZE) {
-                    hr_voxel3 = ptrHighRes[ii_hr + 3];
-                } 
-
-                //
-                ex_voxel0 = sp_voxel0 * hr_voxel0;
-                ex_voxel1 = sp_voxel1 * hr_voxel1;
-                ex_voxel2 = sp_voxel2 * hr_voxel2;
-                ex_voxel3 = sp_voxel3 * hr_voxel3;
-                //
-                extracted_region[ii] = ex_voxel0;
-                extracted_region[ii+1] = ex_voxel1;
-                extracted_region[ii+2] = ex_voxel2;
-                extracted_region[ii+3] = ex_voxel3;
-
-#ifdef DEBUG
-    region_extraction_flop_count += 4;
-#endif
-
-        }}} // mini block loop
-    }}} // Block number loop
 }

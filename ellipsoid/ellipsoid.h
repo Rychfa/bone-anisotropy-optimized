@@ -33,7 +33,7 @@
 /// Pre-processor 
 ///
 
-#define DEBUG  // TODO move somewhere more centralized?
+//#define DEBUG  // TODO move somewhere more centralized?
 
 #ifdef linux
 #define M_SQRT3 1.7320508075688772935

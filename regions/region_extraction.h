@@ -29,13 +29,13 @@
 
 //#define SPHERE_DIAMETER 4
 #define HIGH_RES_VOXEL_SIZE 0.082
-#define SPHERE_NDIM 16
+#define SPHERE_NDIM 8
 #define SPHERE_DIAMETER SPHERE_NDIM*0.082
-//#define SPHERE_NDIM  (int) (SPHERE_DIAMETER /HIGH_RES_VOXEL_SIZE + 1)
+//#define SPHERE_NDIM (int) (SPHERE_DIAMETER /HIGH_RES_VOXEL_SIZE + 1)
 #define SPHERE_HALF_NDIM ((int) (SPHERE_NDIM/2))
 #define SPHERE_ARRAY_SIZE (SPHERE_NDIM * SPHERE_NDIM * SPHERE_NDIM)
  
-#define DEBUG 
+//#define DEBUG 
 
 ///
 /// Function declarations
@@ -44,7 +44,6 @@ void createSphereMask(double *sphere);
 void region_extraction (int i_hr, int j_hr, int k_hr, double *sphere, double *extracted_region, double *ptrHighRes);
 void region_extraction_opt1 (int i_hr, int j_hr, int k_hr, double *sphere, double *extracted_region, double *ptrHighRes);
 void region_extraction_opt2 (int i_hr, int j_hr, int k_hr, double *sphere, double *extracted_region, double *ptrHighRes);
-void region_extraction_opt3 (int i_hr, int j_hr, int k_hr, double *sphere, double *extracted_region, double *ptrHighRes);
 
 #ifdef DEBUG
 	void region_extraction_debug_init(void);

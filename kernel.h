@@ -30,17 +30,17 @@
 #include <stdbool.h>
 
 #ifdef __cplusplus
-extern "C" void init(double** sphere, double** ptrHighRes, double** ptrLowRes, double** rotation_matrix, double** ptrEvecOut, double** ptrEvalsOut);
-extern "C" void kernel_basic(double* sphere, double* ptrHighRes, double* ptrLowRes, double* rotation_matrix, double* ptrEvecOut, double *ptrEvalsOut);
-extern "C" void kernel_opt1(double* sphere, double* ptrHighRes, double* ptrLowRes, double* rotation_matrix, double* ptrEvecOut, double *ptrEvalsOut);
-extern "C" void kernel_opt2(double* sphere, double* ptrHighRes, double* ptrLowRes, double* rotation_matrix, double* ptrEvecOut, double *ptrEvalsOut);
-extern "C" void deInit(double* sphere, double* ptrHighRes, double* ptrLowRes, double* rotation_matrix, double* ptrEvecOut, double *ptrEvalsOut, bool generate_ground_truth);
+extern "C" void init(double** sphere, double** extracted_region, double** ptrHighRes, double** ptrLowRes, double** rotation_matrix, double** ptrEvecOut, double** ptrEvalsOut);
+extern "C" void kernel_basic(double* sphere, double* extracted_region, double* ptrHighRes, double* ptrLowRes, double* rotation_matrix, double* ptrEvecOut, double *ptrEvalsOut);
+extern "C" void kernel_opt1(double* sphere, double* extracted_region, double* ptrHighRes, double* ptrLowRes, double* rotation_matrix, double* ptrEvecOut, double *ptrEvalsOut);
+extern "C" void kernel_opt2(double* sphere, double* extracted_region, double* ptrHighRes, double* ptrLowRes, double* rotation_matrix, double* ptrEvecOut, double *ptrEvalsOut);
+extern "C" void deInit(double* sphere, double* extracted_region, double* ptrHighRes, double* ptrLowRes, double* rotation_matrix, double* ptrEvecOut, double *ptrEvalsOut, bool generate_ground_truth);
 #else
-void init(double** sphere, double** ptrHighRes, double** ptrLowRes, double** rotation_matrix, double** ptrEvecOut, double **ptrEvalsOut);
-void kernel_basic(double* sphere, double* ptrHighRes, double* ptrLowRes, double* rotation_matrix, double* ptrEvecOut, double *ptrEvalsOut);
-void kernel_opt1(double* sphere, double* ptrHighRes, double* ptrLowRes, double* rotation_matrix, double* ptrEvecOut, double *ptrEvalsOut);
-void kernel_opt2(double* sphere, double* ptrHighRes, double* ptrLowRes, double* rotation_matrix, double* ptrEvecOut, double *ptrEvalsOut);
-void deInit(double* sphere, double* ptrHighRes, double* ptrLowRes, double* rotation_matrix, double* ptrEvecOut, double *ptrEvalsOut, bool generate_ground_truth);
+void init(double** sphere, double** extracted_region, double** ptrHighRes, double** ptrLowRes, double** rotation_matrix, double** ptrEvecOut, double **ptrEvalsOut);
+void kernel_basic(double* sphere, double* extracted_region, double* ptrHighRes, double* ptrLowRes, double* rotation_matrix, double* ptrEvecOut, double *ptrEvalsOut);
+void kernel_opt1(double* sphere, double* extracted_region, double* ptrHighRes, double* ptrLowRes, double* rotation_matrix, double* ptrEvecOut, double *ptrEvalsOut);
+void kernel_opt2(double* sphere, double* extracted_region, double* ptrHighRes, double* ptrLowRes, double* rotation_matrix, double* ptrEvecOut, double *ptrEvalsOut);
+void deInit(double* sphere, double* extracted_region, double* ptrHighRes, double* ptrLowRes, double* rotation_matrix, double* ptrEvecOut, double *ptrEvalsOut, bool generate_ground_truth);
 #endif
 
 #endif //BONEMAP_KERNEL_H
