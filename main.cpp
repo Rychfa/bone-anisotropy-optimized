@@ -79,12 +79,12 @@ void destroy(double* sphere, double* extracted_region, double* ptrHighRes, doubl
 void register_functions()
 {
     long int flops = 0;
-    flops = pow(8,3); //debug
+    flops = 2461248;
     //
     // TODO: Add correct number of flops
     add_function(&kernel_basic, "Base kernel", flops);
     //
-    add_function(&kernel_opt1, "[regions] opt1", flops);
+    add_function(&kernel_opt1, "Optimized kernel", flops);
 }
 
 

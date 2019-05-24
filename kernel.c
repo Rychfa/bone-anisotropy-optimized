@@ -389,8 +389,6 @@ void kernel_opt1 (double* sphere, double* extracted_region, double* ptrHighRes, 
                     i_hr = (int) tx_hr;
                     j_hr = (int) ty_hr;
                     k_hr = (int) tz_hr;
-        
-                    printf("hr point: %d %d %d", i_hr, j_hr, k_hr);
                     
                     region_extraction_opt1(i_hr, j_hr, k_hr, sphere, extracted_region, ptrHighRes);
 
