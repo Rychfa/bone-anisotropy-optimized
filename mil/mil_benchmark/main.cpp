@@ -39,6 +39,9 @@
 #include <time.h>
 #include <math.h>
 #include <string.h>
+
+#include <immintrin.h>
+
 #include "..\utils\tsc_x86.h"
 
 using namespace std;
@@ -51,16 +54,19 @@ using namespace std;
 #define MAX_SIZE  300
 
 /* prototype of the function you need to optimize */
-typedef void(*comp_func)( const double*, int, double* );
+typedef void(*comp_func)(const double *, int, double *);
 
 //headers
 double get_perf_score(comp_func f);
+
 void register_functions();
+
 double perf_test(comp_func f, int n);
 
 //You can delcare your functions here
 extern int gBone1, gBone2, gInter1, gInter2;
 extern "C" void mil2_baseline(const double *hr_sphere_region, int n, double *directions_vectors_mil);
+extern "C" void mil2(const double *hr_sphere_region, int n, double *directions_vectors_mil);
 extern "C" void mil2_o1(const double *hr_sphere_region, int n, double *directions_vectors_mil);
 extern "C" void mil_test_v1(const float *hr_sphere_region, int n, float *directions_vectors_mil);
 extern "C" void mil_test_v2(const float *hr_sphere_region, int n, float *directions_vectors_mil);
@@ -72,9 +78,9 @@ extern "C" void mil_test_v7(const float *hr_sphere_region, int n, float *directi
 extern "C" void mil_test_v8(const float *hr_sphere_region, int n, float *directions_vectors_mil);
 extern "C" void mil_test_v9(const float *hr_sphere_region, int n, float *directions_vectors_mil);
 extern "C" void mil_test_all(const double *hr_sphere_region, int n, double *directions_vectors_mil);
-extern "C" void mil_test_all_simd(const double *hr_sphere_region, int n, double *directions_vectors_mil);
+extern "C" void simd_mil_test_all(const double *hr_sphere_region, int n, double *directions_vectors_mil);
 
-void add_function(comp_func f, const string& name, double flop);
+void add_function(comp_func f, const string &name, double flop);
 
 /* Global vars, used to keep track of student functions */
 vector<comp_func> userFuncs;
@@ -82,9 +88,8 @@ vector<string> funcNames;
 vector<double> funcFlops;
 int numFuncs = 0;
 
-template <typename T>
-void rands(T * m, size_t n)
-{
+template<typename T>
+void rands(T *m, size_t n) {
     std::random_device rd;
     std::mt19937 gen{rd()};
     std::uniform_real_distribution<double> dist(-1.0, 1.0);
@@ -100,26 +105,22 @@ void rands(T * m, size_t n)
 //            m[i] = dist(gen) > 0.0 ? 1 : 0;
 }
 
-void build(int **a, int n)
-{
+void build(int **a, int n) {
     *a = static_cast<int *>(aligned_alloc(32, n * sizeof(int)));
     rands(*a, n);
 }
 
-void build(float **a, int n)
-{
+void build(float **a, int n) {
     *a = static_cast<float *>(aligned_alloc(32, n * sizeof(float)));
     rands(*a, n);
 }
 
-void build(double **a, int n)
-{
+void build(double **a, int n) {
     *a = static_cast<double *>(aligned_alloc(32, n * sizeof(double)));
     rands(*a, n);
 }
 
-void destroy(void * m)
-{
+void destroy(void *m) {
     free(m);
 }
 
@@ -127,9 +128,9 @@ void destroy(void * m)
 * Called by the driver to register your functions
 * Use add_function(func, description) to add your own functions
 */
-void register_functions()
-{
-    add_function(&mil2_baseline, "Base line", 3.25*2);
+void register_functions() {
+//    add_function(&mil2, "mil2", 3.25 * 2);
+    add_function(&mil2_baseline, "mil2_baseline", 1.5 * 4);
 //    add_function(&mil2_o1, "Base opt1", 3.25);
 //    add_function(&mil_test_v1, "MIL block vector (1,0,0)", 3.25*2);
 //    add_function(&mil_test_v2, "MIL block vector (0,1,0)", 3.25*2);
@@ -140,14 +141,15 @@ void register_functions()
 //    add_function(&mil_test_v7, "MIL block vector (-1,1,0)", 3.25*2);
 //    add_function(&mil_test_v8, "MIL block vector (-1,0,1)", 3.25*2);
 //    add_function(&mil_test_v9, "MIL block vector (0,1,-1)", 3.25*2);
-    add_function(&mil_test_all, "MIL all vectors", (6.0/4.0)*2);
+    add_function(&mil_test_all, "test all - 4 accumulators", 1.5);
+    add_function(&simd_mil_test_all, "test all - SIMD 2 vectors of doubles", 1.5);
 }
 
-bool checksum(const double* a, const double* b, int n) {
+bool checksum(const double *a, const double *b, int n) {
 
-    for(int i = 0; i < n; i++) {
-//        cout << a[i] << " " << b[i] << endl;
-        if ( (b[i] < a[i] - TOLERANCE) || (b[i] > a[i] + TOLERANCE)) {
+    for (int i = 0; i < n; i++) {
+        if ((b[i] < a[i] - TOLERANCE) || (b[i] > a[i] + TOLERANCE)) {
+            printf("value %d: %0.10f -> %0.10f\n",i, a[i], b[i]);
             return true;
         }
     }
@@ -155,20 +157,25 @@ bool checksum(const double* a, const double* b, int n) {
     return false;
 }
 
+void print_vector(int data[], int n) {
+    for (unsigned int i = 0; i < n; ++i) {
+        printf("%d ", data[i]);
+    }
+    printf("\n");
+}
+
 /*
 * Main driver routine - calls register_funcs to get student functions, then
 * tests all functions registered, and reports the best performance
 */
-int main(int argc, char **argv)
-{
+int main(int argc, char **argv) {
     cout << endl << "Starting program. " << endl;
     double cycles;
     int i;
 
     register_functions();
 
-    if (numFuncs == 0)
-    {
+    if (numFuncs == 0) {
         cout << endl;
         cout << "No functions registered - nothing for driver to do" << endl;
         cout << "Register functions by calling register_func(f, name)" << endl;
@@ -180,17 +187,17 @@ int main(int argc, char **argv)
 
     //Check validity of functions. 
 //    int n = 30;
-    double* region;
-    double* output;
-    double* outputBaseline;
+    double *region;
+    double *output;
+    double *outputBaseline;
 
-    for (int n = 80; n <= 80; n += 16) {
+    for (int n = 16; n <= 16; n += 16) {
 //    for (int n = 20; n <= MAX_SIZE; n += 20) {
         cout << endl << "Testing size " << n << endl;
 
         // Compute with base line first.
         if (numFuncs > 1) {
-            build(&region, n*n*n);
+            build(&region, n * n * n);
             build(&outputBaseline, 13);
             build(&output, 13);
 
@@ -201,9 +208,9 @@ int main(int argc, char **argv)
             {
                 comp_func f = userFuncs[i];
                 f(region, n, output);
-                bool error = checksum(outputBaseline, output, 13);
-//                if (error)
-//                    cout << "ERROR: the results for function " << i << " are incorrect." << std::endl;
+                bool error = checksum(outputBaseline, output, 3);
+                if (error)
+                    cout << "ERROR: the results for function " << i << " are incorrect." << std::endl;
             }
 
 
@@ -215,10 +222,9 @@ int main(int argc, char **argv)
 //        cout <<  gBone1 <<  " " << gBone2  << endl;
 //        cout << gInter1 <<  " " << gInter2 << endl;
 
-        for (i = 0; i < numFuncs; i++)
-        {
-            cycles = perf_test(userFuncs[i], n);
+        for (i = 0; i < numFuncs; i++) {
             cout << endl << "** Running: " << funcNames[i] << " **" << endl;
+            cycles = perf_test(userFuncs[i], n);
             cout << "Runtime: " << cycles << " cycles" << endl;
             cout << "Performance: " << (1.0 * funcFlops[i] * n * n * n) / cycles << " flops per cycle" << endl;
 //            cout << (1.0 * funcFlops[i] * n * n * n) / cycles << endl;
@@ -233,8 +239,7 @@ int main(int argc, char **argv)
 * Registers a user function to be tested by the driver program. Registers a
 * string description of the function as well
 */
-void add_function(comp_func f, const string& name, double flops)
-{
+void add_function(comp_func f, const string &name, double flops) {
     userFuncs.push_back(f);
     funcNames.emplace_back(name);
     funcFlops.push_back(flops);
@@ -246,16 +251,15 @@ void add_function(comp_func f, const string& name, double flops)
 * Checks the given function for validity. If valid, then computes and
 * reports and returns the number of cycles required per iteration
 */
-double perf_test(comp_func f, int n)
-{
+double perf_test(comp_func f, int n) {
     double cycles;
     long num_runs = 20;
     double multiplier = 1;
     myInt64 start, end;
 
-    double* region;
-    double* output;
-    build(&region, n*n*n);
+    double *region;
+    double *output;
+    build(&region, n * n * n);
     build(&output, 13);
 
 
@@ -270,7 +274,7 @@ double perf_test(comp_func f, int n)
         }
         end = stop_tsc(start);
 
-        cycles = (double)end;
+        cycles = (double) end;
         multiplier = (CYCLES_REQUIRED) / (cycles);
 
     } while (multiplier > 2);
@@ -279,7 +283,7 @@ double perf_test(comp_func f, int n)
 
     // Actual performance measurements repeated REP times.
     // We simply store all results and compute medians during post-processing.
-    for (size_t j = 0; j < REP; j++) {
+    for (size_t j = 0; j < 1; j++) {
 
         start = start_tsc();
         for (size_t i = 0; i < num_runs; ++i) {
@@ -287,7 +291,7 @@ double perf_test(comp_func f, int n)
         }
         end = stop_tsc(start);
 
-        cycles = ((double)end) / num_runs;
+        cycles = ((double) end) / num_runs;
 
         cyclesList.push_back(cycles);
     }
@@ -296,7 +300,7 @@ double perf_test(comp_func f, int n)
     destroy(output);
     cyclesList.sort();
     cycles = cyclesList.front();
-    return  cycles;
+    return cycles;
 }
 
 

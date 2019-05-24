@@ -26,6 +26,7 @@
 */
 #include "mil2.h"
 #include "ellipsoid.h"
+#include <immintrin.h>
 #include <stdio.h>
 
 #define BLOCK_SIZE 16
@@ -59,7 +60,7 @@ int get_iterator_vectors (const int directionVector[3], int iteratorVectors[][3]
     return n;
 }
 
-void mil2(const int *hr_sphere_region, int n, double *directions_vectors_mil) {
+void mil2(const double *hr_sphere_region, int n, double *directions_vectors_mil) {
 
     const int n_vectors = NUM_DIRECTIONS;
 
@@ -120,7 +121,7 @@ void mil2_baseline(const double *hr_sphere_region, int n, double *directions_vec
 
     const int n_vectors = NUM_DIRECTIONS;
 
-    float directions_vectors_bone_length[n_vectors];
+    double directions_vectors_bone_length[n_vectors];
     int directions_vectors_intercepts[n_vectors];
     int iteratorVectors[3][3];
 
@@ -174,9 +175,13 @@ void mil2_baseline(const double *hr_sphere_region, int n, double *directions_vec
         directions_vectors_mil[i] = directions_vectors_bone_length[i] / directions_vectors_intercepts[i];
     }
 
-
-    gBone1 = directions_vectors_bone_length[3];
-    gInter1 = directions_vectors_intercepts[3];
+#ifdef DEBUG
+    printf("TRUE 0 - BONE LENGTH = %.8f, INTERCEPTS = %d\n", directions_vectors_bone_length[0], directions_vectors_intercepts[0]);
+    printf("TRUE 1 - BONE LENGTH = %.8f, INTERCEPTS = %d\n", directions_vectors_bone_length[1], directions_vectors_intercepts[1]);
+    printf("TRUE 2 - BONE LENGTH = %.8f, INTERCEPTS = %d\n", directions_vectors_bone_length[2], directions_vectors_intercepts[2]);
+#endif
+    gBone1 = directions_vectors_bone_length[2];
+    gInter1 = directions_vectors_intercepts[2];
 
 }
 
@@ -669,13 +674,13 @@ void mil_test_all(const double *hr_sphere_region, int n, double *directions_vect
                 intercepts[1]  += intercept_blk;
                 bone_length[2] += mil_1D(hr_sphere_region, &intercept_blk, n, jj, ii, kk, 3);
                 intercepts[2]  += intercept_blk;
-
-                bone_length[3] += mil_2D_pos(hr_sphere_region, &intercept_blk, n, kk, jj, ii, 4);
-                intercepts[3]  += intercept_blk;
-                bone_length[4] += mil_2D_pos(hr_sphere_region, &intercept_blk, n, jj, kk, ii, 5);
-                intercepts[4]  += intercept_blk;
-                bone_length[5] += mil_2D_pos(hr_sphere_region, &intercept_blk, n, ii, jj, kk, 6);
-                intercepts[5]  += intercept_blk;
+//
+//                bone_length[3] += mil_2D_pos(hr_sphere_region, &intercept_blk, n, kk, jj, ii, 4);
+//                intercepts[3]  += intercept_blk;
+//                bone_length[4] += mil_2D_pos(hr_sphere_region, &intercept_blk, n, jj, kk, ii, 5);
+//                intercepts[4]  += intercept_blk;
+//                bone_length[5] += mil_2D_pos(hr_sphere_region, &intercept_blk, n, ii, jj, kk, 6);
+//                intercepts[5]  += intercept_blk;
 //
 //                bone_length[6] += mil_2D_neg(hr_sphere_region, &intercepts[6], n, kk, jj, ii, 7);
 //                bone_length[7] += mil_2D_neg(hr_sphere_region, &intercepts[7], n, kk, jj, ii, 8);
@@ -694,7 +699,12 @@ void mil_test_all(const double *hr_sphere_region, int n, double *directions_vect
         directions_vectors_mil[i] = bone_length[i] / intercepts[i];
     }
 
-    gBone2 = bone_length[3];
-    gInter2 = intercepts[3];
+#ifdef DEBUG
+    printf("0 - BONE LENGTH = %.8f, INTERCEPTS = %d\n", bone_length[0], intercepts[0]);
+    printf("1 - BONE LENGTH = %.8f, INTERCEPTS = %d\n", bone_length[1], intercepts[1]);
+    printf("2 - BONE LENGTH = %.8f, INTERCEPTS = %d\n\n", bone_length[2], intercepts[2]);
+#endif
+    gBone2 = bone_length[0];
+    gInter2 = intercepts[0];
 
 }
