@@ -39,19 +39,19 @@
 #include <time.h>
 #include <math.h>
 #include <string.h>
-#include "tsc_x86.h"
+#include "..\utils\tsc_x86.h"
 
 using namespace std;
 
 #define CYCLES_REQUIRED 1e7
-#define REP 20
+#define REP 100
 #define EPS (1e-3)
 #define FREQ 2.7
 #define TOLERANCE 1e-8
 #define MAX_SIZE  300
 
 /* prototype of the function you need to optimize */
-typedef void(*comp_func)( const int*, int, double* );
+typedef void(*comp_func)( const double*, int, double* );
 
 //headers
 double get_perf_score(comp_func f);
@@ -59,12 +59,22 @@ void register_functions();
 double perf_test(comp_func f, int n);
 
 //You can delcare your functions here
-extern "C" void mil2(const int *hr_sphere_region, int n, double *directions_vectors_mil);
-//void complex_conversion_unrolled(const double *complex_a, double *complex_b, int n);
-//void complex_conversion_o1(const double *complex_a, double *complex_b, int n);
-//void complex_conversion_o2(const double *complex_a, double *complex_b, int n);
+extern int gBone1, gBone2, gInter1, gInter2;
+extern "C" void mil2_baseline(const double *hr_sphere_region, int n, double *directions_vectors_mil);
+extern "C" void mil2_o1(const double *hr_sphere_region, int n, double *directions_vectors_mil);
+extern "C" void mil_test_v1(const float *hr_sphere_region, int n, float *directions_vectors_mil);
+extern "C" void mil_test_v2(const float *hr_sphere_region, int n, float *directions_vectors_mil);
+extern "C" void mil_test_v3(const float *hr_sphere_region, int n, float *directions_vectors_mil);
+extern "C" void mil_test_v4(const float *hr_sphere_region, int n, float *directions_vectors_mil);
+extern "C" void mil_test_v5(const float *hr_sphere_region, int n, float *directions_vectors_mil);
+extern "C" void mil_test_v6(const float *hr_sphere_region, int n, float *directions_vectors_mil);
+extern "C" void mil_test_v7(const float *hr_sphere_region, int n, float *directions_vectors_mil);
+extern "C" void mil_test_v8(const float *hr_sphere_region, int n, float *directions_vectors_mil);
+extern "C" void mil_test_v9(const float *hr_sphere_region, int n, float *directions_vectors_mil);
+extern "C" void mil_test_all(const double *hr_sphere_region, int n, double *directions_vectors_mil);
+extern "C" void mil_test_all_simd(const double *hr_sphere_region, int n, double *directions_vectors_mil);
 
-void add_function(comp_func f, string name, double flop);
+void add_function(comp_func f, const string& name, double flop);
 
 /* Global vars, used to keep track of student functions */
 vector<comp_func> userFuncs;
@@ -72,14 +82,22 @@ vector<string> funcNames;
 vector<double> funcFlops;
 int numFuncs = 0;
 
-
-void rands(int * m, size_t n)
+template <typename T>
+void rands(T * m, size_t n)
 {
     std::random_device rd;
     std::mt19937 gen{rd()};
     std::uniform_real_distribution<double> dist(-1.0, 1.0);
-    for (size_t i = 0; i < n; ++i)
-        m[i] = dist(gen) > 0.0 ? 1 : 0;
+    for (size_t i = 0; i < n; ++i) {
+        if (0) {
+            m[i] = 0;
+        }
+        else {
+            m[i] = dist(gen) > 0.0 ? 1 : 0;
+        }
+    }
+
+//            m[i] = dist(gen) > 0.0 ? 1 : 0;
 }
 
 void build(int **a, int n)
@@ -88,9 +106,16 @@ void build(int **a, int n)
     rands(*a, n);
 }
 
+void build(float **a, int n)
+{
+    *a = static_cast<float *>(aligned_alloc(32, n * sizeof(float)));
+    rands(*a, n);
+}
+
 void build(double **a, int n)
 {
     *a = static_cast<double *>(aligned_alloc(32, n * sizeof(double)));
+    rands(*a, n);
 }
 
 void destroy(void * m)
@@ -104,13 +129,24 @@ void destroy(void * m)
 */
 void register_functions()
 {
-    add_function(&mil2, "Base line", 6.5);
-//    add_function(&mil2, "Base line 2", 6.5);
+    add_function(&mil2_baseline, "Base line", 3.25*2);
+//    add_function(&mil2_o1, "Base opt1", 3.25);
+//    add_function(&mil_test_v1, "MIL block vector (1,0,0)", 3.25*2);
+//    add_function(&mil_test_v2, "MIL block vector (0,1,0)", 3.25*2);
+//    add_function(&mil_test_v3, "MIL block vector (0,0,1)", 3.25*2);
+//    add_function(&mil_test_v4, "MIL block vector (1,1,0)", 3.25*2);
+//    add_function(&mil_test_v5, "MIL block vector (1,0,1)", 3.25*2);
+//    add_function(&mil_test_v6, "MIL block vector (0,1,1)", 3.25*2);
+//    add_function(&mil_test_v7, "MIL block vector (-1,1,0)", 3.25*2);
+//    add_function(&mil_test_v8, "MIL block vector (-1,0,1)", 3.25*2);
+//    add_function(&mil_test_v9, "MIL block vector (0,1,-1)", 3.25*2);
+    add_function(&mil_test_all, "MIL all vectors", (6.0/4.0)*2);
 }
 
 bool checksum(const double* a, const double* b, int n) {
 
     for(int i = 0; i < n; i++) {
+//        cout << a[i] << " " << b[i] << endl;
         if ( (b[i] < a[i] - TOLERANCE) || (b[i] > a[i] + TOLERANCE)) {
             return true;
         }
@@ -144,11 +180,12 @@ int main(int argc, char **argv)
 
     //Check validity of functions. 
 //    int n = 30;
-    int *region;
+    double* region;
     double* output;
     double* outputBaseline;
 
-    for (int n = 20; n <= MAX_SIZE; n += 20) {
+    for (int n = 32; n <= 96; n += 32) {
+//    for (int n = 20; n <= MAX_SIZE; n += 20) {
         cout << endl << "Testing size " << n << endl;
 
         // Compute with base line first.
@@ -165,15 +202,18 @@ int main(int argc, char **argv)
                 comp_func f = userFuncs[i];
                 f(region, n, output);
                 bool error = checksum(outputBaseline, output, 13);
-                if (error)
-                    cout << "ERROR: the results for function " << i << " are incorrect." << std::endl;
+//                if (error)
+//                    cout << "ERROR: the results for function " << i << " are incorrect." << std::endl;
             }
+
 
             destroy(region);
             destroy(output);
             destroy(outputBaseline);
         }
 
+//        cout <<  gBone1 <<  " " << gBone2  << endl;
+//        cout << gInter1 <<  " " << gInter2 << endl;
 
         for (i = 0; i < numFuncs; i++)
         {
@@ -193,7 +233,7 @@ int main(int argc, char **argv)
 * Registers a user function to be tested by the driver program. Registers a
 * string description of the function as well
 */
-void add_function(comp_func f, string name, double flops)
+void add_function(comp_func f, const string& name, double flops)
 {
     userFuncs.push_back(f);
     funcNames.emplace_back(name);
@@ -208,12 +248,12 @@ void add_function(comp_func f, string name, double flops)
 */
 double perf_test(comp_func f, int n)
 {
-    double cycles = 0.0;
-    long num_runs = 10;
+    double cycles;
+    long num_runs = 20;
     double multiplier = 1;
     myInt64 start, end;
 
-    int *region;
+    double* region;
     double* output;
     build(&region, n*n*n);
     build(&output, 13);

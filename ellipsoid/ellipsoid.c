@@ -1,4 +1,5 @@
 #include <string.h>
+#include <math.h>
 #include "ellipsoid.h"
 #ifdef DEBUG
 	#include <stdio.h>
@@ -13,7 +14,8 @@ static const double BETA    = 0.5;
  *  Private data
  ****************************************************************************/
 #ifdef DEBUG
-	static long ellipsoid_flop_count = 0;
+	static unsigned long ellipsoid_flop_count  = 0;
+	static unsigned long ellipsoid_outer_iters = 0;
 #endif
 
 /*****************************************************************************
@@ -23,11 +25,14 @@ static const double BETA    = 0.5;
 #ifdef DEBUG
 	void fit_ellipsoid_debug_init(void)
 	{
-		ellipsoid_flop_count = 0;
+		ellipsoid_flop_count  = 0;
+		ellipsoid_outer_iters = 0;
 	}
-	void fit_ellipsoid_debug_deinit(void)
+	long fit_ellipsoid_debug_deinit(void)
 	{
 		printf("[ellipsoid] flop count = %ld\n", ellipsoid_flop_count);
+		printf("[ellipsoid] iters      = %ld\n", ellipsoid_outer_iters);
+		return ellipsoid_flop_count;
 	}
 #endif
 
@@ -37,16 +42,16 @@ static const double BETA    = 0.5;
 
 /**
  * returns p^T Q p 
- * flop count = 12adds + 12mults
- *					  = 24
+ * flop count = 8adds + 12mults
+ *					  = 20
  */ 
-static double _quadratic_form(const double p[3], const double Q[3][3])
+static double _quadratic_form(const double p[3], const double (*Q)[3][3])
 {
 	double Qp[3] = {0};
 
-	for (int i=0; i<3; i++){
+	for (int i=0; i<3; i++) {
 		for (int j=0; j<3; j++) {
-			Qp[i] += Q[i][j] * p[j];
+			Qp[i] += (*Q)[i][j] * p[j];
 		}
 	}
 
@@ -59,21 +64,23 @@ static double _quadratic_form(const double p[3], const double Q[3][3])
 
 /**
  * returns \sum_i (p_i^T Q p_i - 1)^2
- * flop count = n*(3adds + 1mult  + 2*C(_quadratic_form))
- *            = n*(3+1+2*24)
+ * flop count = n*(C(_quadratic_Form)+1sub + 1add+1mult)
+ *            = n*(20+3) = 23n
  */
-static double _cost(const double (*p)[3], int n, const double Q[3][3])
+static double _cost(const double (*p)[3], int n, const double (*Q)[3][3])
 {
 	double ret = 0;
 
 	for (int i=0; i<n; i++){
-		ret += (_quadratic_form(p[i], Q) - 1)*(_quadratic_form(p[i], Q) - 1);
+		double residual_i = _quadratic_form(p[i], Q) - 1;
+		ret += residual_i*residual_i;
 	}
 	return ret;
 }
 
 /*
  * ||A||_F
+ * flop count = 9*(1mult + 1add) + 1sqrt
  */
 static double _normFro(const double A[3][3])
 {
@@ -98,10 +105,11 @@ static double _normFro(const double A[3][3])
  *        9*(1add + 3 mults)
  *	where iters_bt = number of back tracking iterations
  */
-void fit_ellipsoid(const double (*p)[3], int n, double Q[3][3])
+void fit_ellipsoid(const double (*p)[3], int n, double (*Q)[3][3])
 {
-	double Qk[3][3] = {{1,0,0}, {0,1,0}, {0,0,1}}; 
-
+	(*Q)[0][0] = 1; (*Q)[0][1] = 0; (*Q)[0][2] = 0;
+	(*Q)[1][0] = 0; (*Q)[1][1] = 1; (*Q)[1][2] = 0;
+	(*Q)[2][0] = 0; (*Q)[2][1] = 0; (*Q)[2][2] = 1;
 
 	while(1) {
 		/* determine gradient */
@@ -109,38 +117,15 @@ void fit_ellipsoid(const double (*p)[3], int n, double Q[3][3])
 		double grad[3][3] = {{0}};
 
 		for (int i=0; i<n; i++) {
-			double residual_i = _quadratic_form(p[i], Qk) - 1;
+			double residual_i = _quadratic_form(p[i], Q) - 1;
 			double jacobian_i[3][3] = {{0}};
 		
 			/* jacobian_i =  outer product */
 			for (int j=0; j<3; j++) {
 				for (int k=0; k<3; k++) {
 					jacobian_i[j][k] = p[i][j]*p[i][k];
-          // temporal and spatial locality
-          // scalr replacement
-          // p_i0 = p[i][0]
-          // p_i1 = p[i][1]
-          // p_i2 = p[i][2]
-          // jacobian_i00 = p_i0 * p_i0
-          // jacobian_i01 = p_i0 * p_i1
-          // jacobian_i02 = p_i0 * p_i2
-          // jacobian_i10 = p_i1 * p_i0
-          // jacobian_i11 = p_i1 * p_i1
-          // jacobian_i12 = p_i1 * p_i2
-          // jacobian_i20 = p_i2 * p_i0
-          // jacobian_i21 = p_i2 * p_i1
-          // jacobian_i22 = p_i2 * p_i2
-					// jacobian_i[0][0] = jacobian_i00
-					// jacobian_i[0][1] = jacobian_i01
-					// jacobian_i[0][2] = jacobian_i02
-					// jacobian_i[1][0] = jacobian_i10
-					// jacobian_i[1][1] = jacobian_i11
-					// jacobian_i[1][2] = jacobian_i12
-					// jacobian_i[2][0] = jacobian_i20
-					// jacobian_i[2][1] = jacobian_i21
-					// jacobian_i[2][2] = jacobian_i22
-				}
-			}
+				} 
+			} 
 
 			/* grad += 2*residual_i*jacobian_i */
 			// coeff = 2*residual_i
@@ -152,13 +137,13 @@ void fit_ellipsoid(const double (*p)[3], int n, double Q[3][3])
 			}
 		}
 
-		if (_normFro(grad) < EPSILON) break;
-
-
 #ifdef DEBUG
-		ellipsoid_flop_count += n*(24+1+9+9*(2+1)); 
-		// ellipsoid_flop_count++;
+		ellipsoid_flop_count += n*(20+1 + 9+1+9*2 +2); 
+		ellipsoid_flop_count += 9*(1+1) + 1; 
+		ellipsoid_outer_iters++;
 #endif
+
+		if (_normFro(grad) < EPSILON) break;
 
 		/* take step direction to be negative gradient */
 		
@@ -169,20 +154,22 @@ void fit_ellipsoid(const double (*p)[3], int n, double Q[3][3])
 			}
 		}
 #ifdef DEBUG
-		ellipsoid_flop_count += 9;
+		// ellipsoid_flop_count += 9;
 #endif
 
-
-#if 1
 		/* backtracking line search */
 		
 		double t = 100;
 		double Qk_plus_tstep[3][3] = {{0}};
 		for (int i=0; i<3; i++) {
 			for (int j=0; j<3; j++) {
-				Qk_plus_tstep[i][j] = Qk[i][j] + t*step[i][j];
+				Qk_plus_tstep[i][j] = (*Q)[i][j] + t*step[i][j];
 			}
 		}
+#ifdef DEBUG
+		ellipsoid_flop_count += 9*(1+1);
+#endif
+
 		double trace_gradstep = 0;
 		for (int i=0; i<3; i++) {
 			for (int j=0; j<3; j++) {
@@ -190,43 +177,25 @@ void fit_ellipsoid(const double (*p)[3], int n, double Q[3][3])
 			}
 		}
 #ifdef DEBUG
-		ellipsoid_flop_count += 9*(1+1) + 9*(1+1);
+		// ellipsoid_flop_count += 9*(1+1); 
+		ellipsoid_flop_count += 23*n;// + 1+2; 
 #endif
-		while (_cost(p, n, Qk_plus_tstep) > _cost(p, n, Qk) + ALPHA*t*trace_gradstep) {
+		while (_cost(p, n, (double (*)[3][3]) Qk_plus_tstep) > 
+																_cost(p, n, Q) + ALPHA*t*trace_gradstep) {
 			t = t*BETA;
-
+			
 			for (int i=0; i<3; i++) {
 				for (int j=0; j<3; j++) {
-					Qk_plus_tstep[i][j] = Qk[i][j] + t*step[i][j];
+					Qk_plus_tstep[i][j] = (*Q)[i][j] + t*step[i][j];
 				}
 			}
 #ifdef DEBUG
-		ellipsoid_flop_count += n*(3+1+2*24)*2 + 1+2 + 1 + 9*(1+1);
+			/* not counting the second cost, it is loop invariant code */
+			ellipsoid_flop_count += 1 + 9*(1+1) + 23*n + 1+2;
 #endif
-		}
-
-#else
-		/* exact line search */
-
-		double Qk_plus_tstep[3][3] = {{0}};
-		double trace_gradstep = 0;
-		for (int i=0; i<3; i++) {
-			for (int j=0; j<3; j++) {
-				trace_gradstep += grad[i][j]*step[j][i];
-			}
-		}
-		double t = -_cost(p, n, Qk)/trace_gradstep;
-		for (int i=0; i<3; i++) {
-			for (int j=0; j<3; j++) {
-				Qk_plus_tstep[i][j] = Qk[i][j] + t*step[i][j];
-			}
-		}
-#endif
-
-		memcpy(Qk, Qk_plus_tstep, sizeof(Qk));
+		} /* back tracking while loop */
+		memcpy(Q, Qk_plus_tstep, sizeof(double)*9);
 	} /* main while loop */
-
-	memcpy(Q, Qk, sizeof(Qk));
 }
 
 /*
@@ -234,7 +203,7 @@ void fit_ellipsoid(const double (*p)[3], int n, double Q[3][3])
  * each of the DIRECTIONS defined above
  * flop count = NUM_DIRS*3mults + C(fit_ellipsoid)
  */
-void fit_ellipsoid_mils(const double *mils, double Q[3][3])
+void fit_ellipsoid_mils(const double *mils, double (*Q)[3][3])
 {
 	/* construct the points */
 	double p[NUM_DIRECTIONS][3];

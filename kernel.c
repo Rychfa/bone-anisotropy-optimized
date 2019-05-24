@@ -36,13 +36,15 @@
 #include "utils.h"
 #include "eigen.h"
 
-static int* ptrHighResGlobal = NULL;
+static double* ptrHighResGlobal = NULL;
+static double* ptrLowResGlobal = NULL;
 
-void init (int** sphere, int** ptrHighRes, int** ptrLowRes, double** rotation_matrix, double** ptrEvecOut, double ** ptrEvalsOut, int index) {
+void init (double** sphere, double** extracted_region, double** ptrHighRes, double** ptrLowRes, double** rotation_matrix, double** ptrEvecOut, double ** ptrEvalsOut) {
     //
     // Create sphere mask
     //
-    *sphere = malloc( (sizeof (int)) * SPHERE_ARRAY_SIZE);
+    *extracted_region = malloc( (sizeof (double)) * SPHERE_ARRAY_SIZE);
+    *sphere = malloc( (sizeof (double)) * SPHERE_ARRAY_SIZE);
     createSphereMask(*sphere);
     //
     // Read input images
@@ -50,8 +52,11 @@ void init (int** sphere, int** ptrHighRes, int** ptrLowRes, double** rotation_ma
     if (ptrHighResGlobal == NULL) {
         ptrHighResGlobal = readHighResImage();
     }
+    if (ptrLowResGlobal == NULL) {
+        ptrLowResGlobal = readLowResImage();
+    }
     *ptrHighRes = ptrHighResGlobal;
-    *ptrLowRes = readLowResImage(index);
+    *ptrLowRes = ptrLowResGlobal;
     //
     // Init rotation matrix
     //
@@ -68,22 +73,23 @@ void init (int** sphere, int** ptrHighRes, int** ptrLowRes, double** rotation_ma
     //
     // Allocate space for the output eigen vectors
     //
-    *ptrEvecOut = calloc (sizeof(double), 3*3*LOW_RES_SIZE(index));
-    *ptrEvalsOut = calloc(sizeof(double), 3*LOW_RES_SIZE(index));
+    *ptrEvecOut = calloc (sizeof(double), 3*3*LOW_RES_SIZE);
+    *ptrEvalsOut = calloc(sizeof(double), 3*LOW_RES_SIZE);
 
 #ifdef DEBUG
-    fit_ellipsoid_debug_init();
+    region_extraction_debug_init();
+    //fit_ellipsoid_debug_init();
 #endif
 }
 
-void deInit (int* sphere, int* ptrHighResArg, int* ptrLowRes, double* rotation_matrix, double* ptrEvecOut, double *ptrEvalsOut, bool generate_ground_truth) {
+void deInit (double* sphere, double* extracted_region, double* ptrHighRes, double* ptrLowRes, double* rotation_matrix, double* ptrEvecOut, double *ptrEvalsOut, bool generate_ground_truth) {
     if (generate_ground_truth) {
         FILE *fd = fopen("ground_truth.txt","w");
 
-        for (int k=0; k<LOW_RES_D3(0); k++) {
-            for (int j=0; j<LOW_RES_D2(0); j++) {
-                for (int i=0; i<LOW_RES_D1(0); i++) {
-                    int temp = i + j*LOW_RES_D1(0) + k*LOW_RES_D1(0)*LOW_RES_D2(0);
+        for (int k=0; k<LOW_RES_D3; k++) {
+            for (int j=0; j<LOW_RES_D2; j++) {
+                for (int i=0; i<LOW_RES_D1; i++) {
+                    int temp = i + j*LOW_RES_D1 + k*LOW_RES_D1*LOW_RES_D2;
                     fprintf(fd, "%d, %d, %d, " /* index into LR image */
                             "%.20f, %.20f, %.20f, "   /* e vals */
                             "%.20f, %.20f, %.20f, "   /* e vecs*/
@@ -102,18 +108,28 @@ void deInit (int* sphere, int* ptrHighResArg, int* ptrLowRes, double* rotation_m
     }
 
     free(sphere);
-//    free(ptrHighRes); // we always use the same highres
-    free(ptrLowRes);
+    free(extracted_region);
+    //free(ptrHighRes); // we always use the same highres
+    //free(ptrLowRes);
     free(rotation_matrix);
     free(ptrEvecOut);
     free(ptrEvalsOut);
  
 #ifdef DEBUG
-    fit_ellipsoid_debug_deinit();
+    region_extraction_debug_deinit();
+    //fit_ellipsoid_debug_deinit();
 #endif
 }
 
-void kernel_basic (int* sphere, int* ptrHighRes, int* ptrLowRes, double* rotation_matrix, double* ptrEvecOut, double *ptrEvalsOut, int index) {
+void kernel_basic (double* sphere, double* extracted_region, double* ptrHighRes, double* ptrLowRes, double* rotation_matrix, double* ptrEvecOut, double *ptrEvalsOut) {
+    region_extraction(798, 413, 976, sphere, extracted_region, ptrHighRes);
+}
+
+void kernel_opt1 (double* sphere, double* extracted_region, double* ptrHighRes, double* ptrLowRes, double* rotation_matrix, double* ptrEvecOut, double *ptrEvalsOut) {
+    region_extraction_opt1(798, 413, 976, sphere, extracted_region, ptrHighRes);
+}
+
+void kernel_basic_save (double* sphere, double* extracted_region, double* ptrHighRes, double* ptrLowRes, double* rotation_matrix, double* ptrEvecOut, double *ptrEvalsOut) {
     double xT, yT, zT, xC, yC, zC;
 
     xT = 5.386915;
@@ -136,7 +152,6 @@ void kernel_basic (int* sphere, int* ptrHighRes, int* ptrLowRes, double* rotatio
     int i_hr, j_hr, k_hr, ii_hr;
     int imin, jmin, kmin;
     int radius_i, radius_j, radius_k;
-    int *extracted_region = malloc((sizeof (int)) * SPHERE_ARRAY_SIZE);
 
     zero = 0.0;
     half = 0.5;
@@ -153,8 +168,8 @@ void kernel_basic (int* sphere, int* ptrHighRes, int* ptrLowRes, double* rotatio
 
     // QCT - Low resolution
     // voxel_size
-    voxel_size_lr = 3.0 / scaleFactor[index];
-    half_voxel_size_lr = 1.5 / scaleFactor[index];
+    voxel_size_lr = 3.0;
+    half_voxel_size_lr = 1.5;
 
     // Rotation matrix
     r00 = rotation_matrix[0];
@@ -166,9 +181,9 @@ void kernel_basic (int* sphere, int* ptrHighRes, int* ptrLowRes, double* rotatio
     r20 = rotation_matrix[6];
     r21 = rotation_matrix[7];
     r22 = rotation_matrix[8];
-
+      
     // loop over all femur voxels
-    for (int k_lr=0; k_lr < LOW_RES_D3(index); k_lr++)
+    for (int k_lr=0; k_lr < LOW_RES_D3; k_lr++)
     {
         // calculate vector from the center of the image
         // to the center of this voxel
@@ -178,7 +193,7 @@ void kernel_basic (int* sphere, int* ptrHighRes, int* ptrLowRes, double* rotatio
         zDr12 = z_lr * r12;
         zDr22 = z_lr * r22;
 
-        for (int j_lr=0; j_lr < LOW_RES_D2(index); j_lr++)
+        for (int j_lr=0; j_lr < LOW_RES_D2; j_lr++)
         {
             //calculate vector from the center of the image
             //to the center of this voxel
@@ -188,15 +203,15 @@ void kernel_basic (int* sphere, int* ptrHighRes, int* ptrLowRes, double* rotatio
             yDr11 = y_lr * r11;
             yDr21 = y_lr * r21;
 
-            for (int i_lr=0; i_lr < LOW_RES_D1(index); i_lr++)
+            for (int i_lr=0; i_lr < LOW_RES_D1; i_lr++)
             {
                 // calculate vector from the center of the image
                 // to the center of this voxel
                 x_lr = i_lr*voxel_size_lr - xC + half_voxel_size_lr;
                 // calculate index
-                ii_lr = i_lr + j_lr*LOW_RES_D1(index) + k_lr*LOW_RES_D1(index)*LOW_RES_D2(index);
+                ii_lr = i_lr + j_lr*LOW_RES_D1 + k_lr*LOW_RES_D1*LOW_RES_D2;
                 // check if this voxel inside the FE mask
-                if (ptrLowRes[ii_lr] > 0)
+                if (ptrLowRes[ii_lr] > 0.5)
                 {
                     //
                     // This is executed approx. one third of the times.
@@ -215,6 +230,152 @@ void kernel_basic (int* sphere, int* ptrHighRes, int* ptrLowRes, double* rotatio
                     ty_hr = (xDr10 + yDr11 + zDr12 + yC + yT - half_voxel_size_hr)/voxel_size_hr;
                     tz_hr = (xDr20 + yDr21 + zDr22 + zC + zT - half_voxel_size_hr)/voxel_size_hr;
 
+                    // lower bounds
+                    if ((tx_hr < zero) && (tx_hr >= -half)) {
+                        tx_hr = zero;
+                    }
+                    else if ((ty_hr < zero) && (ty_hr >= -half)) {
+                        ty_hr = zero;
+                    }
+                    else if ((tz_hr < zero) && (tz_hr >= -half)) {
+                        tz_hr = zero;
+                    }
+                    // upper bounds
+                    if ((tx_hr <= nx_hr-half) && (tx_hr > nx_hr-one)) {
+                        tx_hr = nx_hr-one;
+                    }
+                    else if ((ty_hr <= ny_hr-half) && (ty_hr > ny_hr-one)) {
+                        ty_hr = ny_hr-one;
+                    }
+                    else if ((tz_hr <= nz_hr-half) && (tz_hr > nz_hr-one)) {
+                        tz_hr = nz_hr-one;
+                    }
+
+                    i_hr = (int) tx_hr;
+                    j_hr = (int) ty_hr;
+                    k_hr = (int) tz_hr;
+ 
+                    region_extraction(i_hr, j_hr, k_hr, sphere, extracted_region, ptrHighRes);
+
+                    /* // compute fabric */
+                    /* double mils[NUM_DIRECTIONS]; */
+                    /* mil2(extracted_region, SPHERE_NDIM, mils); */
+                    /* //print_vector(mils, NUM_DIRECTIONS); */
+                    /* double Q[3][3]; */
+                    /* fit_ellipsoid_mils(mils, (double (*)[3][3])Q); */
+
+                    /* eigen3(Q, &ptrEvecOut[ii_lr*9], &ptrEvalsOut[ii_lr*3]); */
+                }
+            }
+        }
+    } /* main loop */
+}
+
+
+
+
+
+// loop unrolling and scalar replacement
+void kernel_opt1_save (double* sphere, double* extracted_region, double* ptrHighRes, double* ptrLowRes, double* rotation_matrix, double* ptrEvecOut, double *ptrEvalsOut) {
+    double xT, yT, zT, xC, yC, zC;
+
+    xT = 5.386915;
+    yT = 5.253300;
+    zT = 16.591884;
+    xC = 37.0230010226;
+    yC = 22.5910006240;
+    zC = 45.8790012673;
+
+    double r00, r01, r02, r10, r11, r12, r20, r21, r22;
+    double voxel_size_lr, voxel_size_hr;
+    double half_voxel_size_lr, half_voxel_size_hr;
+    double xDr00, xDr10, xDr20, yDr01, yDr11, yDr21, zDr02, zDr12, zDr22;
+    double tx_hr, ty_hr, tz_hr;
+    double nx_hr, ny_hr, nz_hr;
+    double nx_sp, ny_sp, nz_sp;
+    double x_lr, y_lr, z_lr;
+    int ii_lr;
+    double zero, half, one;
+    int i_hr, j_hr, k_hr, ii_hr;
+    int imin, jmin, kmin;
+    int radius_i, radius_j, radius_k;
+
+    zero = 0.0;
+    half = 0.5;
+    one = 1.0;
+
+    // XCT - High resolution
+    // image dimension
+    nx_hr = HIGH_RES_D1;
+    ny_hr = HIGH_RES_D2;
+    nz_hr = HIGH_RES_D3;
+    // voxel_size
+    voxel_size_hr = 0.082;
+    half_voxel_size_hr = 0.041;
+
+    // QCT - Low resolution
+    // voxel_size
+    voxel_size_lr = 3.0;
+    half_voxel_size_lr = 1.5;
+
+    // Rotation matrix
+    r00 = rotation_matrix[0];
+    r01 = rotation_matrix[1];
+    r02 = rotation_matrix[2];
+    r10 = rotation_matrix[3];
+    r11 = rotation_matrix[4];
+    r12 = rotation_matrix[5];
+    r20 = rotation_matrix[6];
+    r21 = rotation_matrix[7];
+    r22 = rotation_matrix[8];
+
+    // loop over all femur voxels
+    for (int k_lr=0; k_lr < LOW_RES_D3; k_lr++)
+    {
+        // calculate vector from the center of the image
+        // to the center of this voxel
+        z_lr = k_lr*voxel_size_lr - zC + half_voxel_size_lr;
+        // multiply the vector with the rotation matrix
+        zDr02 = z_lr * r02;
+        zDr12 = z_lr * r12;
+        zDr22 = z_lr * r22;
+
+        for (int j_lr=0; j_lr < LOW_RES_D2; j_lr++)
+        {
+            //calculate vector from the center of the image
+            //to the center of this voxel
+            y_lr = j_lr*voxel_size_lr - yC + half_voxel_size_lr;
+            //multiply the vector with the rotation matrix
+            yDr01 = y_lr * r01;
+            yDr11 = y_lr * r11;
+            yDr21 = y_lr * r21;
+
+            for (int i_lr=0; i_lr < LOW_RES_D1; i_lr++)
+            {
+                // calculate vector from the center of the image
+                // to the center of this voxel
+                x_lr = i_lr*voxel_size_lr - xC + half_voxel_size_lr;
+                // calculate index
+                ii_lr = i_lr + j_lr*LOW_RES_D1 + k_lr*LOW_RES_D1*LOW_RES_D2;
+                // check if this voxel inside the FE mask
+                if (ptrLowRes[ii_lr] > 0.5)
+                {
+                    //
+                    // This is executed approx. one third of the times.
+                    //
+
+                    // multiply the vector with the rotation matrix
+                    xDr00 = x_lr * r00;
+                    xDr10 = x_lr * r10;
+                    xDr20 = x_lr * r20;
+                    // Find location in Fabric image
+                    // the point in the original domain; tx,ty,tz are float indices,
+                    // supposed to point to the SWB corner of that voxel
+                    // in the original image.
+                    // t = (R*D + original_center - half_voxel)/voxel_size
+                    tx_hr = (xDr00 + yDr01 + zDr02 + xC + xT - half_voxel_size_hr)/voxel_size_hr;
+                    ty_hr = (xDr10 + yDr11 + zDr12 + yC + yT - half_voxel_size_hr)/voxel_size_hr;
+                    tz_hr = (xDr20 + yDr21 + zDr22 + zC + zT - half_voxel_size_hr)/voxel_size_hr;
 
                     // lower bounds
                     if ((tx_hr < zero) && (tx_hr >= -half)) {
@@ -227,42 +388,172 @@ void kernel_basic (int* sphere, int* ptrHighRes, int* ptrLowRes, double* rotatio
                         tz_hr = zero;
                     }
                     // upper bounds
-                    if ((tx_hr <= (nx_hr-half)) && (tx_hr > (nx_hr-one))) {
-                        tx_hr = nx_hr-one; }
-                    else if ((ty_hr <= (ny_hr-half)) && (ty_hr > (ny_hr-one))) {
-                        ty_hr = ny_hr-one; }
-                    else if ((tz_hr <= (nz_hr-half)) && (tz_hr > (nz_hr-one))) {
-                        tz_hr = nz_hr-one; }
-                    // get the integer index of the calculated point
-                    // which is the corner of that voxel in the original image
+                    if ((tx_hr <= nx_hr-half) && (tx_hr > nx_hr-one)) {
+                        tx_hr = nx_hr-one;
+                    }
+                    else if ((ty_hr <= ny_hr-half) && (ty_hr > ny_hr-one)) {
+                        ty_hr = ny_hr-one;
+                    }
+                    else if ((tz_hr <= nz_hr-half) && (tz_hr > nz_hr-one)) {
+                        tz_hr = nz_hr-one;
+                    }
+
+                    i_hr = (int) tx_hr;
+                    j_hr = (int) ty_hr;
+                    k_hr = (int) tz_hr;
+        
+                    printf("hr point: %d %d %d", i_hr, j_hr, k_hr);
+                    
+                    region_extraction_opt1(i_hr, j_hr, k_hr, sphere, extracted_region, ptrHighRes);
+
+                    /* // compute fabric */
+                    /* double mils[NUM_DIRECTIONS]; */
+                    /* mil2(extracted_region, SPHERE_NDIM, mils); */
+                    /* //print_vector(mils, NUM_DIRECTIONS); */
+
+                    /* double Q[3][3]; */
+                    /* fit_ellipsoid_mils(mils, Q); */
+
+                    /* eigen3(Q, &ptrEvecOut[ii_lr*9], &ptrEvalsOut[ii_lr*3]); */
+                }
+            }
+        }
+    } /* main loop */
+}
+
+// blocking
+void kernel_opt2 (double* sphere, double* extracted_region, double* ptrHighRes, double* ptrLowRes, double* rotation_matrix, double* ptrEvecOut, double *ptrEvalsOut) {
+    double xT, yT, zT, xC, yC, zC;
+
+    xT = 5.386915;
+    yT = 5.253300;
+    zT = 16.591884;
+    xC = 37.0230010226;
+    yC = 22.5910006240;
+    zC = 45.8790012673;
+
+    double r00, r01, r02, r10, r11, r12, r20, r21, r22;
+    double voxel_size_lr, voxel_size_hr;
+    double half_voxel_size_lr, half_voxel_size_hr;
+    double xDr00, xDr10, xDr20, yDr01, yDr11, yDr21, zDr02, zDr12, zDr22;
+    double tx_hr, ty_hr, tz_hr;
+    double nx_hr, ny_hr, nz_hr;
+    double nx_sp, ny_sp, nz_sp;
+    double x_lr, y_lr, z_lr;
+    int ii_lr;
+    double zero, half, one;
+    int i_hr, j_hr, k_hr, ii_hr;
+    int imin, jmin, kmin;
+    int radius_i, radius_j, radius_k;
+
+    zero = 0.0;
+    half = 0.5;
+    one = 1.0;
+
+    // XCT - High resolution
+    // image dimension
+    nx_hr = HIGH_RES_D1;
+    ny_hr = HIGH_RES_D2;
+    nz_hr = HIGH_RES_D3;
+    // voxel_size
+    voxel_size_hr = 0.082;
+    half_voxel_size_hr = 0.041;
+
+    // QCT - Low resolution
+    // voxel_size
+    voxel_size_lr = 3.0;
+    half_voxel_size_lr = 1.5;
+
+    // Rotation matrix
+    r00 = rotation_matrix[0];
+    r01 = rotation_matrix[1];
+    r02 = rotation_matrix[2];
+    r10 = rotation_matrix[3];
+    r11 = rotation_matrix[4];
+    r12 = rotation_matrix[5];
+    r20 = rotation_matrix[6];
+    r21 = rotation_matrix[7];
+    r22 = rotation_matrix[8];
+
+    // loop over all femur voxels
+    for (int k_lr=0; k_lr < LOW_RES_D3; k_lr++)
+    {
+        // calculate vector from the center of the image
+        // to the center of this voxel
+        z_lr = k_lr*voxel_size_lr - zC + half_voxel_size_lr;
+        // multiply the vector with the rotation matrix
+        zDr02 = z_lr * r02;
+        zDr12 = z_lr * r12;
+        zDr22 = z_lr * r22;
+
+        for (int j_lr=0; j_lr < LOW_RES_D2; j_lr++)
+        {
+            //calculate vector from the center of the image
+            //to the center of this voxel
+            y_lr = j_lr*voxel_size_lr - yC + half_voxel_size_lr;
+            //multiply the vector with the rotation matrix
+            yDr01 = y_lr * r01;
+            yDr11 = y_lr * r11;
+            yDr21 = y_lr * r21;
+
+            for (int i_lr=0; i_lr < LOW_RES_D1; i_lr++)
+            {
+                // calculate vector from the center of the image
+                // to the center of this voxel
+                x_lr = i_lr*voxel_size_lr - xC + half_voxel_size_lr;
+                // calculate index
+                ii_lr = i_lr + j_lr*LOW_RES_D1 + k_lr*LOW_RES_D1*LOW_RES_D2;
+                // check if this voxel inside the FE mask
+                if (ptrLowRes[ii_lr] > 0.0)
+                {
+                    //
+                    // This is executed approx. one third of the times.
+                    //
+
+                    // multiply the vector with the rotation matrix
+                    xDr00 = x_lr * r00;
+                    xDr10 = x_lr * r10;
+                    xDr20 = x_lr * r20;
+                    // Find location in Fabric image
+                    // the point in the original domain; tx,ty,tz are float indices,
+                    // supposed to point to the SWB corner of that voxel
+                    // in the original image.
+                    // t = (R*D + original_center - half_voxel)/voxel_size
+                    tx_hr = (xDr00 + yDr01 + zDr02 + xC + xT - half_voxel_size_hr)/voxel_size_hr;
+                    ty_hr = (xDr10 + yDr11 + zDr12 + yC + yT - half_voxel_size_hr)/voxel_size_hr;
+                    tz_hr = (xDr20 + yDr21 + zDr22 + zC + zT - half_voxel_size_hr)/voxel_size_hr;
+
+                    // lower bounds
+                    if ((tx_hr < zero) && (tx_hr >= -half)) {
+                        tx_hr = zero;
+                    }
+                    else if ((ty_hr < zero) && (ty_hr >= -half)) {
+                        ty_hr = zero;
+                    }
+                    else if ((tz_hr < zero) && (tz_hr >= -half)) {
+                        tz_hr = zero;
+                    }
+                    // upper bounds
+                    if ((tx_hr <= nx_hr-half) && (tx_hr > nx_hr-one)) {
+                        tx_hr = nx_hr-one;
+                    }
+                    else if ((ty_hr <= ny_hr-half) && (ty_hr > ny_hr-one)) {
+                        ty_hr = ny_hr-one;
+                    }
+                    else if ((tz_hr <= nz_hr-half) && (tz_hr > nz_hr-one)) {
+                        tz_hr = nz_hr-one;
+                    }
+
                     i_hr = (int) tx_hr;
                     j_hr = (int) ty_hr;
                     k_hr = (int) tz_hr;
 
-                    // debug
-                    if ((i_lr == 13) && (j_lr == 4) && (k_lr == 28)) { 
-                        printf("coordMap: lr(%d ,%d, %d), hr(%d, %d, %d)\n", i_lr, j_lr, k_lr, i_hr, j_hr, k_hr);
-                        region_extraction(i_hr, j_hr, k_hr, sphere, extracted_region, ptrHighRes);
-                        // writeVTK(extracted_region, HIGH_RES_VOXEL_SIZE, SPHERE_NDIM, SPHERE_NDIM, SPHERE_NDIM, "test/region.vtk");
-                    
-                        /* double mils[NUM_DIRECTIONS]; */
-                        /* mil2( extracted_region, SPHERE_NDIM, DIRECTIONS, mils); */
-                        /* //print_vector(mils, NUM_DIRECTIONS); */
+                    region_extraction_opt2(i_hr, j_hr, k_hr, sphere, extracted_region, ptrHighRes);
 
-                        /* double Q[3][3]; */
-                        /* fit_ellipsoid_mils(mils, Q); */
-
-                        /* eigen3(Q, &ptrEvecOut[ii_lr*9], &ptrEvalsOut[ii_lr*3]); */
-
-                    }
-
-
-                    // extract a sphere region
-                    /* region_extraction(i_hr, j_hr, k_hr, sphere, extracted_region, ptrHighRes); */
-
+                    /* // compute fabric */
                     /* double mils[NUM_DIRECTIONS]; */
                     /* mil2(extracted_region, SPHERE_NDIM, mils); */
-                    //print_vector(mils, NUM_DIRECTIONS);
+                    /* //print_vector(mils, NUM_DIRECTIONS); */
 
                     /* double Q[3][3]; */
                     /* fit_ellipsoid_mils(mils, Q); */
