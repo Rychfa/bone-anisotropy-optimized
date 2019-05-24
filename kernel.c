@@ -39,10 +39,11 @@
 static double* ptrHighResGlobal = NULL;
 static double* ptrLowResGlobal = NULL;
 
-void init (double** sphere, double** ptrHighRes, double** ptrLowRes, double** rotation_matrix, double** ptrEvecOut, double ** ptrEvalsOut) {
+void init (double** sphere, double** extracted_region, double** ptrHighRes, double** ptrLowRes, double** rotation_matrix, double** ptrEvecOut, double ** ptrEvalsOut) {
     //
     // Create sphere mask
     //
+    *extracted_region = malloc( (sizeof (double)) * SPHERE_ARRAY_SIZE);
     *sphere = malloc( (sizeof (double)) * SPHERE_ARRAY_SIZE);
     createSphereMask(*sphere);
     //
@@ -81,7 +82,7 @@ void init (double** sphere, double** ptrHighRes, double** ptrLowRes, double** ro
 #endif
 }
 
-void deInit (double* sphere, double* ptrHighRes, double* ptrLowRes, double* rotation_matrix, double* ptrEvecOut, double *ptrEvalsOut, bool generate_ground_truth) {
+void deInit (double* sphere, double* extracted_region, double* ptrHighRes, double* ptrLowRes, double* rotation_matrix, double* ptrEvecOut, double *ptrEvalsOut, bool generate_ground_truth) {
     if (generate_ground_truth) {
         FILE *fd = fopen("ground_truth.txt","w");
 
@@ -107,6 +108,7 @@ void deInit (double* sphere, double* ptrHighRes, double* ptrLowRes, double* rota
     }
 
     free(sphere);
+    free(extracted_region);
     //free(ptrHighRes); // we always use the same highres
     //free(ptrLowRes);
     free(rotation_matrix);
@@ -119,7 +121,15 @@ void deInit (double* sphere, double* ptrHighRes, double* ptrLowRes, double* rota
 #endif
 }
 
-void kernel_basic (double* sphere, double* ptrHighRes, double* ptrLowRes, double* rotation_matrix, double* ptrEvecOut, double *ptrEvalsOut) {
+void kernel_basic (double* sphere, double* extracted_region, double* ptrHighRes, double* ptrLowRes, double* rotation_matrix, double* ptrEvecOut, double *ptrEvalsOut) {
+    region_extraction(798, 413, 976, sphere, extracted_region, ptrHighRes);
+}
+
+void kernel_opt1 (double* sphere, double* extracted_region, double* ptrHighRes, double* ptrLowRes, double* rotation_matrix, double* ptrEvecOut, double *ptrEvalsOut) {
+    region_extraction_opt1(798, 413, 976, sphere, extracted_region, ptrHighRes);
+}
+
+void kernel_basic_save (double* sphere, double* extracted_region, double* ptrHighRes, double* ptrLowRes, double* rotation_matrix, double* ptrEvecOut, double *ptrEvalsOut) {
     double xT, yT, zT, xC, yC, zC;
 
     xT = 5.386915;
@@ -142,7 +152,6 @@ void kernel_basic (double* sphere, double* ptrHighRes, double* ptrLowRes, double
     int i_hr, j_hr, k_hr, ii_hr;
     int imin, jmin, kmin;
     int radius_i, radius_j, radius_k;
-    double *extracted_region = malloc((sizeof (double)) * SPHERE_ARRAY_SIZE);
 
     zero = 0.0;
     half = 0.5;
@@ -172,7 +181,7 @@ void kernel_basic (double* sphere, double* ptrHighRes, double* ptrLowRes, double
     r20 = rotation_matrix[6];
     r21 = rotation_matrix[7];
     r22 = rotation_matrix[8];
-
+      
     // loop over all femur voxels
     for (int k_lr=0; k_lr < LOW_RES_D3; k_lr++)
     {
@@ -202,7 +211,7 @@ void kernel_basic (double* sphere, double* ptrHighRes, double* ptrLowRes, double
                 // calculate index
                 ii_lr = i_lr + j_lr*LOW_RES_D1 + k_lr*LOW_RES_D1*LOW_RES_D2;
                 // check if this voxel inside the FE mask
-                if (ptrLowRes[ii_lr] > 0.0)
+                if (ptrLowRes[ii_lr] > 0.5)
                 {
                     //
                     // This is executed approx. one third of the times.
@@ -245,25 +254,29 @@ void kernel_basic (double* sphere, double* ptrHighRes, double* ptrLowRes, double
                     i_hr = (int) tx_hr;
                     j_hr = (int) ty_hr;
                     k_hr = (int) tz_hr;
-
+ 
                     region_extraction(i_hr, j_hr, k_hr, sphere, extracted_region, ptrHighRes);
 
-                    // compute fabric
-                    double mils[NUM_DIRECTIONS];
-                    mil2(extracted_region, SPHERE_NDIM, mils);
-                    //print_vector(mils, NUM_DIRECTIONS);
-                    double Q[3][3];
-                    fit_ellipsoid_mils(mils, (double (*)[3][3])Q);
+                    /* // compute fabric */
+                    /* double mils[NUM_DIRECTIONS]; */
+                    /* mil2(extracted_region, SPHERE_NDIM, mils); */
+                    /* //print_vector(mils, NUM_DIRECTIONS); */
+                    /* double Q[3][3]; */
+                    /* fit_ellipsoid_mils(mils, (double (*)[3][3])Q); */
 
-                    eigen3(Q, &ptrEvecOut[ii_lr*9], &ptrEvalsOut[ii_lr*3]);
+                    /* eigen3(Q, &ptrEvecOut[ii_lr*9], &ptrEvalsOut[ii_lr*3]); */
                 }
             }
         }
     } /* main loop */
 }
 
+
+
+
+
 // loop unrolling and scalar replacement
-void kernel_opt1 (double* sphere, double* ptrHighRes, double* ptrLowRes, double* rotation_matrix, double* ptrEvecOut, double *ptrEvalsOut) {
+void kernel_opt1_save (double* sphere, double* extracted_region, double* ptrHighRes, double* ptrLowRes, double* rotation_matrix, double* ptrEvecOut, double *ptrEvalsOut) {
     double xT, yT, zT, xC, yC, zC;
 
     xT = 5.386915;
@@ -286,7 +299,6 @@ void kernel_opt1 (double* sphere, double* ptrHighRes, double* ptrLowRes, double*
     int i_hr, j_hr, k_hr, ii_hr;
     int imin, jmin, kmin;
     int radius_i, radius_j, radius_k;
-    double *extracted_region = malloc((sizeof (double)) * SPHERE_ARRAY_SIZE);
 
     zero = 0.0;
     half = 0.5;
@@ -346,7 +358,7 @@ void kernel_opt1 (double* sphere, double* ptrHighRes, double* ptrLowRes, double*
                 // calculate index
                 ii_lr = i_lr + j_lr*LOW_RES_D1 + k_lr*LOW_RES_D1*LOW_RES_D2;
                 // check if this voxel inside the FE mask
-                if (ptrLowRes[ii_lr] > 0.0)
+                if (ptrLowRes[ii_lr] > 0.5)
                 {
                     //
                     // This is executed approx. one third of the times.
@@ -389,7 +401,9 @@ void kernel_opt1 (double* sphere, double* ptrHighRes, double* ptrLowRes, double*
                     i_hr = (int) tx_hr;
                     j_hr = (int) ty_hr;
                     k_hr = (int) tz_hr;
-
+        
+                    printf("hr point: %d %d %d", i_hr, j_hr, k_hr);
+                    
                     region_extraction_opt1(i_hr, j_hr, k_hr, sphere, extracted_region, ptrHighRes);
 
                     /* // compute fabric */
@@ -408,7 +422,7 @@ void kernel_opt1 (double* sphere, double* ptrHighRes, double* ptrLowRes, double*
 }
 
 // blocking
-void kernel_opt2 (double* sphere, double* ptrHighRes, double* ptrLowRes, double* rotation_matrix, double* ptrEvecOut, double *ptrEvalsOut) {
+void kernel_opt2 (double* sphere, double* extracted_region, double* ptrHighRes, double* ptrLowRes, double* rotation_matrix, double* ptrEvecOut, double *ptrEvalsOut) {
     double xT, yT, zT, xC, yC, zC;
 
     xT = 5.386915;
@@ -431,7 +445,6 @@ void kernel_opt2 (double* sphere, double* ptrHighRes, double* ptrLowRes, double*
     int i_hr, j_hr, k_hr, ii_hr;
     int imin, jmin, kmin;
     int radius_i, radius_j, radius_k;
-    double *extracted_region = malloc((sizeof (double)) * SPHERE_ARRAY_SIZE);
 
     zero = 0.0;
     half = 0.5;

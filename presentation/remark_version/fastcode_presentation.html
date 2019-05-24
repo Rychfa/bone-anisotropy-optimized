@@ -28,6 +28,11 @@ Project Presentation, How to Write Fast Numerical Code, 27 May 2019
 ![:scale 30%](figs/ETH_logo.png)
 
 ---
+class: middle
+
+# Algorithms
+
+---
 ### Algorithms
 
 Coordinate mapping
@@ -132,45 +137,9 @@ m_{7} & m_{8} & m_{9}\\
 ![:scale 80%](figs/algorithms.png)]
 
 ---
-### Region extraction
-Basic implementation
-```
-    for (int k=0; k < SPHERE_NDIM; k++) {
-        khr = k + khr_min;
-        for (int j=0; j < SPHERE_NDIM; j++) {
-            jhr = j + jhr_min;
-            for (int i=0; i < SPHERE_NDIM; i++) {
-                ihr = i + ihr_min;
-                // calculate index
-                ii = i + j*SPHERE_NDIM + k*SPHERE_NDIM*SPHERE_NDIM;
-                ii_hr = ihr + jhr*HIGH_RES_D1 + khr*HIGH_RES_D1*HIGH_RES_D2;
-    
-                if (ii_hr < HIGH_RES_SIZE) {
-                    extracted_region[ii] = sphere[ii] * ptrHighRes[ii_hr];
-                } else {
-                    extracted_region[ii] = 0;
-                }
-            }
-        }
-    }
-```
+class: middle
 
----
-### Region extraction
-Cost measure
-  `\[ C(n) = flmults(n) = n^{3} \]`
-Operational intensity
-   `\[W(n) = n^{3} \]`
-   `\[ Q(n) = 8 \cdot 3 \cdot n^{3} \]`
-   `\[ I(n) = 1/24  \]`
-
----
-### Region extraction
-  
-Optimization
-  - Loop unrolling
-  - Blocking
-
+# Region extraction
 
 ---
 ### Region extraction
@@ -180,6 +149,11 @@ Optimization
 ### Region extraction
 ![:scale 90%](figs/regions_roofline_bounds_labelled.png)
 
+
+---
+class: middle
+
+# MIL calculation
 
 ---
 ### MIL calculation
@@ -193,7 +167,22 @@ Optimization
 * Cost analysis
 * Basic implementation
 * Optimization
-* Performance and roofline plots
+  - SIMD vector instruction
+  - Removing loop invariant code
+
+---
+class: middle
+
+# Ellipsoid fitting
+
+---
+### Ellipsoid fitting
+.margin[![:scale 100%](figs/ellipsoid_performance.png)]
+
+---
+class: middle
+
+# Overall performance <br> and results
 
 ---
 ### Overall performance

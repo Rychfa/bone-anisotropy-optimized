@@ -41,10 +41,10 @@ using namespace std;
 #define CYCLES_REQUIRED 1e7
 #define REP 3
 #define EPS (1e-3)
-#define CLOCK_FREQ 2.7
+#define CLOCK_FREQ 2.8
 
 /* prototype of the function you need to optimize */
-typedef void(*comp_func)(double*, double*, double*, double*, double*, double *);
+typedef void(*comp_func)(double*, double*, double*, double*, double*, double*, double *);
 
 //headers
 double get_perf_score(comp_func f);
@@ -62,14 +62,14 @@ vector<string> funcNames;
 vector<long> funcFlops;
 int numFuncs = 0;
 
-void build(double** sphere, double** ptrHighRes, double** ptrLowRes, double** rotation_matrix, double** ptrEvecOut, double **ptrEvalsOut)
+void build(double** sphere, double** extracted_region, double** ptrHighRes, double** ptrLowRes, double** rotation_matrix, double** ptrEvecOut, double **ptrEvalsOut)
 {
-    init(sphere, ptrHighRes, ptrLowRes, rotation_matrix, ptrEvecOut, ptrEvalsOut);
+    init(sphere, extracted_region, ptrHighRes, ptrLowRes, rotation_matrix, ptrEvecOut, ptrEvalsOut);
 }
 
-void destroy(double* sphere, double* ptrHighRes, double* ptrLowRes, double* rotation_matrix, double* ptrEvecOut, double *ptrEvalsOut, bool generate_ground_truth)
+void destroy(double* sphere, double* extracted_region, double* ptrHighRes, double* ptrLowRes, double* rotation_matrix, double* ptrEvecOut, double *ptrEvalsOut, bool generate_ground_truth)
 {
-    deInit(sphere, ptrHighRes, ptrLowRes, rotation_matrix, ptrEvecOut, ptrEvalsOut, generate_ground_truth);
+    deInit(sphere, extracted_region, ptrHighRes, ptrLowRes, rotation_matrix, ptrEvecOut, ptrEvalsOut, generate_ground_truth);
 }
 
 /*
@@ -78,9 +78,11 @@ void destroy(double* sphere, double* ptrHighRes, double* ptrLowRes, double* rota
 */
 void register_functions()
 {
-    long int flops = 126921;
+    //long int flops = 126921;
+    long int flops = 0;
+    flops = pow(8,3); //debug
     //flops += 19691008; //16
-    flops += 157471744; //32
+    //flops += 157471744; //32
     //flops += 531295488; //48
     //flops += 1258770432; //64
     //flops += 2457100800; //80
@@ -93,7 +95,7 @@ void register_functions()
     //
     add_function(&kernel_opt1, "[regions] opt1", flops);
     //
-    add_function(&kernel_opt2, "[regions] opt2", flops);
+    //add_function(&kernel_opt2, "[regions] opt2", flops);
 }
 
 
@@ -166,13 +168,14 @@ double perf_test(comp_func f, string desc, long flops)
     myInt64 start, end;
 
     double* sphere;
+    double* extracted_region;
     double* ptrHighRes;
     double* ptrLowRes;
     double* rotation_matrix;
     double* ptrEvecOut;
     double* ptrEvalsOut;
 
-    build(&sphere, &ptrHighRes, &ptrLowRes, &rotation_matrix, &ptrEvecOut, &ptrEvalsOut);
+    build(&sphere, &extracted_region, &ptrHighRes, &ptrLowRes, &rotation_matrix, &ptrEvecOut, &ptrEvalsOut);
 
     // Warm-up phase: we determine a number of executions that allows
     // the code to be executed for at least CYCLES_REQUIRED cycles.
@@ -181,7 +184,7 @@ double perf_test(comp_func f, string desc, long flops)
         num_runs = num_runs * multiplier;
         start = start_tsc();
         for (size_t i = 0; i < num_runs; i++) {
-            f(sphere, ptrHighRes, ptrLowRes, rotation_matrix, ptrEvecOut, ptrEvalsOut);
+            f(sphere, extracted_region, ptrHighRes, ptrLowRes, rotation_matrix, ptrEvecOut, ptrEvalsOut);
         }
         end = stop_tsc(start);
 
@@ -198,7 +201,7 @@ double perf_test(comp_func f, string desc, long flops)
 
         start = start_tsc();
         for (size_t i = 0; i < num_runs; ++i) {
-            f(sphere, ptrHighRes, ptrLowRes, rotation_matrix, ptrEvecOut, ptrEvalsOut);
+            f(sphere, extracted_region, ptrHighRes, ptrLowRes, rotation_matrix, ptrEvecOut, ptrEvalsOut);
         }
         end = stop_tsc(start);
 
@@ -207,7 +210,7 @@ double perf_test(comp_func f, string desc, long flops)
         cyclesList.push_back(cycles);
     }
 
-    destroy(sphere, ptrHighRes, ptrLowRes, rotation_matrix, ptrEvecOut, ptrEvalsOut, false);
+    destroy(sphere, extracted_region, ptrHighRes, ptrLowRes, rotation_matrix, ptrEvecOut, ptrEvalsOut, false);
     cyclesList.sort();
     cycles = cyclesList.front();
     return cycles;
@@ -239,6 +242,7 @@ int main(int argc, char **argv)
     /* generate the ground truth data. assumption: userFuncs[0] generates ground truth */
 
     double* sphere;
+    double* extracted_region;
     double* ptrHighRes;
     double* ptrLowRes;
     double* rotation_matrix;
@@ -246,17 +250,17 @@ int main(int argc, char **argv)
     double* ptrEvalsOut;
 
     cout << endl << "*** Initial run " << funcNames[0] << " ***" << endl;
-    build(&sphere, &ptrHighRes, &ptrLowRes, &rotation_matrix, &ptrEvecOut, &ptrEvalsOut);
-    userFuncs[0](sphere, ptrHighRes, ptrLowRes, rotation_matrix, ptrEvecOut, ptrEvalsOut);
-    destroy(sphere, ptrHighRes, ptrLowRes, rotation_matrix, ptrEvecOut, ptrEvalsOut, true);
+    build(&sphere, &extracted_region, &ptrHighRes, &ptrLowRes, &rotation_matrix, &ptrEvecOut, &ptrEvalsOut);
+    userFuncs[0](sphere, extracted_region, ptrHighRes, ptrLowRes, rotation_matrix, ptrEvecOut, ptrEvalsOut);
+    destroy(sphere, extracted_region, ptrHighRes, ptrLowRes, rotation_matrix, ptrEvecOut, ptrEvalsOut, true);
     cout << endl;
 
     for (i =1; i < numFuncs; i++) {
         cout << endl << "*** Check results of " << funcNames[0] << " ***" << endl;
-        build(&sphere, &ptrHighRes, &ptrLowRes, &rotation_matrix, &ptrEvecOut, &ptrEvalsOut);
+        build(&sphere, &extracted_region, &ptrHighRes, &ptrLowRes, &rotation_matrix, &ptrEvecOut, &ptrEvalsOut);
 
         comp_func f = userFuncs[i];
-        f(sphere, ptrHighRes, ptrLowRes, rotation_matrix, ptrEvecOut, ptrEvalsOut);
+        f(sphere, extracted_region, ptrHighRes, ptrLowRes, rotation_matrix, ptrEvecOut, ptrEvalsOut);
         double error = checksum((double (*)[3]) ptrEvalsOut, 
                                 (double (*)[3][3]) ptrEvecOut, 
                                 LOW_RES_SIZE);
@@ -266,7 +270,7 @@ int main(int argc, char **argv)
         } else {
             printf("userFuncs[%d] is correct!\n", i);
         }
-        destroy(sphere, ptrHighRes, ptrLowRes, rotation_matrix, ptrEvecOut, ptrEvalsOut, false);
+        destroy(sphere, extracted_region, ptrHighRes, ptrLowRes, rotation_matrix, ptrEvecOut, ptrEvalsOut, false);
     }
 
     for (i = 0; i < numFuncs; i++)
@@ -288,15 +292,16 @@ int main(int argc, char **argv)
 
 int simple_main () {
     double* sphere;
+    double* extracted_region;
     double* ptrHighRes;
     double* ptrLowRes;
     double* rotation_matrix;
     double* ptrEvecOut;
     double* ptrEvalsOut;
 
-    init(&sphere, &ptrHighRes, &ptrLowRes, &rotation_matrix, &ptrEvecOut, &ptrEvalsOut);
-    kernel_basic(sphere, ptrHighRes, ptrLowRes, rotation_matrix, ptrEvecOut, ptrEvalsOut);
-    deInit(sphere, ptrHighRes, ptrLowRes, rotation_matrix, ptrEvecOut, ptrEvalsOut, false);
+    init(&sphere, &extracted_region, &ptrHighRes, &ptrLowRes, &rotation_matrix, &ptrEvecOut, &ptrEvalsOut);
+    kernel_basic(sphere, extracted_region, ptrHighRes, ptrLowRes, rotation_matrix, ptrEvecOut, ptrEvalsOut);
+    deInit(sphere, extracted_region, ptrHighRes, ptrLowRes, rotation_matrix, ptrEvecOut, ptrEvalsOut, false);
 
     printf("\nDone\n");
 
