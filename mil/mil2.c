@@ -192,6 +192,12 @@ void mil2_baseline(const double *hr_sphere_region, int n, double *directions_vec
     printf("TRUE 0 - BONE LENGTH = %.8f, INTERCEPTS = %d\n", directions_vectors_bone_length[0], directions_vectors_intercepts[0]);
     printf("TRUE 1 - BONE LENGTH = %.8f, INTERCEPTS = %d\n", directions_vectors_bone_length[1], directions_vectors_intercepts[1]);
     printf("TRUE 2 - BONE LENGTH = %.8f, INTERCEPTS = %d\n", directions_vectors_bone_length[2], directions_vectors_intercepts[2]);
+    printf("TRUE 3 - BONE LENGTH = %.8f, INTERCEPTS = %d\n", directions_vectors_bone_length[3], directions_vectors_intercepts[3]);
+    printf("TRUE 4 - BONE LENGTH = %.8f, INTERCEPTS = %d\n", directions_vectors_bone_length[4], directions_vectors_intercepts[4]);
+    printf("TRUE 5 - BONE LENGTH = %.8f, INTERCEPTS = %d\n", directions_vectors_bone_length[5], directions_vectors_intercepts[5]);
+    printf("TRUE 6 - BONE LENGTH = %.8f, INTERCEPTS = %d\n", directions_vectors_bone_length[6], directions_vectors_intercepts[6]);
+    printf("TRUE 7 - BONE LENGTH = %.8f, INTERCEPTS = %d\n", directions_vectors_bone_length[7], directions_vectors_intercepts[7]);
+    printf("TRUE 8 - BONE LENGTH = %.8f, INTERCEPTS = %d\n", directions_vectors_bone_length[8], directions_vectors_intercepts[8]);
 #endif
     gBone1 = directions_vectors_bone_length[3];
     gInter1 = directions_vectors_intercepts[3];
@@ -781,7 +787,13 @@ void mil_test_all(const double *hr_sphere_region, int n, double *directions_vect
 #ifdef DEBUG
     printf("0 - BONE LENGTH = %.8f, INTERCEPTS = %d\n", bone_length[0], intercepts[0]);
     printf("1 - BONE LENGTH = %.8f, INTERCEPTS = %d\n", bone_length[1], intercepts[1]);
-    printf("2 - BONE LENGTH = %.8f, INTERCEPTS = %d\n\n", bone_length[2], intercepts[2]);
+    printf("2 - BONE LENGTH = %.8f, INTERCEPTS = %d\n", bone_length[2], intercepts[2]);
+    printf("3 - BONE LENGTH = %.8f, INTERCEPTS = %d\n", bone_length[3], intercepts[3]);
+    printf("4 - BONE LENGTH = %.8f, INTERCEPTS = %d\n", bone_length[4], intercepts[4]);
+    printf("5 - BONE LENGTH = %.8f, INTERCEPTS = %d\n", bone_length[5], intercepts[5]);
+    printf("6 - BONE LENGTH = %.8f, INTERCEPTS = %d\n", bone_length[6], intercepts[6]);
+    printf("7 - BONE LENGTH = %.8f, INTERCEPTS = %d\n", bone_length[7], intercepts[7]);
+    printf("8 - BONE LENGTH = %.8f, INTERCEPTS = %d\n", bone_length[8], intercepts[8]);
 #endif
     gBone2 = bone_length[3];
     gInter2 = intercepts[3];

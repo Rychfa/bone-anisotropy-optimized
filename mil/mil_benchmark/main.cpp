@@ -89,7 +89,7 @@ void rands(T *m, size_t n) {
     std::uniform_real_distribution<double> dist(-1.0, 1.0);
     for (size_t i = 0; i < n; ++i) {
         if (0) {
-            m[i] = 0;
+            m[i] = 1;
         }
         else {
             m[i] = dist(gen) > 0.0 ? 1 : 0;
@@ -124,7 +124,7 @@ void destroy(void *m) {
 */
 void register_functions() {
 //    add_function(&mil2, "mil2", 3.25 * 2);
-    add_function(&mil2_baseline, "mil2_baseline", 1.5 * 4);
+    add_function(&mil2_baseline, "mil2_baseline", 13/2);
 //    add_function(&mil2_o1, "Base opt1", 3.25);
 //    add_function(&mil_test_v1, "MIL block vector (1,0,0)", 3.25*2);
 //    add_function(&mil_test_v2, "MIL block vector (0,1,0)", 3.25*2);
@@ -135,20 +135,20 @@ void register_functions() {
 //    add_function(&mil_test_v7, "MIL block vector (-1,1,0)", 3.25*2);
 //    add_function(&mil_test_v8, "MIL block vector (-1,0,1)", 3.25*2);
 //    add_function(&mil_test_v9, "MIL block vector (0,1,-1)", 3.25*2);
-    add_function(&mil_test_all, "test all - 4 accumulators", 1.5);
-    add_function(&simd_mil_test_all, "test all - SIMD 2 vectors of doubles", 1.5);
+    add_function(&mil_test_all, "test all - 4 accumulators", 9/2);
+    add_function(&simd_mil_test_all, "test all - SIMD 2 vectors of doubles", 9/2);
 }
 
 bool checksum(const double *a, const double *b, int n) {
-
+    bool has_error = false;
     for (int i = 0; i < n; i++) {
         if ((b[i] < a[i] - TOLERANCE) || (b[i] > a[i] + TOLERANCE)) {
             printf("value %d: %0.10f -> %0.10f\n",i, a[i], b[i]);
-            return true;
+            has_error = true;
         }
     }
 
-    return false;
+    return has_error;
 }
 
 /*
@@ -195,7 +195,7 @@ int main(int argc, char **argv) {
             {
                 comp_func f = userFuncs[i];
                 f(region, n, output);
-                bool error = checksum(outputBaseline, output, 3);
+                bool error = checksum(outputBaseline, output, 9);
                 if (error)
                     cout << "ERROR: the results for function " << i << " are incorrect." << std::endl;
             }
