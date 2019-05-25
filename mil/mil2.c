@@ -140,9 +140,9 @@ void mil2_baseline(const double *hr_sphere_region, int n, double *directions_vec
         /* Iterate over all initial faces */
         for (int f = 0; f < numIterVecs;  ++f) {
             /* Iterate through initial points in the face */
-            for (int kk = 0 ; kk <= (n-1)*iteratorVectors[f][2]; kk += STRIDE) {
-                for (int jj = 0 ; jj <= (n-1)*iteratorVectors[f][1]; jj += STRIDE) {
-                    for (int ii = 0 ; ii <= (n-1)*iteratorVectors[f][0]; ii += STRIDE) {
+            for (int kk = 1*iteratorVectors[f][2] ; kk <= (n-1)*iteratorVectors[f][2]; kk += STRIDE) {
+                for (int jj = 1*iteratorVectors[f][1] ; jj <= (n-1)*iteratorVectors[f][1]; jj += STRIDE) {
+                    for (int ii = 1*iteratorVectors[f][0] ; ii <= (n-1)*iteratorVectors[f][0]; ii += STRIDE) {
                         int k = (DIRECTIONS[v][2] == -1 && iteratorVectors[f][2] == 0)? n - 1 : kk;
                         int j = (DIRECTIONS[v][1] == -1 && iteratorVectors[f][1] == 0)? n - 1 : jj;
                         int i = (DIRECTIONS[v][0] == -1 && iteratorVectors[f][0] == 0)? n - 1 : ii;
@@ -248,7 +248,7 @@ void mil2_o1(const double *hr_sphere_region, int n, double *directions_vectors_m
 /// Blocking version for vectors (1,0,0), (0,1,0), (0,0,1).
 /// Using accumulators and unrolling.
 ///
-inline double mil_1D(const double *hr_sphere_region, int* intercepts, int n, const int kk, const int jj, const int ii,  const int vecID) {
+double mil_1D(const double *hr_sphere_region, int* intercepts, int n, const int kk, const int jj, const int ii,  const int vecID) {
     double bone_length;
 
     /* Init accumulators */
@@ -262,8 +262,8 @@ inline double mil_1D(const double *hr_sphere_region, int* intercepts, int n, con
     unsigned int edge_count3 = 0, edge_count7 = 0;
     unsigned int edge_count4 = 0, edge_count8 = 0;
 
-    for (int k = kk; k < kk + BLOCK_SIZE; k += STRIDE) {
-        for (int j = jj; j < jj + BLOCK_SIZE; j += STRIDE*NUM_ACC) {
+    for (int k = kk + 1; k < kk + BLOCK_SIZE; k += STRIDE) {
+        for (int j = jj + 1; j < jj + BLOCK_SIZE; j += STRIDE*NUM_ACC) {
             unsigned int i_prev, prev_mask1, prev_mask2, prev_mask3, prev_mask4;
             LOAD_PREV_1D
 
@@ -314,7 +314,7 @@ inline double mil_1D(const double *hr_sphere_region, int* intercepts, int n, con
 /// Blocking version for vectors (1,1,0), (0,1,1), (1,0,1).
 /// Using accumulators and unrolling.
 ///
-inline double mil_2D_pos(const double *hr_sphere_region, int* intercepts, int n, const int kk, const int jj, const int ii,  const int vecID) {
+double mil_2D_pos(const double *hr_sphere_region, int* intercepts, int n, const int kk, const int jj, const int ii,  const int vecID) {
     double bone_length;
 
     /* Init accumulators */
@@ -328,22 +328,24 @@ inline double mil_2D_pos(const double *hr_sphere_region, int* intercepts, int n,
     unsigned int edge_count3 = 0, edge_count7 = 0;
     unsigned int edge_count4 = 0, edge_count8 = 0;
 
-    for (int k = kk; k < kk + BLOCK_SIZE; k += STRIDE) {
+    for (int k = kk + 1; k < kk + BLOCK_SIZE; k += STRIDE) {
         for (int ij = 0; ij < BLOCK_SIZE; ij += STRIDE*NUM_ACC/2) {
+            unsigned int i1_prev, i2_prev, j1_prev, j2_prev;
+            unsigned int prev_mask1, prev_mask2, prev_mask3, prev_mask4;
 
-            unsigned int prev_mask1 = 0; // change this to previous of the initial val
-            unsigned int prev_mask2 = 0;
-            unsigned int prev_mask3 = 0;
-            unsigned int prev_mask4 = 0;
             int i1 = ii + ij;
             int j1 = jj;
             int i2 = ii;
             int j2 = jj + ij;
-            while (i1 + 1 < ii + BLOCK_SIZE /*&& j2+1 < jj + BLOCK_SIZE - 1*/) {
+
+            /* Initialise previous mask */
+            LOAD_PREV_2D_POS
+
+            while (i1 + 1 < ii + BLOCK_SIZE && j2 + 1 < jj + BLOCK_SIZE) {
                 double r1, r2, r3, r4;
 
                 /* Load working set */
-                LOAD_DATA_SET_2D
+                LOAD_DATA_SET_2D_POS
 
                 /* Perform computation */
                 COMPUTATION
@@ -389,7 +391,7 @@ inline double mil_2D_pos(const double *hr_sphere_region, int* intercepts, int n,
 /// Blocking version for vectors (-1,1,0), (0,-1,1), (-1,0,1).
 /// Using accumulators and unrolling.
 ///
-inline double mil_2D_neg(const float *hr_sphere_region, int* intercepts, int n, const int kk, const int jj, const int ii,  const int vecID) {
+double mil_2D_neg(const double *hr_sphere_region, int* intercepts, int n, const int kk, const int jj, const int ii,  const int vecID) {
     double bone_length;
 
     /* Init accumulators */
@@ -418,7 +420,7 @@ inline double mil_2D_neg(const float *hr_sphere_region, int* intercepts, int n, 
                 double r1, r2, r3, r4;
 
                 /* Load working set */
-                LOAD_DATA_SET_2D
+                LOAD_DATA_SET_2D_NEG
 
                 /* Perform computation */
                 COMPUTATION
@@ -674,17 +676,20 @@ void mil_test_all(const double *hr_sphere_region, int n, double *directions_vect
                 intercepts[1]  += intercept_blk;
                 bone_length[2] += mil_1D(hr_sphere_region, &intercept_blk, n, jj, ii, kk, 3);
                 intercepts[2]  += intercept_blk;
-//
-//                bone_length[3] += mil_2D_pos(hr_sphere_region, &intercept_blk, n, kk, jj, ii, 4);
-//                intercepts[3]  += intercept_blk;
-//                bone_length[4] += mil_2D_pos(hr_sphere_region, &intercept_blk, n, jj, kk, ii, 5);
-//                intercepts[4]  += intercept_blk;
-//                bone_length[5] += mil_2D_pos(hr_sphere_region, &intercept_blk, n, ii, jj, kk, 6);
-//                intercepts[5]  += intercept_blk;
-//
-//                bone_length[6] += mil_2D_neg(hr_sphere_region, &intercepts[6], n, kk, jj, ii, 7);
-//                bone_length[7] += mil_2D_neg(hr_sphere_region, &intercepts[7], n, kk, jj, ii, 8);
-//                bone_length[8] += mil_2D_neg(hr_sphere_region, &intercepts[8], n, kk, jj, ii, 9);
+
+                bone_length[3] += mil_2D_pos(hr_sphere_region, &intercept_blk, n, kk, jj, ii, 4);
+                intercepts[3]  += intercept_blk;
+                bone_length[4] += mil_2D_pos(hr_sphere_region, &intercept_blk, n, jj, kk, ii, 5);
+                intercepts[4]  += intercept_blk;
+                bone_length[5] += mil_2D_pos(hr_sphere_region, &intercept_blk, n, ii, jj, kk, 6);
+                intercepts[5]  += intercept_blk;
+
+                bone_length[6] += mil_2D_neg(hr_sphere_region, &intercept_blk, n, kk, jj, ii, 4);
+                intercepts[6]  += intercept_blk;
+                bone_length[7] += mil_2D_neg(hr_sphere_region, &intercept_blk, n, jj, kk, ii, 5);
+                intercepts[7]  += intercept_blk;
+                bone_length[8] += mil_2D_neg(hr_sphere_region, &intercept_blk, n, ii, jj, kk, 6);
+                intercepts[8]  += intercept_blk;
 
 
 
