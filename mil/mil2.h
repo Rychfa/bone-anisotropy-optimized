@@ -75,6 +75,74 @@
     switch (vecID) {                                                                              \
         case 4: /* Vector (1,1,0) */                                                              \
             /* Unroll over dimensions x,y */                                                      \
+            prev_mask1 = hr_sphere_region[     k*n*n + j1_prev*n + (i1_prev+1) ]  > 0.5;          \
+            prev_mask2 = hr_sphere_region[ (k+STRIDE)*n*n + j1_prev*n + (i1_prev+1) ]  > 0.5;     \
+            prev_mask3 = hr_sphere_region[     k*n*n + (j2_prev+1)*n + i2_prev ]  > 0.5;          \
+            prev_mask4 = hr_sphere_region[ (k+STRIDE)*n*n + (j2_prev+1)*n + i2_prev ]  > 0.5;     \
+            break;                                                                                \
+        case 5: /* Vector (1,0,1) */                                                              \
+            /* Unroll over dimensions x,z */                                                      \
+            prev_mask1 = hr_sphere_region[ j1_prev*n*n +     k*n + (i1_prev+1) ]  > 0.5;          \
+            prev_mask2 = hr_sphere_region[ j1_prev*n*n + (k+STRIDE)*n + (i1_prev+1) ]  > 0.5;     \
+            prev_mask3 = hr_sphere_region[ (j2_prev+1)*n*n +     k*n + i2_prev ]  > 0.5;          \
+            prev_mask4 = hr_sphere_region[ (j2_prev+1)*n*n + (k+STRIDE)*n + i2_prev ]  > 0.5;     \
+            break;                                                                                \
+        case 6: /* Vector (0,1,1) */                                                              \
+            /* Unroll over dimensions x,z */                                                      \
+            prev_mask1 = hr_sphere_region[ (i1_prev+1)*n*n + j1_prev*n + k     ]  > 0.5;          \
+            prev_mask2 = hr_sphere_region[ (i1_prev+1)*n*n + j1_prev*n + (k+STRIDE) ]  > 0.5;     \
+            prev_mask3 = hr_sphere_region[ i2_prev*n*n + (j2_prev+1)*n + k     ]  > 0.5;          \
+            prev_mask4 = hr_sphere_region[ i2_prev*n*n + (j2_prev+1)*n + (k+STRIDE) ]  > 0.5;     \
+            break;                                                                                \
+        default: ;                                                                                \
+    }
+
+#define LOAD_DATA_SET_2D_POS                                            \
+    switch (vecID) {                                                    \
+        case 4: /* Vector (1,1,0) */                                    \
+            /* Unroll over dimensions x,y */                            \
+            r1 = hr_sphere_region[     k*n*n + j1*n + (i1+1) ];         \
+            r2 = hr_sphere_region[ (k+STRIDE)*n*n + j1*n + (i1+1) ];    \
+            r3 = hr_sphere_region[     k*n*n + (j2+1)*n + i2 ];         \
+            r4 = hr_sphere_region[ (k+STRIDE)*n*n + (j2+1)*n + i2 ];    \
+            break;                                                      \
+        case 5: /* Vector (1,0,1) */                                    \
+            /* Unroll over dimensions x,z */                            \
+            r1 = hr_sphere_region[ j1*n*n +     k*n + (i1+1) ];         \
+            r2 = hr_sphere_region[ j1*n*n + (k+STRIDE)*n + (i1+1) ];    \
+            r3 = hr_sphere_region[ (j2+1)*n*n +     k*n + i2 ];         \
+            r4 = hr_sphere_region[ (j2+1)*n*n + (k+STRIDE)*n + i2 ];    \
+            break;                                                  \
+        case 6: /* Vector (0,1,1) */                                \
+            /* Unroll over dimensions y,z */                        \
+            r1 = hr_sphere_region[ (i1+1)*n*n + j1*n + k     ];     \
+            r2 = hr_sphere_region[ (i1+1)*n*n + j1*n + (k+STRIDE) ];     \
+            r3 = hr_sphere_region[ i2*n*n + (j2+1)*n + k     ];     \
+            r4 = hr_sphere_region[ i2*n*n + (j2+1)*n + (k+STRIDE) ];     \
+            break;                                                  \
+        default: ;                                                  \
+    }
+
+#define LOAD_PREV_2D_POS_UNEVEN \
+    if (j1 > 0) {           \
+        i1_prev = i1 - 1;   \
+        j1_prev = j1 - 1;   \
+    }                       \
+    else {                  \
+        i1_prev = i1;       \
+        j1_prev = j1;       \
+    }                       \
+    if (i2 > 0) {           \
+        i2_prev = i2 - 1;   \
+        j2_prev = j2 - 1;   \
+    }                       \
+    else {                  \
+        i2_prev = i2;       \
+        j2_prev = j2;       \
+    }                       \
+    switch (vecID) {                                                                              \
+        case 4: /* Vector (1,1,0) */                                                              \
+            /* Unroll over dimensions x,y */                                                      \
             prev_mask1 = hr_sphere_region[ k*n*n + j1_prev*n + (i1_prev+1+0*STRIDE) ]  > 0.5;     \
             prev_mask2 = hr_sphere_region[ k*n*n + (j2_prev+1+0*STRIDE)*n + i2_prev ]  > 0.5;     \
             prev_mask3 = hr_sphere_region[ k*n*n + j1_prev*n + (i1_prev+1+1*STRIDE) ]  > 0.5;     \
@@ -97,7 +165,7 @@
         default: ;                                                                                \
     }
 
-#define LOAD_DATA_SET_2D_POS                                             \
+#define LOAD_DATA_SET_2D_POS_UNEVEN                                             \
     switch (vecID) {                                                     \
         case 4: /* Vector (1,1,0) */                                     \
             /* Unroll over dimensions x,y */                             \
@@ -144,6 +212,47 @@
         default: ;                                                       \
     }
 
+#define LOAD_PREV_2D_NEG    \
+    if (j1 > 0) {           \
+        i1_prev = i1 + 1;   \
+        j1_prev = j1 - 1;   \
+    }                       \
+    else {                  \
+        i1_prev = i1;       \
+        j1_prev = j1;       \
+    }                       \
+    if (i2 < n-1) {         \
+        i2_prev = i2 + 1;   \
+        j2_prev = j2 - 1;   \
+    }                       \
+    else {                  \
+        i2_prev = i2;       \
+        j2_prev = j2;       \
+    }                       \
+    switch (vecID) {                                                                              \
+        case 7: /* Vector (-1,1,0) */                                                             \
+            /* Unroll over dimensions x,y */                                                      \
+            prev_mask1 = hr_sphere_region[ k*n*n + j1_prev*n + (i1_prev-1-0*STRIDE) ]  > 0.5;     \
+            prev_mask2 = hr_sphere_region[ k*n*n + (j2_prev+1+0*STRIDE)*n + i2_prev ]  > 0.5;     \
+            prev_mask3 = hr_sphere_region[ k*n*n + j1_prev*n + (i1_prev-1-1*STRIDE) ]  > 0.5;     \
+            prev_mask4 = hr_sphere_region[ k*n*n + (j2_prev+1+1*STRIDE)*n + i2_prev ]  > 0.5;     \
+            break;                                                                                \
+        case 8: /* Vector (-1,0,1) */                                                             \
+            /* Unroll over dimensions x,z */                                                      \
+            prev_mask1 = hr_sphere_region[ j1_prev*n*n + k*n + (i1_prev-1-0*STRIDE) ]  > 0.5;     \
+            prev_mask2 = hr_sphere_region[ (j2_prev+1+0*STRIDE)*n*n + k*n + i2_prev ]  > 0.5;     \
+            prev_mask3 = hr_sphere_region[ j1_prev*n*n + k*n + (i1_prev-1-1*STRIDE) ]  > 0.5;     \
+            prev_mask4 = hr_sphere_region[ (j2_prev+1+1*STRIDE)*n*n + k*n + i2_prev ]  > 0.5;     \
+            break;                                                                                \
+        case 9: /* Vector (0,1,-1) */                                                             \
+            /* Unroll over dimensions x,z */                                                      \
+            prev_mask1 = hr_sphere_region[ (i1_prev-1-0*STRIDE)*n*n + j1_prev*n + k ]  > 0.5;     \
+            prev_mask2 = hr_sphere_region[ i2_prev*n*n + (j2_prev+1+0*STRIDE)*n + k ]  > 0.5;     \
+            prev_mask3 = hr_sphere_region[ (i1_prev-1-1*STRIDE)*n*n + j1_prev*n + k ]  > 0.5;     \
+            prev_mask4 = hr_sphere_region[ i2_prev*n*n + (j2_prev+1+1*STRIDE)*n + k ]  > 0.5;     \
+            break;                                                                                \
+        default: ;                                                                                \
+    }
 
 #define LOAD_DATA_SET_2D_NEG                                             \
     switch (vecID) {                                                     \
