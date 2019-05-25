@@ -383,3 +383,109 @@ void fit_ellipsoid_simd_points(const double (*p)[3], int n, double (*Q)[3][3])
 }
 
 #endif
+
+
+void fit_ellipsoid_mils_simd(const double *mils, double (*Q)[3][3])
+{
+	__m256d Q00, Q01, Q02, Q11, Q12, Q22;
+	Q00 = _mm256_set1_pd(1);
+	Q01 = _mm256_set1_pd(0);
+	Q02 = _mm256_set1_pd(0);
+	Q11 = _mm256_set1_pd(1);
+	Q12 = _mm256_set1_pd(0);
+	Q22 = _mm256_set1_pd(1);
+
+	/* shuffle variables once and store */
+	double p0[MILS_ARRAY_DIM] = {0};
+	double p1[MILS_ARRAY_DIM] = {0};
+	double p2[MILS_ARRAY_DIM] = {0};
+	int i;
+	for (i=0; i<NUM_DIRECTIONS; i++) {
+		p0[i] = mils[i]*DIRECTIONS_NORMALIZED[i][0];
+		p1[i] = mils[i]*DIRECTIONS_NORMALIZED[i][1];
+		p2[i] = mils[i]*DIRECTIONS_NORMALIZED[i][2];
+	}
+
+	while(1) {
+		/* determine gradient */
+
+		__m256d g00, g01, g02, g11, g12, g22;
+		g00             = _mm256_setzero_pd();
+		g01             = _mm256_setzero_pd();
+		g02             = _mm256_setzero_pd();
+		g11             = _mm256_setzero_pd();
+		g12             = _mm256_setzero_pd();
+		g22             = _mm256_setzero_pd();
+		__m256d costQ_0 = _mm256_setzero_pd();
+		
+		for (i=0; i<NUM_DIRECTIONS; i+=4) {
+			RESIDUAL_ACC(0, i);
+			__m256d t0;
+			t0 = _mm256_mul_pd(residual_0, vTWOS); 
+
+			g00 = _mm256_fmadd_pd(t0, p0p0_0, g00);
+			g01 = _mm256_fmadd_pd(t0, p0p1_0, g01);
+			g02 = _mm256_fmadd_pd(t0, p0p2_0, g02);
+			g11 = _mm256_fmadd_pd(t0, p1p1_0, g11);
+			g12 = _mm256_fmadd_pd(t0, p1p2_0, g12);
+			g22 = _mm256_fmadd_pd(t0, p2p2_0, g22);
+		}
+
+		costQ_0[0] = costQ_0[0] + costQ_0[1] + costQ_0[2] + costQ_0[3];
+
+		g00 = _mm256_set1_pd(g00[0]+g00[1]+g00[2]+g00[3]);
+		g01 = _mm256_set1_pd(g01[0]+g01[1]+g01[2]+g01[3]);
+		g02 = _mm256_set1_pd(g02[0]+g02[1]+g02[2]+g02[3]);
+		g11 = _mm256_set1_pd(g11[0]+g11[1]+g11[2]+g11[3]);
+		g12 = _mm256_set1_pd(g12[0]+g12[1]+g12[2]+g12[3]);
+		g22 = _mm256_set1_pd(g22[0]+g22[1]+g22[2]+g22[3]);
+
+		
+		double normFro_sq = g00[0]*g00[0] + 2*g01[0]*g01[0] + 2*g02[0]*g02[0] + g11[0]*g11[0] + 2*g12[0]*g12[0] + g22[0]*g22[0];
+		
+		if (normFro_sq < EPSILON*EPSILON) break;
+
+		/* take step direction to be negative gradient */
+		
+		/* backtracking line search */
+		
+		__m256d Qnext00, Qnext01, Qnext02, Qnext11, Qnext12, Qnext22;
+		__m256d nt   = _mm256_set1_pd(-100);
+
+		Qnext00 = _mm256_fmadd_pd(nt, g00, Q00);
+		Qnext01 = _mm256_fmadd_pd(nt, g01, Q01);
+		Qnext02 = _mm256_fmadd_pd(nt, g02, Q02);
+		Qnext11 = _mm256_fmadd_pd(nt, g11, Q11);
+		Qnext12 = _mm256_fmadd_pd(nt, g12, Q12);
+		Qnext22 = _mm256_fmadd_pd(nt, g22, Q22);
+
+
+		while (_cost(p0, p1, p2, NUM_DIRECTIONS, Qnext00, Qnext01, Qnext02, Qnext11, Qnext12, Qnext22) > 
+																					costQ_0[0] + ALPHA*nt[0]*normFro_sq) {
+			nt = _mm256_mul_pd(nt, vBETA);
+
+			Qnext00 = _mm256_fmadd_pd(nt, g00, Q00);
+			Qnext01 = _mm256_fmadd_pd(nt, g01, Q01);
+			Qnext02 = _mm256_fmadd_pd(nt, g02, Q02);
+			Qnext11 = _mm256_fmadd_pd(nt, g11, Q11);
+			Qnext12 = _mm256_fmadd_pd(nt, g12, Q12);
+			Qnext22 = _mm256_fmadd_pd(nt, g22, Q22);
+		} /* back tracking while loop */
+
+		Q00 = Qnext00;
+		Q01 = Qnext01;
+		Q02 = Qnext02;
+		Q11 = Qnext11;
+		Q12 = Qnext12;
+		Q22 = Qnext22;
+	} /* main while loop */
+	(*Q)[0][0] = Q00[0];
+	(*Q)[0][1] = Q01[0];
+	(*Q)[0][2] = Q02[0];
+	(*Q)[1][0] = Q01[0];
+	(*Q)[1][1] = Q11[0];
+	(*Q)[1][2] = Q12[0];
+	(*Q)[2][0] = Q02[0];
+	(*Q)[2][1] = Q12[0];
+	(*Q)[2][2] = Q22[0];
+}

@@ -53,11 +53,12 @@ static const double BETA    = 0.5;
 	__m256d VAR(p0,k), VAR(p1,k), VAR(p2,k);\
 	__m256d VAR(t00,k), VAR(t01,k), VAR(t02,k);\
 	VAR(t00,k) = _mm256_load_pd(&p[i][0]);\
-	VAR(t01,k) = _mm256_load_pd(&p[i+1][1]);\
+	VAR(t01,k) = _mm256_load_pd(&p[i+1][1]);\/*this seg faults..*/\
 	VAR(t02,k) = _mm256_load_pd(&p[i+2][2]);\
 	\
-	VAR(p0,k) = _mm256_permute4x64_pd(VAR(t00,k), 0b00001100);\
-	VAR(p0,k) = _mm256_permute4x64_pd(VAR(t01,k), 0b00001100);\
+	VAR(p0,k) = _mm256_set_pd(VAR(t00,k)[0], VAR(t00,k)[3], VAR(t01,k)[2], VAR(t02,k)[1]);\
+	VAR(p1,k) = _mm256_set_pd(VAR(t00,k)[1], VAR(t01,k)[0], VAR(t01,k)[3], VAR(t02,k)[2]);\
+	VAR(p2,k) = _mm256_set_pd(VAR(t00,k)[2], VAR(t01,k)[1], VAR(t02,k)[0], VAR(t02,k)[3]);\
 	\
 	__m256d VAR(p0p0,k), VAR(p0p1,k), VAR(p0p2,k), VAR(p1p1,k), VAR(p1p2,k), VAR(p2p2,k);\
 	VAR(p0p0,k) = _mm256_mul_pd(VAR(p0,k), VAR(p0,k));\
