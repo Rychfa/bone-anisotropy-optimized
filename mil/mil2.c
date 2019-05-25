@@ -26,6 +26,7 @@
 */
 #include "mil2.h"
 #include "ellipsoid.h"
+#include <immintrin.h>
 #include <stdio.h>
 
 #define BLOCK_SIZE 16
@@ -59,7 +60,7 @@ int get_iterator_vectors (const int directionVector[3], int iteratorVectors[][3]
     return n;
 }
 
-void mil2(const int *hr_sphere_region, int n, double *directions_vectors_mil) {
+void mil2(const double *hr_sphere_region, int n, double *directions_vectors_mil) {
 
     const int n_vectors = NUM_DIRECTIONS;
 
@@ -167,7 +168,6 @@ void mil2_baseline(const double *hr_sphere_region, int n, double *directions_vec
     }
 
     for (int i = 0; i < n_vectors; ++i) {
-
         if (directions_vectors_intercepts[i] == 0) {
             directions_vectors_intercepts[i] = 1;
         }
@@ -175,9 +175,13 @@ void mil2_baseline(const double *hr_sphere_region, int n, double *directions_vec
         directions_vectors_mil[i] = directions_vectors_bone_length[i] / directions_vectors_intercepts[i];
     }
 
-
-    gBone1 = directions_vectors_bone_length[6];
-    gInter1 = directions_vectors_intercepts[6];
+#ifdef DEBUG
+    printf("TRUE 0 - BONE LENGTH = %.8f, INTERCEPTS = %d\n", directions_vectors_bone_length[0], directions_vectors_intercepts[0]);
+    printf("TRUE 1 - BONE LENGTH = %.8f, INTERCEPTS = %d\n", directions_vectors_bone_length[1], directions_vectors_intercepts[1]);
+    printf("TRUE 2 - BONE LENGTH = %.8f, INTERCEPTS = %d\n", directions_vectors_bone_length[2], directions_vectors_intercepts[2]);
+#endif
+    gBone1 = directions_vectors_bone_length[2];
+    gInter1 = directions_vectors_intercepts[2];
 
 }
 
@@ -236,10 +240,6 @@ void mil2_o1(const double *hr_sphere_region, int n, double *directions_vectors_m
 
         }
         directions_vectors_mil[v] = sum / intersects;
-
-        if (v == 4) {
-
-        }
     }
 
 }
@@ -299,7 +299,7 @@ double mil_1D(const double *hr_sphere_region, int* intercepts, int n, const int 
 
 #ifdef  DEBUG
     if (!already_tested[vecID]) {
-//        printf("Count 1D: %d\n", count);
+        printf("%d\n", count);
         already_tested[vecID] = 1;
     }
     count = 0;
@@ -376,9 +376,8 @@ double mil_2D_pos(const double *hr_sphere_region, int* intercepts, int n, const 
     *intercepts  = edge_count1 + edge_count5;
 
 #ifdef  DEBUG
-    if (vecID == 4) {
-//        printf("bone_length 2D: %f\n", bone_length);
-//        printf("edge_count1 2D: %d\n", edge_count1);
+    if (!already_tested[vecID]) {
+        printf("%d\n", count);
         already_tested[vecID] = 1;
     }
     count = 0;
@@ -705,7 +704,12 @@ void mil_test_all(const double *hr_sphere_region, int n, double *directions_vect
         directions_vectors_mil[i] = bone_length[i] / intercepts[i];
     }
 
-    gBone2 = bone_length[6];
-    gInter2 = intercepts[6];
+#ifdef DEBUG
+    printf("0 - BONE LENGTH = %.8f, INTERCEPTS = %d\n", bone_length[0], intercepts[0]);
+    printf("1 - BONE LENGTH = %.8f, INTERCEPTS = %d\n", bone_length[1], intercepts[1]);
+    printf("2 - BONE LENGTH = %.8f, INTERCEPTS = %d\n\n", bone_length[2], intercepts[2]);
+#endif
+    gBone2 = bone_length[0];
+    gInter2 = intercepts[0];
 
 }

@@ -49,7 +49,8 @@ include_directories(
 
 set(SOURCE_FILES
         main.cpp
-        ../mil2.c)
+        ../mil2.c
+        ../mil2_simd.c)
 
 
 # ================================================================================
