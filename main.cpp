@@ -35,6 +35,7 @@
 #include <reader.h>
 #include "tsc_x86.h"
 #include "kernel.h"
+#include "region_extraction.h"
 
 using namespace std;
 
@@ -79,11 +80,12 @@ void destroy(double* sphere, double* extracted_region, double* ptrHighRes, doubl
 void register_functions()
 {
     long int flops = 0;
-    flops = 2461248;
+    //      kernel + regions
+    flops = (6*LOW_RES_D3 + 6*LOW_RES_D2*LOW_RES_D3 + 3*LOW_RES_D1*LOW_RES_D2*LOW_RES_D3 + 21*4814) + pow(SPHERE_NDIM,3)*4814;
     //
     // TODO: Add correct number of flops
     add_function(&kernel_basic, "Base kernel", flops);
-    //
+     //
     add_function(&kernel_opt1, "Optimized kernel", flops);
 }
 

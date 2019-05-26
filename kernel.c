@@ -251,7 +251,7 @@ void kernel_basic (double* sphere, double* extracted_region, double* ptrHighRes,
 
                     /* // compute fabric */
                     /* double mils[NUM_DIRECTIONS]; */
-                    /* mil2(extracted_region, SPHERE_NDIM, mils); */
+                    /* mil2_baseline(extracted_region, SPHERE_NDIM, mils); */
                     /* //print_vector(mils, NUM_DIRECTIONS); */
                     /* double Q[3][3]; */
                     /* fit_ellipsoid_mils(mils, (double (*)[3][3])Q); */
