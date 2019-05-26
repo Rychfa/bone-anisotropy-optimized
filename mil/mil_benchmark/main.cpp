@@ -193,7 +193,7 @@ int main(int argc, char **argv) {
             {
                 comp_func f = userFuncs[i];
                 f(region, n, output);
-                bool error = checksum(outputBaseline, output, 9);
+                bool error = checksum(outputBaseline, output, 6);
                 if (error)
                     cout << "ERROR: the results for function " << i << " are incorrect." << std::endl;
             }

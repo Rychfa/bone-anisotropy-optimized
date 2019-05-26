@@ -1,5 +1,5 @@
-#ifndef BONEMAP_MIL2_H
-#define BONEMAP_MIL2_H
+#ifndef BONEMAP_MIL2_SIMD_H
+#define BONEMAP_MIL2_SIMD_H
 
 #include <immintrin.h>
 #include <stdio.h>
@@ -79,7 +79,7 @@
         }
 
 
-#define LOAD_PREV_2D_POS                                                                          \
+#define SIMD_LOAD_PREV_2D_POS                                                                          \
     __m256d tmp_reg1, tmp_reg2, prev_mask_d1, prev_mask_d2;                                       \
     __m256i tmp_comp1, tmp_comp2;                                                                 \
     int vector1_id0, vector1_id1, vector1_id2, vector1_id3;                                       \
@@ -156,7 +156,7 @@
     prev_mask = _mm256_and_si256(tmp_comp1, ONES);                                                \
     prev_mask2 = _mm256_and_si256(tmp_comp2, ONES);
 
-#define LOAD_DATA_SET_2D_POS                                                                      \
+#define SIMD_LOAD_DATA_SET_2D_POS                                                                      \
     switch (vecID) {                                                                              \
         case 4: /* Vector (1,1,0) */                                                              \
             /* Unroll over dimensions x,y */                                                      \
@@ -209,7 +209,7 @@
 
 
 
-#define LOAD_PREV_2D_NEG                                                                 \
+#define SIMD_LOAD_PREV_2D_NEG                                                                 \
     __m256d tmp_reg1, tmp_reg2, prev_mask_d1, prev_mask_d2;                              \
     __m256i tmp_comp1, tmp_comp2;                                                        \
     int vector1_id0, vector1_id1, vector1_id2, vector1_id3;                              \
@@ -288,7 +288,7 @@
 
 
 
-#define LOAD_DATA_SET_2D_NEG                                                            \
+#define SIMD_LOAD_DATA_SET_2D_NEG                                                            \
     switch (vecID) {                                                                    \
         case 7: /* Vector (-1,1,0) */                                                   \
             /* Unroll over dimensions x,y */                                            \
@@ -432,14 +432,14 @@
                 int j2 = jj + ij;                                                        \
                                                                                          \
                 /* Initialise previous mask */                                           \
-                LOAD_PREV_2D_POS                                                         \
+                SIMD_LOAD_PREV_2D_POS                                                         \
                                                                                          \
                 while (i1 + 1 < ii + BLOCK_SIZE && j2 + 1 < jj + BLOCK_SIZE) {           \
                     __m256d region1;                                                     \
                     __m256d region2;                                                     \
                                                                                          \
                     /* Load working set */                                               \
-                    LOAD_DATA_SET_2D_POS                                                 \
+                    SIMD_LOAD_DATA_SET_2D_POS                                                 \
                                                                                          \
                     /* Perform computation */                                            \
                     SIMD_COMPUTATION                                                     \
@@ -469,5 +469,9 @@
 double simd_mil_1D(const double *hr_sphere_region, int* intercepts, int n, const int kk, const int jj, const int ii,  const int vecID);
 double simd_mil_2D_pos(const double *hr_sphere_region, int* intercepts, int n, const int kk, const int jj, const int ii,  const int vecID);
 double simd_mil_2D_neg(const double *hr_sphere_region, int* intercepts, int n, const int kk, const int jj, const int ii,  const int vecID);
-#endif //BONEMAP_MIL2_H
+
+//void mil2_simd(const double *hr_sphere_region, int n, double *directions_vectors_mil);
+void mil2_simd(const double *hr_sphere_region, int n, double *directions_vectors_mil);
+
+#endif //BONEMAP_MIL2_SIMD_H
 

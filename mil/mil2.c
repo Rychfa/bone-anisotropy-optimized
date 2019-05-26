@@ -287,7 +287,7 @@ double mil_2D_pos_uneven(const double *hr_sphere_region, int* intercepts, int n,
             int j2 = jj + ij;
 
             /* Initialise previous mask */
-            LOAD_PREV_2D_POS
+            SIMD_LOAD_PREV_2D_POS
 
             while (i1 + 1 < ii + BLOCK_SIZE && j2 + 1 < jj + BLOCK_SIZE) {
                 double r1, r2, r3, r4;
@@ -355,7 +355,7 @@ double mil_2D_pos(const double *hr_sphere_region, int* intercepts, int n, const 
             int j2 = jj + ij;
 
             /* Initialise previous mask */
-            LOAD_PREV_2D_POS
+            SIMD_LOAD_PREV_2D_POS
 
             while (i1 + 1 < ii + BLOCK_SIZE && j2 + 1 < jj + BLOCK_SIZE) {
                 double r1, r2, r3, r4;
