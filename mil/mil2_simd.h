@@ -4,6 +4,9 @@
 #include <immintrin.h>
 #include <stdio.h>
 
+#define BLOCK_SIZE 16
+#define NUM_ACC 4
+#define STRIDE 2
 /**
  * SIMD IMPLEMNTATION
  */
@@ -293,7 +296,7 @@
             vector1_id1 = k*n*n + (j2+1)*n + i2;                                        \
             vector1_id2 = (k+STRIDE)*n*n + j1*n + (i1-1);                               \
             vector1_id3 = (k+STRIDE)*n*n + (j2+1)*n + i2;                               \
-            \
+                                                                                        \
             vector2_id0 = (k+2*STRIDE)*n*n + j1*n + (i1-1);                             \
             vector2_id1 = (k+2*STRIDE)*n*n + (j2+1)*n + i2;                             \
             vector2_id2 = (k+3*STRIDE)*n*n + j1*n + (i1-1);                             \
@@ -339,22 +342,129 @@
     
 #define SIMD_COMPUTATION                                                                      \
     __m256i curr_mask, curr_mask2;                                                            \
-    __m256i compi;                                                                            \
+    __m256i compi1, compi2;                                                                   \
     bone_count = _mm256_add_pd(bone_count, region1);                                          \
     bone_count2 = _mm256_add_pd(bone_count2, region2);                                        \
     \
     /* Calculate masks */                                                                     \
-    compi = _mm256_castpd_si256(_mm256_cmp_pd(region1, threshold, _CMP_GT_OQ));               \
-    curr_mask = _mm256_and_si256(compi, ONES);                                                \
+    compi1 = _mm256_castpd_si256(_mm256_cmp_pd(region1, threshold, _CMP_GT_OQ));              \
+    curr_mask = _mm256_and_si256(compi1, ONES);                                               \
     \
-    compi = _mm256_castpd_si256(_mm256_cmp_pd(region2, threshold, _CMP_GT_OQ));               \
-    curr_mask2 = _mm256_and_si256(compi, ONES);                                               \
+    compi2 = _mm256_castpd_si256(_mm256_cmp_pd(region2, threshold, _CMP_GT_OQ));              \
+    curr_mask2 = _mm256_and_si256(compi2, ONES);                                              \
     \
     /* Detect edge and add to counter */                                                      \
     __m256i edge1 = _mm256_xor_si256(curr_mask, prev_mask);                                   \
     __m256i edge2 = _mm256_xor_si256(curr_mask2, prev_mask2);                                 \
-    edge_count = _mm256_add_epi64(edge_count, edge1);                                         \
+    edge_count  = _mm256_add_epi64(edge_count, edge1);                                        \
     edge_count2 = _mm256_add_epi64(edge_count2, edge2);
+
+#define BLOCK_KERNEL_1D_SIMD(vec, kk, jj, ii)                                            \
+    {                                                                                    \
+        const int vecID = vec;                                                           \
+        double bone_length_block;                                                        \
+        int intercepts_block;                                                            \
+        /* Init accumulators */                                                          \
+        __m256d bone_count = _mm256_setzero_pd();                                        \
+        __m256d bone_count2 = _mm256_setzero_pd();                                       \
+                                                                                         \
+        __m256i edge_count = _mm256_set1_epi64x(0);                                      \
+        __m256i edge_count2 = _mm256_set1_epi64x(0);                                     \
+                                                                                         \
+        int nn = n * n;                                                                  \
+        int i_prev = (ii > 0) ? ii - 1 : 0;                                              \
+                                                                                         \
+        for (int k = kk + 1; k < kk + BLOCK_SIZE; k += STRIDE) {                         \
+            int knn = k * nn;                                                            \
+            for (int j = jj + 1; j < jj + BLOCK_SIZE; j += STRIDE*NUM_ACC*2) {           \
+                __m256i prev_mask, prev_mask2;                                           \
+                                                                                         \
+                SIMD_LOAD_PREV_1D                                                        \
+                                                                                         \
+                for (int i = ii; i < ii + BLOCK_SIZE; ++i) {                             \
+                    int inn = i * nn;                                                    \
+                    __m256d region1;                                                     \
+                    __m256d region2;                                                     \
+                                                                                         \
+                    /* Load working set */                                               \
+                    SIMD_LOAD_DATA_SET_1D                                                \
+                                                                                         \
+                    /* Perform computation */                                            \
+                    SIMD_COMPUTATION                                                     \
+                                                                                         \
+                    /* Update state of prev_mask */                                      \
+                    prev_mask = curr_mask;                                               \
+                    prev_mask2 = curr_mask2;                                             \
+                }                                                                        \
+            }                                                                            \
+        }                                                                                \
+        bone_count = _mm256_add_pd(bone_count, bone_count2);                             \
+        edge_count = _mm256_add_epi64(edge_count, edge_count2);                          \
+                                                                                         \
+        bone_length_block = horizontal_add(bone_count);                                  \
+        intercepts_block  = horizontal_addi(edge_count);                                 \
+                                                                                         \
+        bone_length[vecID-1] += bone_length_block;                                       \
+        intercepts[vecID-1] += intercepts_block;                                         \
+    }
+
+#define BLOCK_KERNEL_2D_POS_SIMD(vec, kk, jj, ii)                                        \
+    {                                                                                    \
+        const int vecID = vec;                                                           \
+        double bone_length_block;                                                        \
+        int intercepts_block;                                                            \
+        /* Init accumulators */                                                          \
+        __m256d bone_count = _mm256_setzero_pd();                                        \
+        __m256d bone_count2 = _mm256_setzero_pd();                                       \
+                                                                                         \
+        __m256i edge_count = _mm256_set1_epi64x(0);                                      \
+        __m256i edge_count2 = _mm256_set1_epi64x(0);                                     \
+                                                                                         \
+                                                                                         \
+        for (int k = kk + 1; k < kk + BLOCK_SIZE; k += STRIDE * NUM_ACC) {               \
+            for (int ij = 0; ij < BLOCK_SIZE; ij += STRIDE) {                            \
+                unsigned int i1_prev, i2_prev, j1_prev, j2_prev;                         \
+                __m256i prev_mask, prev_mask2;                                           \
+                                                                                         \
+                int i1 = ii + ij;                                                        \
+                int j1 = jj;                                                             \
+                int i2 = ii;                                                             \
+                int j2 = jj + ij;                                                        \
+                                                                                         \
+                /* Initialise previous mask */                                           \
+                LOAD_PREV_2D_POS                                                         \
+                                                                                         \
+                while (i1 + 1 < ii + BLOCK_SIZE && j2 + 1 < jj + BLOCK_SIZE) {           \
+                    __m256d region1;                                                     \
+                    __m256d region2;                                                     \
+                                                                                         \
+                    /* Load working set */                                               \
+                    LOAD_DATA_SET_2D_POS                                                 \
+                                                                                         \
+                    /* Perform computation */                                            \
+                    SIMD_COMPUTATION                                                     \
+                                                                                         \
+                    /* Update state of prev_mask */                                      \
+                    prev_mask = curr_mask;                                               \
+                    prev_mask2 = curr_mask2;                                             \
+                                                                                         \
+                    ++i1;                                                                \
+                    ++j1;                                                                \
+                    ++i2;                                                                \
+                    ++j2;                                                                \
+                }                                                                        \
+            }                                                                            \
+        } /* End iteration over dimension k */                                           \
+                                                                                         \
+        bone_count = _mm256_add_pd(bone_count, bone_count2);                             \
+        edge_count = _mm256_add_epi64(edge_count, edge_count2);                          \
+                                                                                         \
+        bone_length_block  = horizontal_add(bone_count);                                 \
+        intercepts_block  = horizontal_addi(edge_count);                                 \
+                                                                                         \
+        bone_length[vecID-1] += bone_length_block;                                       \
+        intercepts[vecID-1] += intercepts_block;                                         \
+    }
 
 double simd_mil_1D(const double *hr_sphere_region, int* intercepts, int n, const int kk, const int jj, const int ii,  const int vecID);
 double simd_mil_2D_pos(const double *hr_sphere_region, int* intercepts, int n, const int kk, const int jj, const int ii,  const int vecID);

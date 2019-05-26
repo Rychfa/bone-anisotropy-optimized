@@ -27,18 +27,15 @@
 #include "mil2_simd.h"
 #include "ellipsoid.h"
 #include <immintrin.h>
-#include <stdio.h>
+//#include <stdio.h>
 
-#define BLOCK_SIZE 16
-#define NUM_ACC 4
-#define STRIDE 2
 //#define DEBUG
 int gBone1, gBone2, gInter1, gInter2;
 unsigned int count_simd = 0;
 unsigned int already_tested_simd[13] = {0};
 
-
-void simd_mil_test_all(const double *hr_sphere_region, int n, double *directions_vectors_mil) {
+#if 0
+void simd_mil_test_all_old(const double *hr_sphere_region, int n, double *directions_vectors_mil) {
 
     double bone_length[NUM_DIRECTIONS];
     int intercepts[NUM_DIRECTIONS];
@@ -101,6 +98,7 @@ void simd_mil_test_all(const double *hr_sphere_region, int n, double *directions
     gInter2 = intercepts[0];
 
 }
+#endif
 
 inline double horizontal_add (__m256d a) {
     __m256d t1 = _mm256_hadd_pd(a,a);
@@ -120,7 +118,7 @@ inline int horizontal_addi(__m256i a) {
     __int64_t x6 = x5 + x4;
     return x6;
 }
-
+#if 0
 inline double simd_mil_1D(const double *hr_sphere_region, int* intercepts, int n, const int kk, const int jj, const int ii,  const int vecID) {
     double bone_length;
 
@@ -311,4 +309,36 @@ double simd_mil_2D_neg(const double *hr_sphere_region, int* intercepts, int n, c
 
     return bone_length;
 
+}
+
+#endif
+///
+/// Test all vectors with SIMD.
+///
+void simd_mil_test_all(const double *hr_sphere_region, int n, double *directions_vectors_mil) {
+
+    double bone_length[13] = {0.0};
+    int intercepts[13] = {0};
+    for (int kk_b = 0; kk_b < n; kk_b+=BLOCK_SIZE) {
+        for (int jj_b = 0; jj_b < n; jj_b+=BLOCK_SIZE) {
+            for (int ii_b = 0; ii_b < n; ii_b+=BLOCK_SIZE) {
+
+//                for (int v = 0; v < 2; ++v) {
+                    BLOCK_KERNEL_1D_SIMD(1, kk_b, jj_b, ii_b)
+//                    BLOCK_KERNEL_1D_SIMD(2, kk_b, ii_b, jj_b)
+//                    BLOCK_KERNEL_1D_SIMD(3, jj_b, ii_b, kk_b)
+//                    BLOCK_KERNEL_2D_POS_SIMD(4, kk_b, jj_b, ii_b)
+//                    BLOCK_KERNEL_2D_POS_SIMD(5, jj_b, kk_b, ii_b)
+//                    BLOCK_KERNEL_2D_POS_SIMD(6, ii_b, jj_b, kk_b)
+//                }
+            }
+        }
+    }
+
+    for (int i = 0; i < 13; ++i) {
+        if (intercepts[i] == 0) {
+            intercepts[i] = 1;
+        }
+        directions_vectors_mil[i] = bone_length[i] / intercepts[i];
+    }
 }
