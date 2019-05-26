@@ -4,8 +4,11 @@
 #include <immintrin.h>
 #include <stdio.h>
 
+#define BLOCK_SIZE 16
+#define NUM_ACC 4
+#define STRIDE 2
+
 #define LOAD_PREV_1D                                                                     \
-        i_prev = (ii > 0) ? ii - 1 : 0;                                                  \
         switch (vecID) {                                                                 \
             case 1: /* Vector (1,0,0) */                                                 \
                 prev_mask1 = hr_sphere_region[ k*n*n + (j+0*STRIDE)*n + i_prev ]  > 0.5; \
@@ -313,10 +316,10 @@
         acc4 += r4;                             \
                                                 \
         /* Calculate masks */                   \
-        curr_mask1 = r1 > 0.5f;                 \
-        curr_mask2 = r2 > 0.5f;                 \
-        curr_mask3 = r3 > 0.5f;                 \
-        curr_mask4 = r4 > 0.5f;                 \
+        curr_mask1 = r1 > 0.5;                 \
+        curr_mask2 = r2 > 0.5;                 \
+        curr_mask3 = r3 > 0.5;                 \
+        curr_mask4 = r4 > 0.5;                 \
                                                 \
         /* Detect edge and add to counter */    \
         edge_count1 += curr_mask1 ^ prev_mask1; \
@@ -324,6 +327,135 @@
         edge_count3 += curr_mask3 ^ prev_mask3; \
         edge_count4 += curr_mask4 ^ prev_mask4;
         // End of COMPUTATION
+
+
+#define BLOCK_KERNEL_1D(vec, kk, jj, ii)                                           \
+    {                                                                              \
+        const int vecID = vec;                                                     \
+        double bone_length_block = 0.0;                                            \
+        int intercepts_block = 0;                                                  \
+                                                                                   \
+        /* Init accumulators */                                                    \
+        double acc1 = 0.0;                                                         \
+        double acc2 = 0.0;                                                         \
+        double acc3 = 0.0;                                                         \
+        double acc4 = 0.0;                                                         \
+                                                                                   \
+        unsigned int edge_count1 = 0;                                              \
+        unsigned int edge_count2 = 0;                                              \
+        unsigned int edge_count3 = 0;                                              \
+        unsigned int edge_count4 = 0;                                              \
+                                                                                   \
+        unsigned int curr_mask1;                                                   \
+        unsigned int curr_mask2;                                                   \
+        unsigned int curr_mask3;                                                   \
+        unsigned int curr_mask4;                                                   \
+                                                                                   \
+        for (int k = kk + 1; k < kk + BLOCK_SIZE; k += STRIDE) {                   \
+            for (int j = jj + 1; j < jj + BLOCK_SIZE; j += STRIDE*NUM_ACC) {           \
+                unsigned int i_prev, prev_mask1, prev_mask2, prev_mask3, prev_mask4;   \
+                i_prev = (ii > 0) ? ii - 1 : 0;                                        \
+                LOAD_PREV_1D                                                           \
+                                                                                       \
+                for (int i = ii; i < ii + BLOCK_SIZE; ++i) {                           \
+                    double r1, r2, r3, r4;                                             \
+                                                                                       \
+                    /* Load working set */                                             \
+                    LOAD_DATA_SET_1D                                                   \
+                                                                                       \
+                    /* Perform computation */                                          \
+                    COMPUTATION                                                        \
+                                                                                       \
+                    /* Update state of prev_mask */                                    \
+                    prev_mask1 = curr_mask1;                                           \
+                    prev_mask2 = curr_mask2;                                           \
+                    prev_mask3 = curr_mask3;                                           \
+                    prev_mask4 = curr_mask4;                                           \
+                }                                                                      \
+            }                                                                          \
+        }                                                                              \
+                                                                                       \
+        acc1 += acc2;                                                                  \
+        acc3 += acc4;                                                                  \
+        edge_count1 += edge_count2;                                                    \
+        edge_count3 += edge_count4;                                                    \
+                                                                                       \
+        bone_length_block = acc1 + acc3;                                               \
+        intercepts_block  = edge_count1 + edge_count3;                                 \
+        bone_length[vecID-1] += bone_length_block;                                     \
+        intercepts[vecID-1] += intercepts_block;                                       \
+    }
+
+
+#define BLOCK_KERNEL_2D(vec, kk, jj, ii) \
+    {                                                                              \
+        const int vecID = vec;                                                     \
+        double bone_length_block = 0.0;                                            \
+        int intercepts_block = 0;                                                  \
+        /* Init accumulators */                                                    \
+        double acc1 = 0.0;                                                         \
+        double acc2 = 0.0;                                                         \
+        double acc3 = 0.0;                                                         \
+        double acc4 = 0.0;                                                         \
+                                                                                   \
+        unsigned int edge_count1 = 0;                                              \
+        unsigned int edge_count2 = 0;                                              \
+        unsigned int edge_count3 = 0;                                              \
+        unsigned int edge_count4 = 0;                                              \
+                                                                                   \
+        for (int k = kk + 1; k < kk + BLOCK_SIZE; k += STRIDE * NUM_ACC / 2) {     \
+            for (int ij = 0; ij < BLOCK_SIZE; ij += STRIDE) {                      \
+                unsigned int i1_prev, i2_prev, j1_prev, j2_prev;                   \
+                unsigned int prev_mask1, prev_mask2, prev_mask3, prev_mask4;       \
+                                                                                   \
+                int i1 = ii + ij;                                                  \
+                int j1 = jj;                                                       \
+                int i2 = ii;                                                       \
+                int j2 = jj + ij;                                                  \
+                                                                                   \
+                /* Initialise previous mask */                                     \
+                LOAD_PREV_2D_POS                                                   \
+                                                                                   \
+                while (i1 + 1 < ii + BLOCK_SIZE && j2 + 1 < jj + BLOCK_SIZE) {     \
+                    double r1, r2, r3, r4;                                         \
+                                                                                   \
+                    /* Load working set */                                         \
+                    LOAD_DATA_SET_2D_POS                                           \
+                                                                                   \
+                    /* Perform computation */                                      \
+                    COMPUTATION                                                    \
+                                                                                   \
+                    /* Update state of prev_mask */                                \
+                    prev_mask1 = curr_mask1;                                       \
+                    prev_mask2 = curr_mask2;                                       \
+                    prev_mask3 = curr_mask3;                                       \
+                    prev_mask4 = curr_mask4;                                       \
+                                                                                   \
+                    ++i1;                                                          \
+                    ++j1;                                                          \
+                    ++i2;                                                          \
+                    ++j2;                                                          \
+                }                                                                  \
+            }                                                                      \
+        } /* End iteration over dimension k */                                     \
+                                                                                   \
+        /* Sum up accumulators */                                                  \
+        acc1 += acc2;                                                              \
+        acc3 += acc4;                                                              \
+        edge_count1 += edge_count2;                                                \
+        edge_count3 += edge_count4;                                                \
+                                                                                   \
+        bone_length_block += acc1 + acc3;                                          \
+        intercepts_block  += edge_count1 + edge_count3;                            \
+        bone_length[vecID-1] += bone_length_block;                                 \
+        intercepts[vecID-1]  += intercepts_block;                                  \
+    }
+
+
+/* Function declarations*/
+double mil_1D(const double *hr_sphere_region, int* intercepts, int n, const int kk, const int jj, const int ii,  const int vecID);
+double mil_2D_pos(const double *hr_sphere_region, int* intercepts, int n, const int kk, const int jj, const int ii,  const int vecID);
+double mil_2D_neg(const double *hr_sphere_region, int* intercepts, int n, const int kk, const int jj, const int ii,  const int vecID);
 
 #endif //BONEMAP_MIL2_H
 

@@ -29,9 +29,6 @@
 #include <immintrin.h>
 #include <stdio.h>
 
-#define BLOCK_SIZE 16
-#define NUM_ACC 4
-#define STRIDE 2
 //#define DEBUG
 int gBone1, gBone2, gInter1, gInter2;
 unsigned int count = 0;
@@ -198,82 +195,24 @@ void mil2_baseline(const double *hr_sphere_region, int n, double *directions_vec
 
 }
 
-///
-/// Scalar replacement to remove aliasing
-///
-void mil2_o1(const double *hr_sphere_region, int n, double *directions_vectors_mil) {
-
-    const int n_vectors = NUM_DIRECTIONS;
-
-    int iteratorVectors[3][3];
-
-    /* for every direction vector */
-    for (int v = 0; v < n_vectors; ++v) {
-
-        int numIterVecs = 0;
-        /* get array of iterator vectors */
-        numIterVecs = get_iterator_vectors(DIRECTIONS[v], iteratorVectors);
-        int d0 = DIRECTIONS[v][0];
-        int d1 = DIRECTIONS[v][1];
-        int d2 = DIRECTIONS[v][2];
-        double sum = 0.0;
-        int intersects = 1;
-
-        /* Iterate over all initial faces */
-        for (int f = 0; f < numIterVecs;  ++f) {
-            int iter0 = iteratorVectors[f][0];
-            int iter1 = iteratorVectors[f][1];
-            int iter2 = iteratorVectors[f][2];
-            /* Iterate through initial points in the face */
-            for (int kk = 0 ; kk <= (n-1)*iter2; kk += STRIDE) {
-                for (int jj = 0 ; jj <= (n-1)*iter1; jj += STRIDE) {
-                    for (int ii = 0 ; ii <= (n-1)*iter0; ii += STRIDE) {
-                        int k = (d2 == -1 && iter2 == 0)? n - 1 : kk;
-                        int j = (d1 == -1 && iter1 == 0)? n - 1 : jj;
-                        int i = (d0 == -1 && iter0 == 0)? n - 1 : ii;
-                        double current_point;
-                        unsigned int current_masked;
-                        unsigned int prev_masked = hr_sphere_region[ k*n*n + j*n + i] > 0.5;
-                        while ((i < n && i >= 0) && (j < n && j >= 0) && (k < n && k >= 0) ) {
-
-                            current_point = hr_sphere_region[ k*n*n + j*n + i];
-                            current_masked = current_point > 0.5;
-
-                            sum += current_point;
-                            intersects += (current_masked) ^ (prev_masked);
-                            prev_masked = current_masked;
-
-                            k += d2;
-                            j += d1;
-                            i += d0;
-                        }
-                    }
-                }
-            }
-
-        }
-        directions_vectors_mil[v] = sum / intersects;
-    }
-
-}
-
+#if false
 ///
 /// Blocking version for vectors (1,0,0), (0,1,0), (0,0,1).
 /// Using accumulators and unrolling.
 ///
-double mil_1D(const double *hr_sphere_region, int* intercepts, int n, const int kk, const int jj, const int ii,  const int vecID) {
+inline double mil_1D(const double *hr_sphere_region, int* intercepts, int n, const int kk, const int jj, const int ii,  const int vecID) {
     double bone_length;
 
     /* Init accumulators */
-    double acc1 = 0.0, acc5 = 0.0;
-    double acc2 = 0.0, acc6 = 0.0;
-    double acc3 = 0.0, acc7 = 0.0;
-    double acc4 = 0.0, acc8 = 0.0;
+    double acc1 = 0.0;
+    double acc2 = 0.0;
+    double acc3 = 0.0;
+    double acc4 = 0.0;
 
-    unsigned int edge_count1 = 0, edge_count5 = 0;
-    unsigned int edge_count2 = 0, edge_count6 = 0;
-    unsigned int edge_count3 = 0, edge_count7 = 0;
-    unsigned int edge_count4 = 0, edge_count8 = 0;
+    unsigned int edge_count1 = 0;
+    unsigned int edge_count2 = 0;
+    unsigned int edge_count3 = 0;
+    unsigned int edge_count4 = 0;
 
     for (int k = kk + 1; k < kk + BLOCK_SIZE; k += STRIDE) {
         for (int j = jj + 1; j < jj + BLOCK_SIZE; j += STRIDE*NUM_ACC) {
@@ -294,21 +233,17 @@ double mil_1D(const double *hr_sphere_region, int* intercepts, int n, const int 
                 prev_mask2 = curr_mask2;
                 prev_mask3 = curr_mask3;
                 prev_mask4 = curr_mask4;
-#ifdef  DEBUG
-                count++;
-#endif
             }
         }
     }
 
-    acc1 += acc2;   edge_count1 += edge_count2;
-    acc3 += acc4;   edge_count3 += edge_count4;
-    acc5 += acc6;   edge_count5 += edge_count6;
-    acc7 += acc8;   edge_count7 += edge_count8;
-    acc1 += acc3;   edge_count1 += edge_count3;
-    acc5 += acc7;   edge_count5 += edge_count7;
-    bone_length  = acc1 + acc5;
-    *intercepts  = edge_count1 + edge_count5;
+    acc1 += acc2;
+    acc3 += acc4;
+    bone_length  = acc1 + acc3;
+
+    edge_count1 += edge_count2;
+    edge_count3 += edge_count4;
+    *intercepts  = edge_count1 + edge_count3;
 
 #ifdef  DEBUG
     if (!already_tested[vecID]) {
@@ -534,256 +469,35 @@ double mil_2D_neg(const double *hr_sphere_region, int* intercepts, int n, const 
 
     return bone_length;
 }
-
-
-#if 0
-///
-/// Test for first vector only (1,0,0).
-///
-void mil_test_v1(const float *hr_sphere_region, int n, float *directions_vectors_mil) {
-
-    const int n_vectors = NUM_DIRECTIONS;
-    for (int kk = 0; kk < n; kk+=BLOCK_SIZE) {
-        for (int jj = 0; jj < n; jj+=BLOCK_SIZE) {
-            for (int ii = 0; ii < n; ii+=BLOCK_SIZE) {
-                /* for every direction vector */
-                for (int v = 0; v < n_vectors; ++v) {
-
-                    directions_vectors_mil[v] = mil_1D(hr_sphere_region, n, kk, jj, ii, 1);
-
-                }
-            }
-        }
-    }
-}
-
-///
-/// Test second vector (0,1,0).
-///
-void mil_test_v2(const float *hr_sphere_region, int n, float *directions_vectors_mil) {
-
-    const int n_vectors = NUM_DIRECTIONS;
-    for (int kk = 0; kk < n; kk+=BLOCK_SIZE) {
-        for (int jj = 0; jj < n; jj+=BLOCK_SIZE) {
-            for (int ii = 0; ii < n; ii+=BLOCK_SIZE) {
-                /* for every direction vector */
-                for (int v = 0; v < n_vectors; ++v) {
-
-                    directions_vectors_mil[v] = mil_1D(hr_sphere_region, n, kk, jj, ii, 2);
-
-                }
-            }
-        }
-    }
-
-}
-
-///
-/// Test third vector (0,0,1).
-///
-void mil_test_v3(const float *hr_sphere_region, int n, float *directions_vectors_mil) {
-
-    const int n_vectors = NUM_DIRECTIONS;
-    for (int kk = 0; kk < n; kk+=BLOCK_SIZE) {
-        for (int jj = 0; jj < n; jj+=BLOCK_SIZE) {
-            for (int ii = 0; ii < n; ii+=BLOCK_SIZE) {
-                /* for every direction vector */
-                for (int v = 0; v < n_vectors; ++v) {
-
-                    directions_vectors_mil[v] = mil_1D(hr_sphere_region, n, kk, jj, ii, 3);
-
-                }
-            }
-        }
-    }
-
-}
-
-///
-/// Test third vector (1,1,0).
-///
-void mil_test_v4(const float *hr_sphere_region, int n, float *directions_vectors_mil) {
-
-    const int n_vectors = NUM_DIRECTIONS;
-    for (int kk = 0; kk < n; kk+=BLOCK_SIZE) {
-        for (int jj = 0; jj < n; jj+=BLOCK_SIZE) {
-            for (int ii = 0; ii < n; ii+=BLOCK_SIZE) {
-                /* for every direction vector */
-                for (int v = 0; v < n_vectors; ++v) {
-
-                    directions_vectors_mil[v] = mil_2D_pos(hr_sphere_region, n, kk, jj, ii, 4);
-
-                }
-            }
-        }
-    }
-
-}
-
-///
-/// Test third vector (1,0,1).
-///
-void mil_test_v5(const float *hr_sphere_region, int n, float *directions_vectors_mil) {
-
-    const int n_vectors = NUM_DIRECTIONS;
-    for (int kk = 0; kk < n; kk+=BLOCK_SIZE) {
-        for (int jj = 0; jj < n; jj+=BLOCK_SIZE) {
-            for (int ii = 0; ii < n; ii+=BLOCK_SIZE) {
-                /* for every direction vector */
-                for (int v = 0; v < n_vectors; ++v) {
-
-                    directions_vectors_mil[v] = mil_2D_pos(hr_sphere_region, n, kk, jj, ii, 5);
-
-                }
-            }
-        }
-    }
-
-}
-
-///
-/// Test third vector (0,1,1).
-///
-void mil_test_v6(const float *hr_sphere_region, int n, float *directions_vectors_mil) {
-
-    const int n_vectors = NUM_DIRECTIONS;
-    for (int kk = 0; kk < n; kk+=BLOCK_SIZE) {
-        for (int jj = 0; jj < n; jj+=BLOCK_SIZE) {
-            for (int ii = 0; ii < n; ii+=BLOCK_SIZE) {
-                /* for every direction vector */
-                for (int v = 0; v < n_vectors; ++v) {
-
-                    directions_vectors_mil[v] = mil_2D_pos(hr_sphere_region, n, kk, jj, ii, 6);
-
-                }
-            }
-        }
-    }
-
-}
-
-///
-/// Test third vector (-1,1,0).
-///
-void mil_test_v7(const float *hr_sphere_region, int n, float *directions_vectors_mil) {
-
-    const int n_vectors = NUM_DIRECTIONS;
-    for (int kk = 0; kk < n; kk+=BLOCK_SIZE) {
-        for (int jj = 0; jj < n; jj+=BLOCK_SIZE) {
-            for (int ii = 0; ii < n; ii+=BLOCK_SIZE) {
-                /* for every direction vector */
-                for (int v = 0; v < n_vectors; ++v) {
-
-                    directions_vectors_mil[v] = mil_2D_neg(hr_sphere_region, n, kk, jj, ii, 7);
-
-                }
-            }
-        }
-    }
-
-}
-
-///
-/// Test third vector (-1,0,1).
-///
-void mil_test_v8(const float *hr_sphere_region, int n, float *directions_vectors_mil) {
-
-    const int n_vectors = NUM_DIRECTIONS;
-    for (int kk = 0; kk < n; kk+=BLOCK_SIZE) {
-        for (int jj = 0; jj < n; jj+=BLOCK_SIZE) {
-            for (int ii = 0; ii < n; ii+=BLOCK_SIZE) {
-                /* for every direction vector */
-                for (int v = 0; v < n_vectors; ++v) {
-
-                    directions_vectors_mil[v] = mil_2D_neg(hr_sphere_region, n, kk, jj, ii, 8);
-
-                }
-            }
-        }
-    }
-
-}
-
-///
-/// Test third vector (0,1,-1).
-///
-void mil_test_v9(const float *hr_sphere_region, int n, float *directions_vectors_mil) {
-
-    const int n_vectors = NUM_DIRECTIONS;
-    for (int kk = 0; kk < n; kk+=BLOCK_SIZE) {
-        for (int jj = 0; jj < n; jj+=BLOCK_SIZE) {
-            for (int ii = 0; ii < n; ii+=BLOCK_SIZE) {
-                /* for every direction vector */
-                for (int v = 0; v < n_vectors; ++v) {
-
-                    directions_vectors_mil[v] = mil_2D_neg(hr_sphere_region, n, kk, jj, ii, 9);
-
-                }
-            }
-        }
-    }
-
-}
-
 #endif
+
 ///
-/// Test all vectors
+/// Test all vectors.
 ///
 void mil_test_all(const double *hr_sphere_region, int n, double *directions_vectors_mil) {
 
-    double bone_length[NUM_DIRECTIONS];
-    int intercepts[NUM_DIRECTIONS];
+    double bone_length[13] = {0.0};
+    int intercepts[13] = {0};
+    for (int kk_b = 0; kk_b < n; kk_b+=BLOCK_SIZE) {
+        for (int jj_b = 0; jj_b < n; jj_b+=BLOCK_SIZE) {
+            for (int ii_b = 0; ii_b < n; ii_b+=BLOCK_SIZE) {
 
-    for (int i = 0; i < NUM_DIRECTIONS; ++i) {
-        bone_length[i] = 0.0;
-        intercepts[i]  = 0;
-    }
-
-    for (int kk = 0; kk < n; kk+=BLOCK_SIZE) {
-        for (int jj = 0; jj < n; jj+=BLOCK_SIZE) {
-            for (int ii = 0; ii < n; ii+=BLOCK_SIZE) {
-                int intercept_blk;
-
-                bone_length[0] += mil_1D(hr_sphere_region, &intercept_blk, n, kk, jj, ii, 1);
-                intercepts[0]  += intercept_blk;
-                bone_length[1] += mil_1D(hr_sphere_region, &intercept_blk, n, kk, ii, jj, 2);
-                intercepts[1]  += intercept_blk;
-                bone_length[2] += mil_1D(hr_sphere_region, &intercept_blk, n, jj, ii, kk, 3);
-                intercepts[2]  += intercept_blk;
-
-                bone_length[3] += mil_2D_pos(hr_sphere_region, &intercept_blk, n, kk, jj, ii, 4);
-                intercepts[3]  += intercept_blk;
-                bone_length[4] += mil_2D_pos(hr_sphere_region, &intercept_blk, n, jj, kk, ii, 5);
-                intercepts[4]  += intercept_blk;
-                bone_length[5] += mil_2D_pos(hr_sphere_region, &intercept_blk, n, ii, jj, kk, 6);
-                intercepts[5]  += intercept_blk;
-
-                bone_length[6] += mil_2D_neg(hr_sphere_region, &intercept_blk, n, kk, jj, ii, 7);
-                intercepts[6]  += intercept_blk;
-                bone_length[7] += mil_2D_neg(hr_sphere_region, &intercept_blk, n, jj, kk, ii, 8);
-                intercepts[7]  += intercept_blk;
-                bone_length[8] += mil_2D_neg(hr_sphere_region, &intercept_blk, n, ii, jj, kk, 9);
-                intercepts[8]  += intercept_blk;
-
-
-
+                for (int v = 0; v < 2; ++v) {
+                    BLOCK_KERNEL_1D(1, kk_b, jj_b, ii_b)
+                    BLOCK_KERNEL_1D(2, kk_b, ii_b, jj_b)
+                    BLOCK_KERNEL_1D(3, jj_b, ii_b, kk_b)
+                    BLOCK_KERNEL_2D(4, kk_b, jj_b, ii_b)
+                    BLOCK_KERNEL_2D(5, jj_b, kk_b, ii_b)
+                    BLOCK_KERNEL_2D(6, ii_b, jj_b, kk_b)
+                }
             }
         }
     }
 
-    for (int i = 0; i < NUM_DIRECTIONS; ++i) {
+    for (int i = 0; i < 13; ++i) {
         if (intercepts[i] == 0) {
             intercepts[i] = 1;
         }
         directions_vectors_mil[i] = bone_length[i] / intercepts[i];
     }
-
-#ifdef DEBUG
-    printf("0 - BONE LENGTH = %.8f, INTERCEPTS = %d\n", bone_length[0], intercepts[0]);
-    printf("1 - BONE LENGTH = %.8f, INTERCEPTS = %d\n", bone_length[1], intercepts[1]);
-    printf("2 - BONE LENGTH = %.8f, INTERCEPTS = %d\n\n", bone_length[2], intercepts[2]);
-#endif
-    gBone2 = bone_length[3];
-    gInter2 = intercepts[3];
-
 }

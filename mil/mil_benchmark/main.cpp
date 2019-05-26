@@ -44,7 +44,7 @@
 using namespace std;
 
 #define CYCLES_REQUIRED 1e7
-#define REP 100
+#define REP 5
 #define EPS (1e-3)
 #define FREQ 2.7
 #define TOLERANCE 1e-8
@@ -62,15 +62,15 @@ double perf_test(comp_func f, int n);
 extern int gBone1, gBone2, gInter1, gInter2;
 extern "C" void mil2_baseline(const double *hr_sphere_region, int n, double *directions_vectors_mil);
 extern "C" void mil2_o1(const double *hr_sphere_region, int n, double *directions_vectors_mil);
-extern "C" void mil_test_v1(const float *hr_sphere_region, int n, float *directions_vectors_mil);
-extern "C" void mil_test_v2(const float *hr_sphere_region, int n, float *directions_vectors_mil);
-extern "C" void mil_test_v3(const float *hr_sphere_region, int n, float *directions_vectors_mil);
-extern "C" void mil_test_v4(const float *hr_sphere_region, int n, float *directions_vectors_mil);
-extern "C" void mil_test_v5(const float *hr_sphere_region, int n, float *directions_vectors_mil);
-extern "C" void mil_test_v6(const float *hr_sphere_region, int n, float *directions_vectors_mil);
-extern "C" void mil_test_v7(const float *hr_sphere_region, int n, float *directions_vectors_mil);
-extern "C" void mil_test_v8(const float *hr_sphere_region, int n, float *directions_vectors_mil);
-extern "C" void mil_test_v9(const float *hr_sphere_region, int n, float *directions_vectors_mil);
+extern "C" void mil_test_v1(const double *hr_sphere_region, int n, double *directions_vectors_mil);
+extern "C" void mil_test_v2(const double *hr_sphere_region, int n, double *directions_vectors_mil);
+extern "C" void mil_test_v3(const double *hr_sphere_region, int n, double *directions_vectors_mil);
+extern "C" void mil_test_v4(const double *hr_sphere_region, int n, double *directions_vectors_mil);
+extern "C" void mil_test_v5(const double *hr_sphere_region, int n, double *directions_vectors_mil);
+extern "C" void mil_test_v6(const double *hr_sphere_region, int n, double *directions_vectors_mil);
+extern "C" void mil_test_v7(const double *hr_sphere_region, int n, double *directions_vectors_mil);
+extern "C" void mil_test_v8(const double *hr_sphere_region, int n, double *directions_vectors_mil);
+extern "C" void mil_test_v9(const double *hr_sphere_region, int n, double *directions_vectors_mil);
 extern "C" void mil_test_all(const double *hr_sphere_region, int n, double *directions_vectors_mil);
 extern "C" void simd_mil_test_all(const double *hr_sphere_region, int n, double *directions_vectors_mil);
 
@@ -88,15 +88,13 @@ void rands(T *m, size_t n) {
     std::mt19937 gen{rd()};
     std::uniform_real_distribution<double> dist(-1.0, 1.0);
     for (size_t i = 0; i < n; ++i) {
-        if (0) {
-            m[i] = 0;
+        if (false) {
+            m[i] = 1.0;
         }
         else {
             m[i] = dist(gen) > 0.0 ? 1 : 0;
         }
     }
-
-//            m[i] = dist(gen) > 0.0 ? 1 : 0;
 }
 
 void build(int **a, int n) {
@@ -124,19 +122,19 @@ void destroy(void *m) {
 */
 void register_functions() {
 //    add_function(&mil2, "mil2", 3.25 * 2);
-    add_function(&mil2_baseline, "mil2_baseline", 1.5 * 4);
+    add_function(&mil2_baseline, "mil2_baseline", (13.0/4.0)*2.0);
 //    add_function(&mil2_o1, "Base opt1", 3.25);
-//    add_function(&mil_test_v1, "MIL block vector (1,0,0)", 3.25*2);
-//    add_function(&mil_test_v2, "MIL block vector (0,1,0)", 3.25*2);
-//    add_function(&mil_test_v3, "MIL block vector (0,0,1)", 3.25*2);
-//    add_function(&mil_test_v4, "MIL block vector (1,1,0)", 3.25*2);
-//    add_function(&mil_test_v5, "MIL block vector (1,0,1)", 3.25*2);
-//    add_function(&mil_test_v6, "MIL block vector (0,1,1)", 3.25*2);
-//    add_function(&mil_test_v7, "MIL block vector (-1,1,0)", 3.25*2);
-//    add_function(&mil_test_v8, "MIL block vector (-1,0,1)", 3.25*2);
-//    add_function(&mil_test_v9, "MIL block vector (0,1,-1)", 3.25*2);
-    add_function(&mil_test_all, "test all - 4 accumulators", 1.5);
-    add_function(&simd_mil_test_all, "test all - SIMD 2 vectors of doubles", 1.5);
+//    add_function(&mil_test_v1, "MIL block vector (1,0,0)", (13.0/4.0)*2.0);
+//    add_function(&mil_test_v2, "MIL block vector (0,1,0)", (13.0/4.0)*2.0);
+//    add_function(&mil_test_v3, "MIL block vector (0,0,1)", (13.0/4.0)*2.0);
+//    add_function(&mil_test_v4, "MIL block vector (1,1,0)", (13.0/4.0)*2.0);
+//    add_function(&mil_test_v5, "MIL block vector (1,0,1)", (13.0/4.0)*2.0);
+//    add_function(&mil_test_v6, "MIL block vector (0,1,1)", (13.0/4.0)*2.0);
+//    add_function(&mil_test_v7, "MIL block vector (-1,1,0)", (1.0/4.0)*2.0);
+//    add_function(&mil_test_v8, "MIL block vector (-1,0,1)", (1.0/4.0)*2.0);
+//    add_function(&mil_test_v9, "MIL block vector (0,1,-1)", (1.0/4.0)*2.0);
+    add_function(&mil_test_all, "test all - 4 accumulators", (12.0/4.0)*2.0);
+//    add_function(&simd_mil_test_all, "test all - SIMD 2 vectors of doubles", 1.5);
 }
 
 bool checksum(const double *a, const double *b, int n) {
@@ -195,7 +193,7 @@ int main(int argc, char **argv) {
             {
                 comp_func f = userFuncs[i];
                 f(region, n, output);
-                bool error = checksum(outputBaseline, output, 3);
+                bool error = checksum(outputBaseline, output, 9);
                 if (error)
                     cout << "ERROR: the results for function " << i << " are incorrect." << std::endl;
             }
@@ -240,7 +238,7 @@ void add_function(comp_func f, const string &name, double flops) {
 */
 double perf_test(comp_func f, int n) {
     double cycles;
-    long num_runs = 20;
+    long num_runs = 1;
     double multiplier = 1;
     myInt64 start, end;
 
@@ -270,7 +268,7 @@ double perf_test(comp_func f, int n) {
 
     // Actual performance measurements repeated REP times.
     // We simply store all results and compute medians during post-processing.
-    for (size_t j = 0; j < 1; j++) {
+    for (size_t j = 0; j < REP; j++) {
 
         start = start_tsc();
         for (size_t i = 0; i < num_runs; ++i) {
