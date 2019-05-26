@@ -60,19 +60,20 @@ void simd_mil_test_all(const double *hr_sphere_region, int n, double *directions
                 bone_length[2] += simd_mil_1D(hr_sphere_region, &intercept_blk, n, jj, ii, kk, 3);
                 intercepts[2]  += intercept_blk;
 
-//
-//                bone_length[3] += mil_2D_pos(hr_sphere_region, &intercept_blk, n, kk, jj, ii, 4);
-//                intercepts[3]  += intercept_blk;
-//                bone_length[4] += mil_2D_pos(hr_sphere_region, &intercept_blk, n, jj, kk, ii, 5);
-//                intercepts[4]  += intercept_blk;
-//                bone_length[5] += mil_2D_pos(hr_sphere_region, &intercept_blk, n, ii, jj, kk, 6);
-//                intercepts[5]  += intercept_blk;
-//
-//                bone_length[6] += mil_2D_neg(hr_sphere_region, &intercepts[6], n, kk, jj, ii, 7);
-//                bone_length[7] += mil_2D_neg(hr_sphere_region, &intercepts[7], n, kk, jj, ii, 8);
-//                bone_length[8] += mil_2D_neg(hr_sphere_region, &intercepts[8], n, kk, jj, ii, 9);
 
+                bone_length[3] += simd_mil_2D_pos(hr_sphere_region, &intercept_blk, n, kk, jj, ii, 4);
+                intercepts[3]  += intercept_blk;
+                bone_length[4] += simd_mil_2D_pos(hr_sphere_region, &intercept_blk, n, jj, kk, ii, 5);
+                intercepts[4]  += intercept_blk;
+                bone_length[5] += simd_mil_2D_pos(hr_sphere_region, &intercept_blk, n, ii, jj, kk, 6);
+                intercepts[5]  += intercept_blk;
 
+                bone_length[6] += simd_mil_2D_neg(hr_sphere_region, &intercept_blk, n, kk, jj, ii, 7);
+                intercepts[6]  += intercept_blk;
+                bone_length[7] += simd_mil_2D_neg(hr_sphere_region, &intercept_blk, n, jj, kk, ii, 8);
+                intercepts[7]  += intercept_blk;
+                bone_length[8] += simd_mil_2D_neg(hr_sphere_region, &intercept_blk, n, ii, jj, kk, 9);
+                intercepts[8]  += intercept_blk;
 
             }
         }
@@ -89,6 +90,12 @@ void simd_mil_test_all(const double *hr_sphere_region, int n, double *directions
     printf("SIMD 0 - BONE LENGTH = %.8f, INTERCEPTS = %d\n", bone_length[0], intercepts[0]);
     printf("SIMD 1 - BONE LENGTH = %.8f, INTERCEPTS = %d\n", bone_length[1], intercepts[1]);
     printf("SIMD 2 - BONE LENGTH = %.8f, INTERCEPTS = %d\n", bone_length[2], intercepts[2]);
+    printf("SIMD 3 - BONE LENGTH = %.8f, INTERCEPTS = %d\n", bone_length[3], intercepts[3]);
+    printf("SIMD 4 - BONE LENGTH = %.8f, INTERCEPTS = %d\n", bone_length[4], intercepts[4]);
+    printf("SIMD 5 - BONE LENGTH = %.8f, INTERCEPTS = %d\n", bone_length[5], intercepts[5]);
+    printf("SIMD 6 - BONE LENGTH = %.8f, INTERCEPTS = %d\n", bone_length[6], intercepts[6]);
+    printf("SIMD 7 - BONE LENGTH = %.8f, INTERCEPTS = %d\n", bone_length[7], intercepts[7]);
+    printf("SIMD 8 - BONE LENGTH = %.8f, INTERCEPTS = %d\n", bone_length[8], intercepts[8]);
 #endif
     gBone2 = bone_length[0];
     gInter2 = intercepts[0];
@@ -127,16 +134,15 @@ inline double simd_mil_1D(const double *hr_sphere_region, int* intercepts, int n
     int nn = n * n;
     int i_prev = (ii > 0) ? ii - 1 : 0;
 
-    for (int k = kk; k < kk + BLOCK_SIZE; k += STRIDE) {
+    for (int k = kk + 1; k < kk + BLOCK_SIZE; k += STRIDE) {
         int knn = k * nn;
-        for (int j = jj; j < jj + BLOCK_SIZE; j += STRIDE*NUM_ACC*2) {
+        for (int j = jj + 1; j < jj + BLOCK_SIZE; j += STRIDE*NUM_ACC*2) {
             __m256i prev_mask, prev_mask2;
 
             SIMD_LOAD_PREV_1D
 
             for (int i = ii; i < ii + BLOCK_SIZE; ++i) {
                 int inn = i * nn;
-
                 __m256d region1;
                 __m256d region2;
 
@@ -150,7 +156,7 @@ inline double simd_mil_1D(const double *hr_sphere_region, int* intercepts, int n
                 prev_mask = curr_mask;
                 prev_mask2 = curr_mask2;
 #ifdef  DEBUG
-                count++;
+                count_simd++;
 #endif
             }
         }
@@ -166,72 +172,143 @@ inline double simd_mil_1D(const double *hr_sphere_region, int* intercepts, int n
         printf("%d\n", count_simd);
         already_tested_simd[vecID] = 1;
     }
-    count = 0;
+    count_simd = 0;
 #endif
 
     return bone_length;
 }
 
-//
-//inline double simd_mil_2D_pos(const double *hr_sphere_region, int* intercepts, int n, const int kk, const int jj, const int ii,  const int vecID) {
-//    double bone_length;
-//
-//    /* Init accumulators */
-//    __m256d bone_count = _mm256_setzero_pd();
-//    __m256d bone_count2 = _mm256_setzero_pd();
-//
-//    __m256d edge_count = _mm256_set1_pd(1.0);
-//    __m256d edge_count2 = _mm256_set1_pd(1.0);
-//
-//    for (int k = kk; k < kk + BLOCK_SIZE; k += STRIDE) {
-//        for (int ij = 0; ij < BLOCK_SIZE; ij += STRIDE) {
-//
-//            // todo: change this to the previous of the initial value: SIMD_LOAD_PREV_1D
-//            __m256i prev_mask = _mm256_set_
-//            __m256i prev_mask2 = _mm256_setzero_pd();
-//
-//            int i1 = ii + ij;
-//            int j1 = jj;
-//            int i2 = ii;
-//            int j2 = jj + ij;
-//            while (i1 + 1 < ii + BLOCK_SIZE /*&& j2+1 < jj + BLOCK_SIZE - 1*/) {
-////                double r1, r2, r3, r4;
-//                __m256d region1;
-//                __m256d region2;
-//
-//                /* Load working set */
-////                SIMD_LOAD_DATA_SET_2D
-//
-//                /* Perform computation */
-////                SIMD_COMPUTATION
-//
-//                /* Update state of prev_mask */
-//                prev_mask = curr_mask;
-//                prev_mask2 = curr_mask2;
-//                count++;
-//
-//
-//                ++i1;
-//                ++j1;
-//                ++i2;
-//                ++j2;
-//            }
-//        }
-//    } /* End iteration over dimension k */
-//
-//    bone_count = _mm256_add_pd(bone_count, bone_count2);
-//    edge_count = _mm256_add_pd(edge_count, edge_count2);
-//    bone_length  = horizontal_add(bone_count);
-//    *intercepts  = (int) horizontal_add(edge_count);
-//
-//#ifdef  DEBUG
-//    if (!already_tested_simd[vecID]) {
-//        printf("%d\n", count_simd);
-//        already_tested_simd[vecID] = 1;
-//    }
-//    count = 0;
-//#endif
-//
-//    return bone_length;
-//
-//}
+double simd_mil_2D_pos(const double *hr_sphere_region, int* intercepts, int n, const int kk, const int jj, const int ii,  const int vecID) {
+    double bone_length;
+
+    /* Init accumulators */
+    __m256d bone_count = _mm256_setzero_pd();
+    __m256d bone_count2 = _mm256_setzero_pd();
+
+    __m256i edge_count = _mm256_set1_epi64x(0);
+    __m256i edge_count2 = _mm256_set1_epi64x(0);
+
+
+    for (int k = kk + 1; k < kk + BLOCK_SIZE; k += STRIDE * NUM_ACC) {
+        for (int ij = 0; ij < BLOCK_SIZE; ij += STRIDE) {
+            unsigned int i1_prev, i2_prev, j1_prev, j2_prev;
+            __m256i prev_mask, prev_mask2;
+
+            int i1 = ii + ij;
+            int j1 = jj;
+            int i2 = ii;
+            int j2 = jj + ij;
+
+            /* Initialise previous mask */
+            LOAD_PREV_2D_POS
+
+            while (i1 + 1 < ii + BLOCK_SIZE && j2 + 1 < jj + BLOCK_SIZE) {
+                __m256d region1;
+                __m256d region2;
+
+                /* Load working set */
+                LOAD_DATA_SET_2D_POS
+
+                /* Perform computation */
+                SIMD_COMPUTATION
+
+                /* Update state of prev_mask */
+                prev_mask = curr_mask;
+                prev_mask2 = curr_mask2;
+#ifdef  DEBUG
+                count_simd++;
+#endif
+
+                ++i1;
+                ++j1;
+                ++i2;
+                ++j2;
+            }
+        }
+    } /* End iteration over dimension k */
+
+    bone_count = _mm256_add_pd(bone_count, bone_count2);
+    edge_count = _mm256_add_epi64(edge_count, edge_count2);
+
+    bone_length  = horizontal_add(bone_count);
+    *intercepts  = horizontal_addi(edge_count);
+
+#ifdef  DEBUG
+    if (!already_tested_simd[vecID]) {
+        printf("%d\n", count_simd);
+        already_tested_simd[vecID] = 1;
+    }
+    count_simd = 0;
+#endif
+
+    return bone_length;
+
+}
+
+double simd_mil_2D_neg(const double *hr_sphere_region, int* intercepts, int n, const int kk, const int jj, const int ii,  const int vecID) {
+    double bone_length;
+
+    /* Init accumulators */
+    __m256d bone_count = _mm256_setzero_pd();
+    __m256d bone_count2 = _mm256_setzero_pd();
+
+    __m256i edge_count = _mm256_set1_epi64x(0);
+    __m256i edge_count2 = _mm256_set1_epi64x(0);
+
+
+    for (int k = kk + 1; k < kk + BLOCK_SIZE; k += STRIDE * NUM_ACC) {
+        for (int ij = 0; ij < BLOCK_SIZE; ij += STRIDE) {
+            unsigned int i1_prev, i2_prev, j1_prev, j2_prev;
+            __m256i prev_mask, prev_mask2;
+
+            int i1 = ii + (BLOCK_SIZE-1) - ij;  /* Start at the end of the row in the block */
+            int j1 = jj;
+            int i2 = ii + (BLOCK_SIZE-1);
+            int j2 = jj + ij;
+
+            /* Initialise previous mask */
+            LOAD_PREV_2D_NEG
+
+            while (j2 + 1 < jj + BLOCK_SIZE) {
+                __m256d region1;
+                __m256d region2;
+
+                /* Load working set */
+                LOAD_DATA_SET_2D_NEG
+
+                /* Perform computation */
+                SIMD_COMPUTATION
+
+                /* Update state of prev_mask */
+                prev_mask = curr_mask;
+                prev_mask2 = curr_mask2;
+
+                --i1;
+                ++j1;
+                --i2;
+                ++j2;
+
+#ifdef  DEBUG
+                count_simd++;
+#endif
+            }
+        }
+    } /* End iteration over dimension k */
+
+    bone_count = _mm256_add_pd(bone_count, bone_count2);
+    edge_count = _mm256_add_epi64(edge_count, edge_count2);
+
+    bone_length  = horizontal_add(bone_count);
+    *intercepts  = horizontal_addi(edge_count);
+
+#ifdef  DEBUG
+    if (!already_tested_simd[vecID]) {
+        printf("%d\n", count_simd);
+        already_tested_simd[vecID] = 1;
+    }
+    count_simd = 0;
+#endif
+
+    return bone_length;
+
+}

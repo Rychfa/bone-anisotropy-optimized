@@ -33,7 +33,7 @@
 /// Pre-processor 
 ///
 
-//#define DEBUG  // TODO move somewhere more centralized?
+// #define DEBUG  // TODO move somewhere more centralized?
 
 #ifdef linux
 #define M_SQRT3 1.7320508075688772935
@@ -76,24 +76,17 @@ static int DIRECTIONS[][3] =
         { 0,  1,  0},
         { 0,  0,  1},
 
-        { 1,  0,  0},
-        { 0,  1,  0},
-        { 0,  0,  1},
+        { 1,  1,  0},
+        { 1,  0,  1},
+        { 0,  1,  1},
 
-        { 1,  0,  0},
-        { 0,  1,  0},
-        { 0,  0,  1},
+        { -1,  1,  0},
+        { -1,  0, 1},
+        { 0,  1, -1},
 
         { 1,  0,  0},
         { 0,  1,  0},
         { 0,  0,  1}
-
-//        { 0,  1,  1},
-//        { 0,  1, -1},
-//        { 1,  0,  1},
-//        { 1,  0, -1},
-//        { 1,  1,  0},
-//        {-1,  1,  0},
 //
 //        { 1,  1,  1},
 //        { 1,  1, -1},
@@ -182,7 +175,8 @@ void fit_ellipsoid_simd_points_precompute_init(void);
  *
  */
 void fit_ellipsoid_mils(const double *mils, double (*Q)[3][3]);
-void fit_ellipsoid_mils_opt(const double *mils, double (*Q)[3][3]);
+
+#define MILS_ARRAY_DIM 16 /* round NUM_DIRECTIONs to the nearest multiple of 4 */
 void fit_ellipsoid_mils_simd(const double *mils, double (*Q)[3][3]);
 
 /*

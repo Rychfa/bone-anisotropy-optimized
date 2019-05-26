@@ -175,8 +175,8 @@ void fit_ellipsoid(const double (*p)[3], int n, double (*Q)[3][3])
 			}
 		}
 #ifdef DEBUG
-		// ellipsoid_flop_count += 9*(1+1); 
-		ellipsoid_flop_count += 23*n;// + 1+2; 
+		// ellipsoid_flop_count += 9*(1+1); //trace doesn't have to be computed again
+		ellipsoid_flop_count += 23*n + 1+2; 
 #endif
 		while (_cost(p, n, (double (*)[3][3]) Qk_plus_tstep) > 
 																_cost(p, n, Q) + ALPHA*t*trace_gradstep) {
