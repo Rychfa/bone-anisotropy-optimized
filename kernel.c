@@ -81,6 +81,10 @@ void init (double** sphere, double** extracted_region, double** ptrHighRes, doub
     region_extraction_debug_init();
     //fit_ellipsoid_debug_init();
 #endif
+
+#ifdef ELLIPSOID_DEBUG
+    fit_ellipsoid_debug_init();
+#endif
 }
 
 void deInit (double* sphere, double* extracted_region, double* ptrHighRes, double* ptrLowRes, double* rotation_matrix, double* ptrEvecOut, double *ptrEvalsOut, bool generate_ground_truth) {
@@ -120,6 +124,10 @@ void deInit (double* sphere, double* extracted_region, double* ptrHighRes, doubl
     region_extraction_debug_deinit();
     //fit_ellipsoid_debug_deinit();
 #endif
+
+#ifdef ELLIPSOID_DEBUG
+    fit_ellipsoid_debug_deinit();
+#endif     
 }
 
 void kernel_basic (double* sphere, double* extracted_region, double* ptrHighRes, double* ptrLowRes, double* rotation_matrix, double* ptrEvecOut, double *ptrEvalsOut) {
