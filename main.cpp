@@ -82,7 +82,10 @@ void register_functions()
     long int flops = 0;
     //      kernel + regions
     flops = (6*LOW_RES_D3 + 6*LOW_RES_D2*LOW_RES_D3 + 3*LOW_RES_D1*LOW_RES_D2*LOW_RES_D3 + 21*4814) + pow(SPHERE_NDIM,3)*4814;
-    //
+    flops += 774144758;
+    flops += 2*SPHERE_NDIM*SPHERE_NDIM*SPHERE_NDIM/4.0*13*LOW_RES_SIZE;
+
+
     // TODO: Add correct number of flops
     add_function(&kernel_basic, "Base kernel", flops);
      //

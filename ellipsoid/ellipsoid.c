@@ -1,7 +1,7 @@
 #include <string.h>
 #include <math.h>
 #include "ellipsoid.h"
-#ifdef DEBUG
+#ifdef ELLIPSOID_DEBUG
 	#include <stdio.h>
 #endif
 
@@ -13,16 +13,16 @@ static const double BETA    = 0.5;
 /*****************************************************************************
  *  Private data
  ****************************************************************************/
-#ifdef DEBUG
+#ifdef ELLIPSOID_DEBUG
 	static unsigned long ellipsoid_flop_count  = 0;
 	static unsigned long ellipsoid_outer_iters = 0;
 #endif
 
 /*****************************************************************************
- *  Debug tools
+ *  ELLIPSOID_DEBUG tools
  ****************************************************************************/
 
-#ifdef DEBUG
+#ifdef ELLIPSOID_DEBUG
 	void fit_ellipsoid_debug_init(void)
 	{
 		ellipsoid_flop_count  = 0;
@@ -135,7 +135,7 @@ void fit_ellipsoid(const double (*p)[3], int n, double (*Q)[3][3])
 			}
 		}
 
-#ifdef DEBUG
+#ifdef ELLIPSOID_DEBUG
 		ellipsoid_flop_count += n*(20+1 + 9+1+9*2 +2); 
 		ellipsoid_flop_count += 9*(1+1) + 1; 
 		ellipsoid_outer_iters++;
@@ -151,7 +151,7 @@ void fit_ellipsoid(const double (*p)[3], int n, double (*Q)[3][3])
 				step[i][j] = -grad[i][j];
 			}
 		}
-#ifdef DEBUG
+#ifdef ELLIPSOID_DEBUG
 		// ellipsoid_flop_count += 9;
 #endif
 
@@ -164,7 +164,7 @@ void fit_ellipsoid(const double (*p)[3], int n, double (*Q)[3][3])
 				Qk_plus_tstep[i][j] = (*Q)[i][j] + t*step[i][j];
 			}
 		}
-#ifdef DEBUG
+#ifdef ELLIPSOID_DEBUG
 		ellipsoid_flop_count += 9*(1+1);
 #endif
 
@@ -174,7 +174,7 @@ void fit_ellipsoid(const double (*p)[3], int n, double (*Q)[3][3])
 				trace_gradstep += grad[i][j]*step[j][i];
 			}
 		}
-#ifdef DEBUG
+#ifdef ELLIPSOID_DEBUG
 		// ellipsoid_flop_count += 9*(1+1); //trace doesn't have to be computed again
 		ellipsoid_flop_count += 23*n + 1+2; 
 #endif
@@ -187,7 +187,7 @@ void fit_ellipsoid(const double (*p)[3], int n, double (*Q)[3][3])
 					Qk_plus_tstep[i][j] = (*Q)[i][j] + t*step[i][j];
 				}
 			}
-#ifdef DEBUG
+#ifdef ELLIPSOID_DEBUG
 			/* not counting the second cost, it is loop invariant code */
 			ellipsoid_flop_count += 1 + 9*(1+1) + 23*n + 1+2;
 #endif
@@ -210,7 +210,7 @@ void fit_ellipsoid_mils(const double *mils, double (*Q)[3][3])
 			p[i][j] = mils[i] * DIRECTIONS_NORMALIZED[i][j];
 		}
 	}
-#ifdef DEBUG
+#ifdef ELLIPSOID_DEBUG
 		ellipsoid_flop_count += NUM_DIRECTIONS*3;
 #endif
 

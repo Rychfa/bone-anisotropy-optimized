@@ -323,14 +323,14 @@ void mil2_simd(const double *hr_sphere_region, int n, double *directions_vectors
         for (int jj_b = 0; jj_b < n; jj_b+=BLOCK_SIZE) {
             for (int ii_b = 0; ii_b < n; ii_b+=BLOCK_SIZE) {
 
-//                for (int v = 0; v < 2; ++v) {
+               for (int v = 0; v < 2; ++v) {
                     BLOCK_KERNEL_1D_SIMD(1, kk_b, jj_b, ii_b)
                     BLOCK_KERNEL_1D_SIMD(2, kk_b, ii_b, jj_b)
                     BLOCK_KERNEL_1D_SIMD(3, jj_b, ii_b, kk_b)
                     BLOCK_KERNEL_2D_POS_SIMD(4, kk_b, jj_b, ii_b)
                     BLOCK_KERNEL_2D_POS_SIMD(5, jj_b, kk_b, ii_b)
                     BLOCK_KERNEL_2D_POS_SIMD(6, ii_b, jj_b, kk_b)
-//                }
+               }
             }
         }
     }

@@ -33,7 +33,7 @@
 /// Pre-processor 
 ///
 
-// #define DEBUG  // TODO move somewhere more centralized?
+// #define ELLIPSOID_DEBUG  // TODO move somewhere more centralized?
 
 #ifdef linux
 #define M_SQRT3 1.7320508075688772935
@@ -182,7 +182,7 @@ void fit_ellipsoid_mils_simd(const double *mils, double (*Q)[3][3]);
 /*
  * debugging tools
  */
-#ifdef DEBUG
+#ifdef ELLIPSOID_DEBUG
 void fit_ellipsoid_debug_init(void);
 long fit_ellipsoid_debug_deinit(void);
 #endif
