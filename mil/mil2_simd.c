@@ -331,6 +331,7 @@ void mil2_simd(const double *hr_sphere_region, int n, double *directions_vectors
                     BLOCK_KERNEL_2D_POS_SIMD(5, jj_b, kk_b, ii_b)
                     BLOCK_KERNEL_2D_POS_SIMD(6, ii_b, jj_b, kk_b)
                }
+               BLOCK_KERNEL_1D_SIMD(1, kk_b, jj_b, ii_b)
             }
         }
     }

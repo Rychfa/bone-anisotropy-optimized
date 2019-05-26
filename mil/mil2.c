@@ -193,6 +193,13 @@ void mil2_baseline(const double *hr_sphere_region, int n, double *directions_vec
     gBone1 = directions_vectors_bone_length[3];
     gInter1 = directions_vectors_intercepts[3];
 
+    directions_vectors_mil[6] = 0;
+    directions_vectors_mil[7] = 0;
+    directions_vectors_mil[8] = 0;
+    directions_vectors_mil[9] = 0;
+    directions_vectors_mil[10] = 0;
+    directions_vectors_mil[11] = 0;
+    directions_vectors_mil[12] = 0;
 }
 
 #if false

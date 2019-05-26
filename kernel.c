@@ -79,7 +79,7 @@ void init (double** sphere, double** extracted_region, double** ptrHighRes, doub
 
 #ifdef DEBUG
     region_extraction_debug_init();
-    //fit_ellipsoid_debug_init();
+    // fit_ellipsoid_debug_init();
 #endif
 
 #ifdef ELLIPSOID_DEBUG
@@ -262,8 +262,8 @@ void kernel_basic (double* sphere, double* extracted_region, double* ptrHighRes,
                      double mils[NUM_DIRECTIONS];
                      mil2_baseline(extracted_region, SPHERE_NDIM, mils);
                      //print_vector(mils, NUM_DIRECTIONS); */
-                     double Q[3][3];
-                     fit_ellipsoid_mils(mils, (double (*)[3][3])Q);
+                     // double Q[3][3];
+                     // fit_ellipsoid_mils(mils, (double (*)[3][3])Q);
 
                     /* eigen3(Q, &ptrEvecOut[ii_lr*9], &ptrEvalsOut[ii_lr*3]); */
                 }
@@ -405,10 +405,10 @@ void kernel_opt1 (double* sphere, double* extracted_region, double* ptrHighRes, 
                     double mils[NUM_DIRECTIONS];
                     mil2_simd(extracted_region, SPHERE_NDIM, mils);
 
-                    double Q[3][3];
-                    fit_ellipsoid_mils_simd(mils, (double (*)[3][3])Q);
+                    // double Q[3][3];
+                    // fit_ellipsoid_mils_simd(mils, (double (*)[3][3])Q);
 
-                    eigen3(Q, &ptrEvecOut[ii_lr*9], &ptrEvalsOut[ii_lr*3]);
+                    // eigen3(Q, &ptrEvecOut[ii_lr*9], &ptrEvalsOut[ii_lr*3]);
                 }
             }
         }
