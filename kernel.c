@@ -31,6 +31,7 @@
 #include "region_extraction.h"
 #include "mil.h"
 #include "mil2.h"
+#include "mil2_simd.h"
 #include "test_mil.h"
 #include "ellipsoid.h"
 #include "utils.h"
@@ -250,11 +251,11 @@ void kernel_basic (double* sphere, double* extracted_region, double* ptrHighRes,
                     region_extraction(i_hr, j_hr, k_hr, sphere, extracted_region, ptrHighRes);
 
                     /* // compute fabric */
-                    /* double mils[NUM_DIRECTIONS]; */
-                    /* mil2_baseline(extracted_region, SPHERE_NDIM, mils); */
-                    /* //print_vector(mils, NUM_DIRECTIONS); */
-                    /* double Q[3][3]; */
-                    /* fit_ellipsoid_mils(mils, (double (*)[3][3])Q); */
+                     double mils[NUM_DIRECTIONS];
+                     mil2_baseline(extracted_region, SPHERE_NDIM, mils);
+                     //print_vector(mils, NUM_DIRECTIONS); */
+                     double Q[3][3];
+                     fit_ellipsoid_mils(mils, (double (*)[3][3])Q);
 
                     /* eigen3(Q, &ptrEvecOut[ii_lr*9], &ptrEvalsOut[ii_lr*3]); */
                 }
@@ -392,15 +393,14 @@ void kernel_opt1 (double* sphere, double* extracted_region, double* ptrHighRes, 
                     
                     region_extraction_opt1(i_hr, j_hr, k_hr, sphere, extracted_region, ptrHighRes);
 
-                    /* // compute fabric */
-                    /* double mils[NUM_DIRECTIONS]; */
-                    /* mil2(extracted_region, SPHERE_NDIM, mils); */
-                    /* //print_vector(mils, NUM_DIRECTIONS); */
+                    // compute fabric */
+                    double mils[NUM_DIRECTIONS];
+                    mil2_simd(extracted_region, SPHERE_NDIM, mils);
 
-                    /* double Q[3][3]; */
-                    /* fit_ellipsoid_mils(mils, Q); */
+                    double Q[3][3];
+                    fit_ellipsoid_mils_simd(mils, (double (*)[3][3])Q);
 
-                    /* eigen3(Q, &ptrEvecOut[ii_lr*9], &ptrEvalsOut[ii_lr*3]); */
+                    eigen3(Q, &ptrEvecOut[ii_lr*9], &ptrEvalsOut[ii_lr*3]);
                 }
             }
         }
