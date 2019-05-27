@@ -23,10 +23,6 @@ for line in data:
     baseline.append( float(values[5]))
 
 
-p = [0.0, 2.0]
-n_l2 = [31, 31]
-n_l3 = [115, 115]
-
 # plot performance
 plotname = "mil_performance.png"
 fig = plt.figure()
@@ -74,8 +70,8 @@ ax.axhline(8, color="b" )
 ax.axhline(2, color="b" )
 
 ax.scatter(0.5, 0.15, marker='o') # baseline/simd nonblocking
-ax.scatter(6.5, 0.25, marker='o') # baseline
-ax.scatter(6.5, 0.65, marker='o') # blocking with accumulators
+# ax.scatter(6.5, 0.25, marker='o') # baseline
+# ax.scatter(6.5, 0.65, marker='o') # blocking with accumulators
 ax.scatter(6.5, 1.0, marker='o') # simd blocking large n
 ax.scatter(6.5, 1.7, marker='o') # simd blocking max performance
 
