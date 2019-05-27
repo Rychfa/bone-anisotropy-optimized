@@ -288,7 +288,7 @@
 
 
 
-#define SIMD_LOAD_DATA_SET_2D_NEG                                                            \
+#define SIMD_LOAD_DATA_SET_2D_NEG                                                       \
     switch (vecID) {                                                                    \
         case 7: /* Vector (-1,1,0) */                                                   \
             /* Unroll over dimensions x,y */                                            \
@@ -460,6 +460,62 @@
         edge_count = _mm256_add_epi64(edge_count, edge_count2);                          \
                                                                                          \
         bone_length_block  = horizontal_add(bone_count);                                 \
+        intercepts_block  = horizontal_addi(edge_count);                                 \
+                                                                                         \
+        bone_length[vecID-1] += bone_length_block;                                       \
+        intercepts[vecID-1] += intercepts_block;                                         \
+    }
+
+#define BLOCK_KERNEL_2D_NEG_SIMD(vec, kk, jj, ii)                                        \
+    {                                                                                    \
+        const int vecID = vec;                                                           \
+        double bone_length_block = 0;                                                    \
+        int intercepts_block = 0;                                                        \
+        /* Init accumulators */                                                          \
+        __m256d bone_count = _mm256_setzero_pd();                                        \
+        __m256d bone_count2 = _mm256_setzero_pd();                                       \
+                                                                                         \
+        __m256i edge_count = _mm256_set1_epi64x(0);                                      \
+        __m256i edge_count2 = _mm256_set1_epi64x(0);                                     \
+        for (int k = kk + 1; k < kk + BLOCK_SIZE; k += STRIDE * NUM_ACC) {               \
+            for (int ij = 0; ij < BLOCK_SIZE; ij += STRIDE) {                            \
+                unsigned int i1_prev, i2_prev, j1_prev, j2_prev;                         \
+                __m256i prev_mask, prev_mask2;                                           \
+                /* Start at the end of the row in the block */                           \
+                int i1 = ii + (BLOCK_SIZE-1) - ij;                                       \
+                int j1 = jj;                                                             \
+                int i2 = ii + (BLOCK_SIZE-1);                                            \
+                int j2 = jj + ij;                                                        \
+                                                                                         \
+                /* Initialise previous mask */                                           \
+                SIMD_LOAD_PREV_2D_NEG                                                    \
+                                                                                         \
+                while (j2 + 1 < jj + BLOCK_SIZE) {                                       \
+                    __m256d region1;                                                     \
+                    __m256d region2;                                                     \
+                                                                                         \
+                    /* Load working set */                                               \
+                    SIMD_LOAD_DATA_SET_2D_NEG                                            \
+                                                                                         \
+                    /* Perform computation */                                            \
+                    SIMD_COMPUTATION                                                     \
+                                                                                         \
+                    /* Update state of prev_mask */                                      \
+                    prev_mask = curr_mask;                                               \
+                    prev_mask2 = curr_mask2;                                             \
+                                                                                         \
+                    --i1;                                                                \
+                    ++j1;                                                                \
+                    --i2;                                                                \
+                    ++j2;                                                                \
+                }                                                                        \
+            }                                                                            \
+        } /* End iteration over dimension k */                                           \
+                                                                                         \
+        bone_count = _mm256_add_pd(bone_count, bone_count2);                             \
+        edge_count = _mm256_add_epi64(edge_count, edge_count2);                          \
+                                                                                         \
+        bone_length_block = horizontal_add(bone_count);                                  \
         intercepts_block  = horizontal_addi(edge_count);                                 \
                                                                                          \
         bone_length[vecID-1] += bone_length_block;                                       \
