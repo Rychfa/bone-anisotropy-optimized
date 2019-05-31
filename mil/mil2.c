@@ -42,6 +42,12 @@ static int facesVectors[3][3] =
                 { 1,  1,  0},
         };
 
+typedef struct {
+    int k;
+    int j;
+    int i;
+} s_position;
+
 int get_iterator_vectors (const int directionVector[3], int iteratorVectors[][3]) {
 
     int n = 0;
@@ -126,6 +132,58 @@ int get_start_position (int ii, int n, int dir, int iter) {
     return i;
 }
 
+s_position get_start_positions (s_position pos, int n, int dir[3], int iter[3], int num_iter_vecs) {
+
+    s_position start;
+
+    start.i = pos.i + iter[0];
+    start.j = pos.j + iter[1];
+    start.k = pos.k + iter[2];
+    if (dir[0] == -1) {
+        if (iter[0] == 0) {
+            start.i = n - 1;
+        } else {
+            start.i = pos.i;
+        }
+    }
+    if (dir[1] == -1) {
+        if (iter[1] == 0) {
+            start.j = n - 1;
+        } else {
+            start.j = pos.j;
+        }
+    }
+    if (dir[2] == -1) {
+        if (iter[2] == 0) {
+            start.k = n - 1;
+        } else {
+            start.k = pos.k;
+        }
+    }
+
+    /* Handle 3D case separately */
+    if (num_iter_vecs == 3) {
+        if (iter[0] == 0) {
+            start.i = pos.i;
+            start.j = pos.j;
+            start.k = pos.k + 2;
+        }
+        else if (iter[1] == 0) {
+            start.i = pos.i + 2;
+            start.j = pos.j;
+            start.k = pos.k + 2;
+        }
+        else if (iter[2] == 0) {
+            start.i = pos.i;
+            start.j = pos.j;
+            start.k = pos.k;
+        }
+
+    }
+
+    return start;
+}
+
 void mil2_baseline(const double *hr_sphere_region, int n, double *directions_vectors_mil) {
 
     const int n_vectors = NUM_DIRECTIONS;
@@ -152,9 +210,15 @@ void mil2_baseline(const double *hr_sphere_region, int n, double *directions_vec
             for (int kk = 0 ; kk <= (n-1)*iteratorVectors[f][2]; kk += STRIDE) {
                 for (int jj = 0 ; jj <= (n-1)*iteratorVectors[f][1]; jj += STRIDE) {
                     for (int ii = 0 ; ii <= (n-1)*iteratorVectors[f][0]; ii += STRIDE) {
-                        int k = get_start_position(kk, n, DIRECTIONS[v][2], iteratorVectors[f][2]);
-                        int j = get_start_position(jj, n, DIRECTIONS[v][1], iteratorVectors[f][1]);
-                        int i = get_start_position(ii, n, DIRECTIONS[v][0], iteratorVectors[f][0]);
+                        s_position face_position = {kk, jj, ii};
+                        s_position start = get_start_positions(face_position, n, DIRECTIONS[v], iteratorVectors[f], numIterVecs);
+                        int k = start.k;
+                        int j = start.j;
+                        int i = start.i;
+
+//                        int k = get_start_position(kk, n, DIRECTIONS[v][2], iteratorVectors[f][2]);
+//                        int j = get_start_position(jj, n, DIRECTIONS[v][1], iteratorVectors[f][1]);
+//                        int i = get_start_position(ii, n, DIRECTIONS[v][0], iteratorVectors[f][0]);
 
                         unsigned int current_mask;
                         unsigned int prev_mask = hr_sphere_region[ k*n*n + j*n + i] > 0.5;
@@ -190,12 +254,12 @@ void mil2_baseline(const double *hr_sphere_region, int n, double *directions_vec
     printf("TRUE 1 - BONE LENGTH = %.8f, INTERCEPTS = %d\n", directions_vectors_bone_length[1], directions_vectors_intercepts[1]);
     printf("TRUE 2 - BONE LENGTH = %.8f, INTERCEPTS = %d\n", directions_vectors_bone_length[2], directions_vectors_intercepts[2]);
 #endif
-    gBone1 = directions_vectors_bone_length[3];
-    gInter1 = directions_vectors_intercepts[3];
+    gBone1 = directions_vectors_bone_length[9];
+    gInter1 = directions_vectors_intercepts[9];
 
 }
 
-#if false
+#if 0
 ///
 /// Blocking version for vectors (1,0,0), (0,1,0), (0,0,1).
 /// Using accumulators and unrolling.
@@ -751,33 +815,45 @@ double mil2_3D(const double *hr_sphere_region, int n, const int kb, const int jb
     unsigned int prev_mask10;
     unsigned int prev_mask11;
     unsigned int prev_mask12;
+    int prev1;
+    int prev2;
+    int prev3;
+    int prev4;
+    int prev5;
+    int prev6;
 
     double r1, r2,  r3,  r4;
     double r5, r6,  r7,  r8;
     double r9, r10, r11, r12;
 
-    for (int ks = 1; ks < BLOCK_SIZE; ks += 2*STRIDE) {
-        for (int js = ks + 4; js < BLOCK_SIZE; js += STRIDE) {
+    for (int ks = 2; ks < BLOCK_SIZE; ks += 2*STRIDE) {
+        for (int js = ks + 2; js < BLOCK_SIZE; js += STRIDE) {
             int k1 = ks;
             int j1 = js;
             int k2 = js;
-            int j2 = ks;
+            int j2 = ks - 2;
             int i = 0;
 
-            prev_mask1 = hr_sphere_region[ (kb+k1)*n*n        + (jb+j1)*n        + (ib+i)  ]       > 0.5;
-            prev_mask2 = hr_sphere_region[ (kb+k1+STRIDE)*n*n + (jb+j1)*n        + (ib+i)  ]       > 0.5;
-            prev_mask3 = hr_sphere_region[ (kb+k2)*n*n        + (jb+j2)*n        + (ib+i)  ]       > 0.5;
-            prev_mask4 = hr_sphere_region[ (kb+k2)*n*n        + (jb+j2+STRIDE)*n + (ib+i)  ]       > 0.5;
+            prev1 = (ib > 0) ? 1 : 0;
+            prev2 = (ib > 0 && jb+j2 > 0) ? 1 : 0;
+            prev_mask1 = hr_sphere_region[ (kb+k1-prev1)*n*n        + (jb+j1-prev1)*n        + (ib+i-prev1)  ]        > 0.5;
+            prev_mask2 = hr_sphere_region[ (kb+k1+STRIDE-prev1)*n*n + (jb+j1-prev1)*n        + (ib+i-prev1)  ]        > 0.5;
+            prev_mask3 = hr_sphere_region[ (kb+k2-prev2)*n*n        + (jb+j2-prev2)*n        + (ib+i-prev2)  ]        > 0.5;
+            prev_mask4 = hr_sphere_region[ (kb+k2-prev1)*n*n        + (jb+j2+STRIDE-prev1)*n + (ib+i-prev1)  ]        > 0.5;
 
-            prev_mask5 = hr_sphere_region[ (kb+k1)*n*n        + (jb+i)*n         + (ib+j1) ]       > 0.5;
-            prev_mask6 = hr_sphere_region[ (kb+k1+STRIDE)*n*n + (jb+i)*n         + (ib+j1) ]       > 0.5;
-            prev_mask7 = hr_sphere_region[ (kb+k2)*n*n        + (jb+i)*n         + (ib+j2) ]       > 0.5;
-            prev_mask8 = hr_sphere_region[ (kb+k2)*n*n        + (jb+i)*n         + (ib+j2+STRIDE)] > 0.5;
+            prev3 = (jb > 0) ? 1 : 0;
+            prev4 = (jb > 0 && kb+j2 > 0) ? 1 : 0;
+            prev_mask5 = hr_sphere_region[ (kb+j1-prev3)*n*n        + (jb+i-prev3)*n         + (ib+k1)-prev3 ]        > 0.5;
+            prev_mask6 = hr_sphere_region[ (kb+j1-prev3)*n*n        + (jb+i-prev3)*n         + (ib+k1+STRIDE)-prev3 ] > 0.5;
+            prev_mask7 = hr_sphere_region[ (kb+j2-prev4)*n*n        + (jb+i-prev4)*n         + (ib+k2)-prev4 ]        > 0.5;
+            prev_mask8 = hr_sphere_region[ (kb+j2+STRIDE-prev3)*n*n + (jb+i-prev3)*n         + (ib+k2)-prev3 ]        > 0.5;
 
-            prev_mask9  = hr_sphere_region[ (kb+i)*n*n        + (jb+k1)*n         + (ib+j1) ]       > 0.5;
-            prev_mask10 = hr_sphere_region[ (kb+i)*n*n        + (jb+k1+STRIDE)*n  + (ib+j1) ]       > 0.5;
-            prev_mask11 = hr_sphere_region[ (kb+i)*n*n        + (jb+k2)*n         + (ib+j2) ]       > 0.5;
-            prev_mask12 = hr_sphere_region[ (kb+i)*n*n        + (jb+k2)*n         + (ib+j2+STRIDE)] > 0.5;
+            prev5 = (kb > 0) ? 1 : 0;
+            prev6 = (kb > 0 && ib+j2 > 0) ? 1 : 0;
+            prev_mask9  = hr_sphere_region[ (kb+i-prev5)*n*n        + (jb+k1-prev5)*n         + (ib+j1-prev5) ]       > 0.5;
+            prev_mask10 = hr_sphere_region[ (kb+i-prev5)*n*n        + (jb+k1+STRIDE-prev5)*n  + (ib+j1-prev5) ]       > 0.5;
+            prev_mask11 = hr_sphere_region[ (kb+i-prev6)*n*n        + (jb+k2-prev6)*n         + (ib+j2-prev6) ]       > 0.5;
+            prev_mask12 = hr_sphere_region[ (kb+i-prev5)*n*n        + (jb+k2-prev5)*n         + (ib+j2+STRIDE-prev5)] > 0.5;
 
             while (j1 < BLOCK_SIZE) {
 
@@ -786,10 +862,10 @@ double mil2_3D(const double *hr_sphere_region, int n, const int kb, const int jb
                 r3 = hr_sphere_region[ (kb+k2)*n*n        + (jb+j2)*n        + (ib+i)  ];
                 r4 = hr_sphere_region[ (kb+k2)*n*n        + (jb+j2+STRIDE)*n + (ib+i)  ];
 
-                r5 = hr_sphere_region[ (kb+k1)*n*n        + (jb+i)*n         + (ib+j1) ];
-                r6 = hr_sphere_region[ (kb+k1+STRIDE)*n*n + (jb+i)*n         + (ib+j1) ];
-                r7 = hr_sphere_region[ (kb+k2)*n*n        + (jb+i)*n         + (ib+j2) ];
-                r8 = hr_sphere_region[ (kb+k2)*n*n        + (jb+i)*n         + (ib+j2+STRIDE)];
+                r5 = hr_sphere_region[ (kb+j1)*n*n        + (jb+i)*n         + (ib+k1) ];
+                r6 = hr_sphere_region[ (kb+j1)*n*n        + (jb+i)*n         + (ib+k1+STRIDE) ];
+                r7 = hr_sphere_region[ (kb+j2)*n*n        + (jb+i)*n         + (ib+k2) ];
+                r8 = hr_sphere_region[ (kb+j2+STRIDE)*n*n + (jb+i)*n         + (ib+k2)];
 
                 r9  = hr_sphere_region[ (kb+i)*n*n        + (jb+k1)*n         + (ib+j1) ]      ;
                 r10 = hr_sphere_region[ (kb+i)*n*n        + (jb+k1+STRIDE)*n  + (ib+j1) ]      ;
@@ -838,113 +914,73 @@ double mil2_3D(const double *hr_sphere_region, int n, const int kb, const int jb
     }
 
     /* Calculate remainder */
-    for (int jk_s = 1; jk_s < BLOCK_SIZE; jk_s += 2*STRIDE) {
+    for (int jk_s = 2; jk_s < BLOCK_SIZE; jk_s += 2*STRIDE) {
         int k = jk_s;
         int j = jk_s;
         int i = 0;
 
-        /* Calculate first two iterations */
-        prev_mask1 = hr_sphere_region[ (kb+k)*n*n + (jb+j)*n + (ib+i) ] > 0.5;
-        prev_mask2 = hr_sphere_region[ (kb+k)*n*n + (jb+i)*n + (ib+j) ] > 0.5;
-        prev_mask3 = hr_sphere_region[ (kb+i)*n*n + (jb+k)*n + (ib+j) ] > 0.5;
-
-        r1 = hr_sphere_region[ (kb+k)*n*n   + (jb+j)*n   + (ib+i)  ];
-        r2 = hr_sphere_region[ (kb+k+1)*n*n + (jb+j+1)*n + (ib+i+1)];
-        r3 = hr_sphere_region[ (kb+k)*n*n   + (jb+i)*n   + (ib+j)  ];
-        r4 = hr_sphere_region[ (kb+k+1)*n*n + (jb+i+1)*n + (ib+j+1)];
-        r5 = hr_sphere_region[ (kb+i)*n*n   + (jb+k)*n   + (ib+j)  ];
-        r6 = hr_sphere_region[ (kb+i+1)*n*n + (jb+k+1)*n + (ib+j+1)];
-
-        acc1 += r1;
-        acc2 += r2;
-        acc3 += r3;
-        acc4 += r4;
-        acc5 += r5;
-        acc6 += r6;
-
-        curr_mask1 = r1 > 0.5;
-        curr_mask2 = r2 > 0.5;
-        curr_mask3 = r3 > 0.5;
-        curr_mask4 = r4 > 0.5;
-        curr_mask5 = r5 > 0.5;
-        curr_mask6 = r6 > 0.5;
-
-        edge_count1 += curr_mask1 ^ prev_mask1;
-        edge_count2 += curr_mask2 ^ curr_mask1;
-        edge_count3 += curr_mask3 ^ prev_mask2;
-        edge_count4 += curr_mask4 ^ curr_mask3;
-        edge_count5 += curr_mask5 ^ prev_mask3;
-        edge_count6 += curr_mask6 ^ curr_mask5;
-
         /* Start remainder complete vectors */
-        prev_mask1 = hr_sphere_region[ (kb+k+STRIDE-1)*n*n + (jb+j+STRIDE-1)*n  + (ib+i+STRIDE-1)]  > 0.5;
-        prev_mask2 = hr_sphere_region[ (kb+k+STRIDE)*n*n   + (jb+j+STRIDE)*n    + (ib+i)        ]   > 0.5;
-        prev_mask3 = hr_sphere_region[ (kb+k+STRIDE)*n*n   + (jb+j)*n           + (ib+i)        ]   > 0.5;
-        prev_mask4 = hr_sphere_region[ (kb+k)*n*n          + (jb+j+STRIDE)*n    + (ib+i)        ]   > 0.5;
+        prev1 = (ib > 0) ? 1 : 0;
+        prev2 = (ib > 0 && jb+j > STRIDE) ? 1 : 0;
+        prev_mask1 = hr_sphere_region[ (kb+k-prev1)*n*n        + (jb+j-prev1)*n        + (ib+i-prev1)        ] > 0.5;
+        prev_mask2 = hr_sphere_region[ (kb+k-prev2)*n*n        + (jb+j-STRIDE-prev2)*n + (ib+i-prev2)        ] > 0.5;
 
-        prev_mask5 = hr_sphere_region[ (kb+k+STRIDE-1)*n*n + (jb+i+STRIDE-1)*n  + (ib+j+STRIDE-1)]  > 0.5;
-        prev_mask6 = hr_sphere_region[ (kb+k+STRIDE)*n*n   + (jb+i)*n           + (ib+j+STRIDE)  ]  > 0.5;
-        prev_mask7 = hr_sphere_region[ (kb+k+STRIDE)*n*n   + (jb+i)*n           + (ib+j)         ]  > 0.5;
-        prev_mask8 = hr_sphere_region[ (kb+k)*n*n          + (jb+i)*n           + (ib+j+STRIDE)  ]  > 0.5;
+        prev3 = (jb > 0) ? 1 : 0;
+        prev4 = (jb > 0 && kb+k > STRIDE) ? 1 : 0;
+        prev_mask5 = hr_sphere_region[ (kb+k-prev3)*n*n        + (jb+i-prev3)*n        + (ib+j-prev3)        ] > 0.5;
+        prev_mask6 = hr_sphere_region[ (kb+k-STRIDE-prev4)*n*n + (jb+i-prev4)*n        + (ib+j-prev4)        ] > 0.5;
 
-        prev_mask9  = hr_sphere_region[ (kb+i+STRIDE-1)*n*n + (jb+k+STRIDE-1)*n + (ib+j+STRIDE-1)] > 0.5;
-        prev_mask10 = hr_sphere_region[ (kb+i)*n*n          + (jb+k+STRIDE)*n   + (ib+j+STRIDE)  ] > 0.5;
-        prev_mask11 = hr_sphere_region[ (kb+i)*n*n          + (jb+k+STRIDE)*n   + (ib+j)         ] > 0.5;
-        prev_mask12 = hr_sphere_region[ (kb+i)*n*n          + (jb+k)*n          + (ib+j+STRIDE)  ] > 0.5;
+        prev5 = (kb > 0) ? 1 : 0;
+        prev6 = (kb > 0 && ib+j > STRIDE) ? 1 : 0;
+        prev_mask9  = hr_sphere_region[ (kb+i-prev5)*n*n       + (jb+k-prev5)*n        + (ib+j-prev5)        ] > 0.5;
+        prev_mask10 = hr_sphere_region[ (kb+i-prev6)*n*n       + (jb+k-prev6)*n        + (ib+j-STRIDE-prev6) ] > 0.5;
 
-        while (j + STRIDE < BLOCK_SIZE) {
-            r1 = hr_sphere_region [ (kb+k+STRIDE)*n*n + (jb+j+STRIDE)*n + (ib+i+STRIDE) ];
-            r2 = hr_sphere_region [ (kb+k+STRIDE)*n*n + (jb+j+STRIDE)*n + (ib+i)        ];
-            r3 = hr_sphere_region [ (kb+k+STRIDE)*n*n + (jb+j)*n        + (ib+i)        ];
-            r4 = hr_sphere_region [ (kb+k)*n*n        + (jb+j+STRIDE)*n + (ib+i)        ];
+        while (j < BLOCK_SIZE) {
+            r1 = hr_sphere_region[ (kb+k)*n*n        + (jb+j)*n        + (ib+i)        ];
+            r2 = hr_sphere_region[ (kb+k)*n*n        + (jb+j-STRIDE)*n + (ib+i)        ];
 
-            r5 = hr_sphere_region [ (kb+k+STRIDE)*n*n + (jb+i+STRIDE)*n + (ib+j+STRIDE) ];
-            r6 = hr_sphere_region [ (kb+k+STRIDE)*n*n + (jb+i)*n        + (ib+j+STRIDE) ];
-            r7 = hr_sphere_region [ (kb+k+STRIDE)*n*n + (jb+i)*n        + (ib+j)        ];
-            r8 = hr_sphere_region [ (kb+k)*n*n        + (jb+i)*n        + (ib+j+STRIDE) ];
+            r5 = hr_sphere_region[ (kb+k)*n*n        + (jb+i)*n        + (ib+j)        ];
+            r6 = hr_sphere_region[ (kb+k-STRIDE)*n*n + (jb+i)*n        + (ib+j)        ];
 
-            r9  = hr_sphere_region[ (kb+i+STRIDE)*n*n + (jb+k+STRIDE)*n + (ib+j+STRIDE) ];
-            r10 = hr_sphere_region[ (kb+i)*n*n        + (jb+k+STRIDE)*n + (ib+j+STRIDE) ];
-            r11 = hr_sphere_region[ (kb+i)*n*n        + (jb+k+STRIDE)*n + (ib+j)        ];
-            r12 = hr_sphere_region[ (kb+i)*n*n        + (jb+k)*n        + (ib+j+STRIDE) ];
+            r9  = hr_sphere_region[ (kb+i)*n*n       + (jb+k)*n        + (ib+j)        ];
+            r10 = hr_sphere_region[ (kb+i)*n*n       + (jb+k)*n        + (ib+j-STRIDE) ];
 
             acc1 += r1; acc5 += r5; acc9  += r9 ;
             acc2 += r2; acc6 += r6; acc10 += r10;
-            acc3 += r3; acc7 += r7; acc11 += r11;
-            acc4 += r4; acc8 += r8; acc12 += r12;
 
             /* Calculate masks */
             curr_mask1 = r1 > 0.5; curr_mask5 = r5 > 0.5; curr_mask9  = r9  > 0.5;
             curr_mask2 = r2 > 0.5; curr_mask6 = r6 > 0.5; curr_mask10 = r10 > 0.5;
-            curr_mask3 = r3 > 0.5; curr_mask7 = r7 > 0.5; curr_mask11 = r11 > 0.5;
-            curr_mask4 = r4 > 0.5; curr_mask8 = r8 > 0.5; curr_mask12 = r12 > 0.5;
 
             /* Detect edge and add to counter */
             edge_count1 += curr_mask1 ^ prev_mask1;
             edge_count2 += curr_mask2 ^ prev_mask2;
-            edge_count3 += curr_mask3 ^ prev_mask3;
-            edge_count4 += curr_mask4 ^ prev_mask4;
 
             edge_count5 += curr_mask5 ^ prev_mask5;
             edge_count6 += curr_mask6 ^ prev_mask6;
-            edge_count7 += curr_mask7 ^ prev_mask7;
-            edge_count8 += curr_mask8 ^ prev_mask8;
 
             edge_count9  += curr_mask9  ^ prev_mask9 ;
             edge_count10 += curr_mask10 ^ prev_mask10;
-            edge_count11 += curr_mask11 ^ prev_mask11;
-            edge_count12 += curr_mask12 ^ prev_mask12;
 
             prev_mask1 = curr_mask1;  prev_mask5 = curr_mask5;  prev_mask9  = curr_mask9 ;
             prev_mask2 = curr_mask2;  prev_mask6 = curr_mask6;  prev_mask10 = curr_mask10;
-            prev_mask3 = curr_mask3;  prev_mask7 = curr_mask7;  prev_mask11 = curr_mask11;
-            prev_mask4 = curr_mask4;  prev_mask8 = curr_mask8;  prev_mask12 = curr_mask12;
 
             ++k;
             ++j;
             ++i;
         }
 
+    }
+
+    /* Calculate diagonal */
+    prev1 = (kb >0 && jb > 0 && ib > 0) ? 1 : 0;
+    prev_mask1 = hr_sphere_region[ (kb-prev1)*n*n + (jb-prev1)*n + (ib-prev1) ] > 0.5;
+    for (int i = 0; i < BLOCK_SIZE; ++i) {
+        r1 = hr_sphere_region[ (kb+i)*n*n + (jb+i)*n + (ib+i)];
+        acc1 += r1;
+        curr_mask1 = r1 > 0.5;
+        edge_count1 += curr_mask1 ^ prev_mask1;
+        prev_mask1 = curr_mask1;
     }
 
     /* Sum up accumulators */
@@ -981,6 +1017,7 @@ void mil_test_all(const double *hr_sphere_region, int n, double *directions_vect
 
     double bone_length[13] = {0.0};
     int intercepts[13] = {0};
+
     for (int kk_b = 0; kk_b < n; kk_b+=BLOCK_SIZE) {
         for (int jj_b = 0; jj_b < n; jj_b+=BLOCK_SIZE) {
             for (int ii_b = 0; ii_b < n; ii_b+=BLOCK_SIZE) {
