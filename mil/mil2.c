@@ -459,17 +459,520 @@ double mil_2D_neg(const double *hr_sphere_region, int* intercepts, int n, const 
     bone_length = acc1 + acc5;
     *intercepts  = edge_count1 + edge_count5;
 
-#ifdef  DEBUG
-    if (!already_tested[vecID]) {
-        printf("%d\n", count);
-        already_tested[vecID] = 1;
-    }
-    count = 0;
-#endif
-
     return bone_length;
 }
+
+
 #endif
+
+double mil2_3D_old(const double *hr_sphere_region, int n, const int kb, const int jb, const int ib) {
+
+    double bone_length_block = 0.0;
+    int intercepts_block = 0;
+
+    /* Init accumulators */
+    double acc1 = 0.0, acc5 = 0.0, acc9  = 0.0;
+    double acc2 = 0.0, acc6 = 0.0, acc10 = 0.0;
+    double acc3 = 0.0, acc7 = 0.0, acc11 = 0.0;
+    double acc4 = 0.0, acc8 = 0.0, acc12 = 0.0;
+
+    unsigned int edge_count1 = 0, edge_count5 = 0, edge_count9  = 0;
+    unsigned int edge_count2 = 0, edge_count6 = 0, edge_count10 = 0;
+    unsigned int edge_count3 = 0, edge_count7 = 0, edge_count11 = 0;
+    unsigned int edge_count4 = 0, edge_count8 = 0, edge_count12 = 0;
+
+    unsigned int curr_mask1, curr_mask2,  curr_mask3,  curr_mask4;
+    unsigned int curr_mask5, curr_mask6,  curr_mask7,  curr_mask8;
+    unsigned int curr_mask9, curr_mask10, curr_mask11, curr_mask12;
+
+    unsigned int prev_mask1;
+    unsigned int prev_mask2;
+    unsigned int prev_mask3;
+    unsigned int prev_mask4;
+    unsigned int prev_mask5;
+    unsigned int prev_mask6;
+    unsigned int prev_mask7;
+    unsigned int prev_mask8;
+    unsigned int prev_mask9;
+    unsigned int prev_mask10;
+    unsigned int prev_mask11;
+    unsigned int prev_mask12;
+
+    double r1, r2,  r3,  r4;
+    double r5, r6,  r7,  r8;
+    double r9, r10, r11, r12;
+
+    for (int ks = 1; ks < BLOCK_SIZE; ks += 2*STRIDE) {
+        for (int js = ks + 4; js < BLOCK_SIZE; js += STRIDE) {
+            int k1 = ks;
+            int j1 = js;
+            int k2 = js;
+            int j2 = ks;
+            int i = 0;
+
+            prev_mask1 = hr_sphere_region[ (kb+k1)*n*n        + (jb+j1)*n        + (ib+i)  ]       > 0.5;
+            prev_mask2 = hr_sphere_region[ (kb+k1+STRIDE)*n*n + (jb+j1)*n        + (ib+i)  ]       > 0.5;
+            prev_mask3 = hr_sphere_region[ (kb+k2)*n*n        + (jb+j2)*n        + (ib+i)  ]       > 0.5;
+            prev_mask4 = hr_sphere_region[ (kb+k2)*n*n        + (jb+j2+STRIDE)*n + (ib+i)  ]       > 0.5;
+
+            prev_mask5 = hr_sphere_region[ (kb+k1)*n*n        + (jb+i)*n         + (ib+j1) ]       > 0.5;
+            prev_mask6 = hr_sphere_region[ (kb+k1+STRIDE)*n*n + (jb+i)*n         + (ib+j1) ]       > 0.5;
+            prev_mask7 = hr_sphere_region[ (kb+k2)*n*n        + (jb+i)*n         + (ib+j2) ]       > 0.5;
+            prev_mask8 = hr_sphere_region[ (kb+k2)*n*n        + (jb+i)*n         + (ib+j2+STRIDE)] > 0.5;
+
+            prev_mask9  = hr_sphere_region[ (kb+i)*n*n        + (jb+k1)*n         + (ib+j1) ]       > 0.5;
+            prev_mask10 = hr_sphere_region[ (kb+i)*n*n        + (jb+k1+STRIDE)*n  + (ib+j1) ]       > 0.5;
+            prev_mask11 = hr_sphere_region[ (kb+i)*n*n        + (jb+k2)*n         + (ib+j2) ]       > 0.5;
+            prev_mask12 = hr_sphere_region[ (kb+i)*n*n        + (jb+k2)*n         + (ib+j2+STRIDE)] > 0.5;
+
+            while (j1 < BLOCK_SIZE) {
+
+                r1 = hr_sphere_region[ (kb+k1)*n*n        + (jb+j1)*n        + (ib+i)  ];
+                r2 = hr_sphere_region[ (kb+k1+STRIDE)*n*n + (jb+j1)*n        + (ib+i)  ];
+                r3 = hr_sphere_region[ (kb+k2)*n*n        + (jb+j2)*n        + (ib+i)  ];
+                r4 = hr_sphere_region[ (kb+k2)*n*n        + (jb+j2+STRIDE)*n + (ib+i)  ];
+
+                r5 = hr_sphere_region[ (kb+k1)*n*n        + (jb+i)*n         + (ib+j1) ];
+                r6 = hr_sphere_region[ (kb+k1+STRIDE)*n*n + (jb+i)*n         + (ib+j1) ];
+                r7 = hr_sphere_region[ (kb+k2)*n*n        + (jb+i)*n         + (ib+j2) ];
+                r8 = hr_sphere_region[ (kb+k2)*n*n        + (jb+i)*n         + (ib+j2+STRIDE)];
+
+                r9  = hr_sphere_region[ (kb+i)*n*n        + (jb+k1)*n         + (ib+j1) ]      ;
+                r10 = hr_sphere_region[ (kb+i)*n*n        + (jb+k1+STRIDE)*n  + (ib+j1) ]      ;
+                r11 = hr_sphere_region[ (kb+i)*n*n        + (jb+k2)*n         + (ib+j2) ]      ;
+                r12 = hr_sphere_region[ (kb+i)*n*n        + (jb+k2)*n         + (ib+j2+STRIDE)];
+
+                acc1 += r1; acc5 += r5; acc9  += r9 ;
+                acc2 += r2; acc6 += r6; acc10 += r10;
+                acc3 += r3; acc7 += r7; acc11 += r11;
+                acc4 += r4; acc8 += r8; acc12 += r12;
+
+                /* Calculate masks */
+                curr_mask1 = r1 > 0.5; curr_mask5 = r5 > 0.5; curr_mask9  = r9  > 0.5;
+                curr_mask2 = r2 > 0.5; curr_mask6 = r6 > 0.5; curr_mask10 = r10 > 0.5;
+                curr_mask3 = r3 > 0.5; curr_mask7 = r7 > 0.5; curr_mask11 = r11 > 0.5;
+                curr_mask4 = r4 > 0.5; curr_mask8 = r8 > 0.5; curr_mask12 = r12 > 0.5;
+
+                /* Detect edge and add to counter */
+                edge_count1 += curr_mask1 ^ prev_mask1;
+                edge_count2 += curr_mask2 ^ prev_mask2;
+                edge_count3 += curr_mask3 ^ prev_mask3;
+                edge_count4 += curr_mask4 ^ prev_mask4;
+
+                edge_count5 += curr_mask5 ^ prev_mask5;
+                edge_count6 += curr_mask6 ^ prev_mask6;
+                edge_count7 += curr_mask7 ^ prev_mask7;
+                edge_count8 += curr_mask8 ^ prev_mask8;
+
+                edge_count9  += curr_mask9  ^ prev_mask9 ;
+                edge_count10 += curr_mask10 ^ prev_mask10;
+                edge_count11 += curr_mask11 ^ prev_mask11;
+                edge_count12 += curr_mask12 ^ prev_mask12;
+
+                prev_mask1 = curr_mask1;  prev_mask5 = curr_mask5;  prev_mask9  = curr_mask9 ;
+                prev_mask2 = curr_mask2;  prev_mask6 = curr_mask6;  prev_mask10 = curr_mask10;
+                prev_mask3 = curr_mask3;  prev_mask7 = curr_mask7;  prev_mask11 = curr_mask11;
+                prev_mask4 = curr_mask4;  prev_mask8 = curr_mask8;  prev_mask12 = curr_mask12;
+
+                ++k1;
+                ++j1;
+                ++k2;
+                ++j2;
+                ++i;
+            }
+        }
+    }
+
+    /* Calculate remainder */
+    for (int jk_s = 1; jk_s < BLOCK_SIZE; jk_s += 2*STRIDE) {
+        int k = jk_s;
+        int j = jk_s;
+        int i = 0;
+
+        /* Calculate first two iterations */
+       prev_mask1 = hr_sphere_region[ (kb+k)*n*n + (jb+j)*n + (ib+i) ] > 0.5;
+       prev_mask2 = hr_sphere_region[ (kb+k)*n*n + (jb+i)*n + (ib+j) ] > 0.5;
+       prev_mask3 = hr_sphere_region[ (kb+i)*n*n + (jb+k)*n + (ib+j) ] > 0.5;
+
+       r1 = hr_sphere_region[ (kb+k)*n*n   + (jb+j)*n   + (ib+i)  ];
+       r2 = hr_sphere_region[ (kb+k+1)*n*n + (jb+j+1)*n + (ib+i+1)];
+       r3 = hr_sphere_region[ (kb+k)*n*n   + (jb+i)*n   + (ib+j)  ];
+       r4 = hr_sphere_region[ (kb+k+1)*n*n + (jb+i+1)*n + (ib+j+1)];
+       r5 = hr_sphere_region[ (kb+i)*n*n   + (jb+k)*n   + (ib+j)  ];
+       r6 = hr_sphere_region[ (kb+i+1)*n*n + (jb+k+1)*n + (ib+j+1)];
+
+       acc1 += r1;
+       acc2 += r2;
+       acc3 += r3;
+       acc4 += r4;
+       acc5 += r5;
+       acc6 += r6;
+
+       curr_mask1 = r1 > 0.5;
+       curr_mask2 = r2 > 0.5;
+       curr_mask3 = r3 > 0.5;
+       curr_mask4 = r4 > 0.5;
+       curr_mask5 = r5 > 0.5;
+       curr_mask6 = r6 > 0.5;
+
+       edge_count1 += curr_mask1 ^ prev_mask1;
+       edge_count2 += curr_mask2 ^ curr_mask1;
+       edge_count3 += curr_mask3 ^ prev_mask2;
+       edge_count4 += curr_mask4 ^ curr_mask3;
+       edge_count5 += curr_mask5 ^ prev_mask3;
+       edge_count6 += curr_mask6 ^ curr_mask5;
+
+       /* Start remainder complete vectors */
+        prev_mask1 = hr_sphere_region[ (kb+k+STRIDE-1)*n*n + (jb+j+STRIDE-1)*n  + (ib+i+STRIDE-1)]  > 0.5;
+        prev_mask2 = hr_sphere_region[ (kb+k+STRIDE)*n*n   + (jb+j+STRIDE)*n    + (ib+i)        ]   > 0.5;
+        prev_mask3 = hr_sphere_region[ (kb+k+STRIDE)*n*n   + (jb+j)*n           + (ib+i)        ]   > 0.5;
+        prev_mask4 = hr_sphere_region[ (kb+k)*n*n          + (jb+j+STRIDE)*n    + (ib+i)        ]   > 0.5;
+
+        prev_mask5 = hr_sphere_region[ (kb+k+STRIDE-1)*n*n + (jb+i+STRIDE-1)*n  + (ib+j+STRIDE-1)]  > 0.5;
+        prev_mask6 = hr_sphere_region[ (kb+k+STRIDE)*n*n   + (jb+i)*n           + (ib+j+STRIDE)  ]  > 0.5;
+        prev_mask7 = hr_sphere_region[ (kb+k+STRIDE)*n*n   + (jb+i)*n           + (ib+j)         ]  > 0.5;
+        prev_mask8 = hr_sphere_region[ (kb+k)*n*n          + (jb+i)*n           + (ib+j+STRIDE)  ]  > 0.5;
+
+        prev_mask9  = hr_sphere_region[ (kb+i+STRIDE-1)*n*n + (jb+k+STRIDE-1)*n + (ib+j+STRIDE-1)] > 0.5;
+        prev_mask10 = hr_sphere_region[ (kb+i)*n*n          + (jb+k+STRIDE)*n   + (ib+j+STRIDE)  ] > 0.5;
+        prev_mask11 = hr_sphere_region[ (kb+i)*n*n          + (jb+k+STRIDE)*n   + (ib+j)         ] > 0.5;
+        prev_mask12 = hr_sphere_region[ (kb+i)*n*n          + (jb+k)*n          + (ib+j+STRIDE)  ] > 0.5;
+
+       while (j + STRIDE < BLOCK_SIZE) {
+           r1 = hr_sphere_region [ (kb+k+STRIDE)*n*n + (jb+j+STRIDE)*n + (ib+i+STRIDE) ];
+           r2 = hr_sphere_region [ (kb+k+STRIDE)*n*n + (jb+j+STRIDE)*n + (ib+i)        ];
+           r3 = hr_sphere_region [ (kb+k+STRIDE)*n*n + (jb+j)*n        + (ib+i)        ];
+           r4 = hr_sphere_region [ (kb+k)*n*n        + (jb+j+STRIDE)*n + (ib+i)        ];
+
+           r5 = hr_sphere_region [ (kb+k+STRIDE)*n*n + (jb+i+STRIDE)*n + (ib+j+STRIDE) ];
+           r6 = hr_sphere_region [ (kb+k+STRIDE)*n*n + (jb+i)*n        + (ib+j+STRIDE) ];
+           r7 = hr_sphere_region [ (kb+k+STRIDE)*n*n + (jb+i)*n        + (ib+j)        ];
+           r8 = hr_sphere_region [ (kb+k)*n*n        + (jb+i)*n        + (ib+j+STRIDE) ];
+
+           r9  = hr_sphere_region[ (kb+i+STRIDE)*n*n + (jb+k+STRIDE)*n + (ib+j+STRIDE) ];
+           r10 = hr_sphere_region[ (kb+i)*n*n        + (jb+k+STRIDE)*n + (ib+j+STRIDE) ];
+           r11 = hr_sphere_region[ (kb+i)*n*n        + (jb+k+STRIDE)*n + (ib+j)        ];
+           r12 = hr_sphere_region[ (kb+i)*n*n        + (jb+k)*n        + (ib+j+STRIDE) ];
+
+           acc1 += r1; acc5 += r5; acc9  += r9 ;
+           acc2 += r2; acc6 += r6; acc10 += r10;
+           acc3 += r3; acc7 += r7; acc11 += r11;
+           acc4 += r4; acc8 += r8; acc12 += r12;
+
+           /* Calculate masks */
+           curr_mask1 = r1 > 0.5; curr_mask5 = r5 > 0.5; curr_mask9  = r9  > 0.5;
+           curr_mask2 = r2 > 0.5; curr_mask6 = r6 > 0.5; curr_mask10 = r10 > 0.5;
+           curr_mask3 = r3 > 0.5; curr_mask7 = r7 > 0.5; curr_mask11 = r11 > 0.5;
+           curr_mask4 = r4 > 0.5; curr_mask8 = r8 > 0.5; curr_mask12 = r12 > 0.5;
+
+           /* Detect edge and add to counter */
+           edge_count1 += curr_mask1 ^ prev_mask1;
+           edge_count2 += curr_mask2 ^ prev_mask2;
+           edge_count3 += curr_mask3 ^ prev_mask3;
+           edge_count4 += curr_mask4 ^ prev_mask4;
+
+           edge_count5 += curr_mask5 ^ prev_mask5;
+           edge_count6 += curr_mask6 ^ prev_mask6;
+           edge_count7 += curr_mask7 ^ prev_mask7;
+           edge_count8 += curr_mask8 ^ prev_mask8;
+
+           edge_count9  += curr_mask9  ^ prev_mask9 ;
+           edge_count10 += curr_mask10 ^ prev_mask10;
+           edge_count11 += curr_mask11 ^ prev_mask11;
+           edge_count12 += curr_mask12 ^ prev_mask12;
+
+           prev_mask1 = curr_mask1;  prev_mask5 = curr_mask5;  prev_mask9  = curr_mask9 ;
+           prev_mask2 = curr_mask2;  prev_mask6 = curr_mask6;  prev_mask10 = curr_mask10;
+           prev_mask3 = curr_mask3;  prev_mask7 = curr_mask7;  prev_mask11 = curr_mask11;
+           prev_mask4 = curr_mask4;  prev_mask8 = curr_mask8;  prev_mask12 = curr_mask12;
+
+           ++k;
+           ++j;
+           ++i;
+       }
+
+    }
+
+    /* Sum up accumulators */
+    acc1 += acc2;
+    acc3 += acc4;
+    acc5 += acc6;
+    acc7 += acc8;
+    acc9 += acc10;
+    acc11 += acc12;
+    edge_count1  += edge_count2;
+    edge_count3  += edge_count4;
+    edge_count5  += edge_count6;
+    edge_count7  += edge_count8;
+    edge_count9  += edge_count10;
+    edge_count11 += edge_count12;
+
+    bone_length_block += acc1 + acc3 + acc5 + acc7 + acc9 + acc11;
+    intercepts_block  += edge_count1 + edge_count3 + edge_count5 + edge_count7 + edge_count9 + edge_count11;
+//    bone_length[9] += bone_length_block;
+//    intercepts[9]  += intercepts_block;
+
+    gBone2 += bone_length_block;
+    gInter2 += intercepts_block;
+
+    return bone_length_block / intercepts_block;
+
+}
+
+double mil2_3D(const double *hr_sphere_region, int n, const int kb, const int jb, const int ib) {
+
+    double bone_length_block = 0.0;
+    int intercepts_block = 0;
+
+    /* Init accumulators */
+    double acc1 = 0.0, acc5 = 0.0, acc9  = 0.0;
+    double acc2 = 0.0, acc6 = 0.0, acc10 = 0.0;
+    double acc3 = 0.0, acc7 = 0.0, acc11 = 0.0;
+    double acc4 = 0.0, acc8 = 0.0, acc12 = 0.0;
+
+    unsigned int edge_count1 = 0, edge_count5 = 0, edge_count9  = 0;
+    unsigned int edge_count2 = 0, edge_count6 = 0, edge_count10 = 0;
+    unsigned int edge_count3 = 0, edge_count7 = 0, edge_count11 = 0;
+    unsigned int edge_count4 = 0, edge_count8 = 0, edge_count12 = 0;
+
+    unsigned int curr_mask1, curr_mask2,  curr_mask3,  curr_mask4;
+    unsigned int curr_mask5, curr_mask6,  curr_mask7,  curr_mask8;
+    unsigned int curr_mask9, curr_mask10, curr_mask11, curr_mask12;
+
+    unsigned int prev_mask1;
+    unsigned int prev_mask2;
+    unsigned int prev_mask3;
+    unsigned int prev_mask4;
+    unsigned int prev_mask5;
+    unsigned int prev_mask6;
+    unsigned int prev_mask7;
+    unsigned int prev_mask8;
+    unsigned int prev_mask9;
+    unsigned int prev_mask10;
+    unsigned int prev_mask11;
+    unsigned int prev_mask12;
+
+    double r1, r2,  r3,  r4;
+    double r5, r6,  r7,  r8;
+    double r9, r10, r11, r12;
+
+    for (int ks = 1; ks < BLOCK_SIZE; ks += 2*STRIDE) {
+        for (int js = ks + 4; js < BLOCK_SIZE; js += STRIDE) {
+            int k1 = ks;
+            int j1 = js;
+            int k2 = js;
+            int j2 = ks;
+            int i = 0;
+
+            prev_mask1 = hr_sphere_region[ (kb+k1)*n*n        + (jb+j1)*n        + (ib+i)  ]       > 0.5;
+            prev_mask2 = hr_sphere_region[ (kb+k1+STRIDE)*n*n + (jb+j1)*n        + (ib+i)  ]       > 0.5;
+            prev_mask3 = hr_sphere_region[ (kb+k2)*n*n        + (jb+j2)*n        + (ib+i)  ]       > 0.5;
+            prev_mask4 = hr_sphere_region[ (kb+k2)*n*n        + (jb+j2+STRIDE)*n + (ib+i)  ]       > 0.5;
+
+            prev_mask5 = hr_sphere_region[ (kb+k1)*n*n        + (jb+i)*n         + (ib+j1) ]       > 0.5;
+            prev_mask6 = hr_sphere_region[ (kb+k1+STRIDE)*n*n + (jb+i)*n         + (ib+j1) ]       > 0.5;
+            prev_mask7 = hr_sphere_region[ (kb+k2)*n*n        + (jb+i)*n         + (ib+j2) ]       > 0.5;
+            prev_mask8 = hr_sphere_region[ (kb+k2)*n*n        + (jb+i)*n         + (ib+j2+STRIDE)] > 0.5;
+
+            prev_mask9  = hr_sphere_region[ (kb+i)*n*n        + (jb+k1)*n         + (ib+j1) ]       > 0.5;
+            prev_mask10 = hr_sphere_region[ (kb+i)*n*n        + (jb+k1+STRIDE)*n  + (ib+j1) ]       > 0.5;
+            prev_mask11 = hr_sphere_region[ (kb+i)*n*n        + (jb+k2)*n         + (ib+j2) ]       > 0.5;
+            prev_mask12 = hr_sphere_region[ (kb+i)*n*n        + (jb+k2)*n         + (ib+j2+STRIDE)] > 0.5;
+
+            while (j1 < BLOCK_SIZE) {
+
+                r1 = hr_sphere_region[ (kb+k1)*n*n        + (jb+j1)*n        + (ib+i)  ];
+                r2 = hr_sphere_region[ (kb+k1+STRIDE)*n*n + (jb+j1)*n        + (ib+i)  ];
+                r3 = hr_sphere_region[ (kb+k2)*n*n        + (jb+j2)*n        + (ib+i)  ];
+                r4 = hr_sphere_region[ (kb+k2)*n*n        + (jb+j2+STRIDE)*n + (ib+i)  ];
+
+                r5 = hr_sphere_region[ (kb+k1)*n*n        + (jb+i)*n         + (ib+j1) ];
+                r6 = hr_sphere_region[ (kb+k1+STRIDE)*n*n + (jb+i)*n         + (ib+j1) ];
+                r7 = hr_sphere_region[ (kb+k2)*n*n        + (jb+i)*n         + (ib+j2) ];
+                r8 = hr_sphere_region[ (kb+k2)*n*n        + (jb+i)*n         + (ib+j2+STRIDE)];
+
+                r9  = hr_sphere_region[ (kb+i)*n*n        + (jb+k1)*n         + (ib+j1) ]      ;
+                r10 = hr_sphere_region[ (kb+i)*n*n        + (jb+k1+STRIDE)*n  + (ib+j1) ]      ;
+                r11 = hr_sphere_region[ (kb+i)*n*n        + (jb+k2)*n         + (ib+j2) ]      ;
+                r12 = hr_sphere_region[ (kb+i)*n*n        + (jb+k2)*n         + (ib+j2+STRIDE)];
+
+                acc1 += r1; acc5 += r5; acc9  += r9 ;
+                acc2 += r2; acc6 += r6; acc10 += r10;
+                acc3 += r3; acc7 += r7; acc11 += r11;
+                acc4 += r4; acc8 += r8; acc12 += r12;
+
+                /* Calculate masks */
+                curr_mask1 = r1 > 0.5; curr_mask5 = r5 > 0.5; curr_mask9  = r9  > 0.5;
+                curr_mask2 = r2 > 0.5; curr_mask6 = r6 > 0.5; curr_mask10 = r10 > 0.5;
+                curr_mask3 = r3 > 0.5; curr_mask7 = r7 > 0.5; curr_mask11 = r11 > 0.5;
+                curr_mask4 = r4 > 0.5; curr_mask8 = r8 > 0.5; curr_mask12 = r12 > 0.5;
+
+                /* Detect edge and add to counter */
+                edge_count1 += curr_mask1 ^ prev_mask1;
+                edge_count2 += curr_mask2 ^ prev_mask2;
+                edge_count3 += curr_mask3 ^ prev_mask3;
+                edge_count4 += curr_mask4 ^ prev_mask4;
+
+                edge_count5 += curr_mask5 ^ prev_mask5;
+                edge_count6 += curr_mask6 ^ prev_mask6;
+                edge_count7 += curr_mask7 ^ prev_mask7;
+                edge_count8 += curr_mask8 ^ prev_mask8;
+
+                edge_count9  += curr_mask9  ^ prev_mask9 ;
+                edge_count10 += curr_mask10 ^ prev_mask10;
+                edge_count11 += curr_mask11 ^ prev_mask11;
+                edge_count12 += curr_mask12 ^ prev_mask12;
+
+                prev_mask1 = curr_mask1;  prev_mask5 = curr_mask5;  prev_mask9  = curr_mask9 ;
+                prev_mask2 = curr_mask2;  prev_mask6 = curr_mask6;  prev_mask10 = curr_mask10;
+                prev_mask3 = curr_mask3;  prev_mask7 = curr_mask7;  prev_mask11 = curr_mask11;
+                prev_mask4 = curr_mask4;  prev_mask8 = curr_mask8;  prev_mask12 = curr_mask12;
+
+                ++k1;
+                ++j1;
+                ++k2;
+                ++j2;
+                ++i;
+            }
+        }
+    }
+
+    /* Calculate remainder */
+    for (int jk_s = 1; jk_s < BLOCK_SIZE; jk_s += 2*STRIDE) {
+        int k = jk_s;
+        int j = jk_s;
+        int i = 0;
+
+        /* Calculate first two iterations */
+        prev_mask1 = hr_sphere_region[ (kb+k)*n*n + (jb+j)*n + (ib+i) ] > 0.5;
+        prev_mask2 = hr_sphere_region[ (kb+k)*n*n + (jb+i)*n + (ib+j) ] > 0.5;
+        prev_mask3 = hr_sphere_region[ (kb+i)*n*n + (jb+k)*n + (ib+j) ] > 0.5;
+
+        r1 = hr_sphere_region[ (kb+k)*n*n   + (jb+j)*n   + (ib+i)  ];
+        r2 = hr_sphere_region[ (kb+k+1)*n*n + (jb+j+1)*n + (ib+i+1)];
+        r3 = hr_sphere_region[ (kb+k)*n*n   + (jb+i)*n   + (ib+j)  ];
+        r4 = hr_sphere_region[ (kb+k+1)*n*n + (jb+i+1)*n + (ib+j+1)];
+        r5 = hr_sphere_region[ (kb+i)*n*n   + (jb+k)*n   + (ib+j)  ];
+        r6 = hr_sphere_region[ (kb+i+1)*n*n + (jb+k+1)*n + (ib+j+1)];
+
+        acc1 += r1;
+        acc2 += r2;
+        acc3 += r3;
+        acc4 += r4;
+        acc5 += r5;
+        acc6 += r6;
+
+        curr_mask1 = r1 > 0.5;
+        curr_mask2 = r2 > 0.5;
+        curr_mask3 = r3 > 0.5;
+        curr_mask4 = r4 > 0.5;
+        curr_mask5 = r5 > 0.5;
+        curr_mask6 = r6 > 0.5;
+
+        edge_count1 += curr_mask1 ^ prev_mask1;
+        edge_count2 += curr_mask2 ^ curr_mask1;
+        edge_count3 += curr_mask3 ^ prev_mask2;
+        edge_count4 += curr_mask4 ^ curr_mask3;
+        edge_count5 += curr_mask5 ^ prev_mask3;
+        edge_count6 += curr_mask6 ^ curr_mask5;
+
+        /* Start remainder complete vectors */
+        prev_mask1 = hr_sphere_region[ (kb+k+STRIDE-1)*n*n + (jb+j+STRIDE-1)*n  + (ib+i+STRIDE-1)]  > 0.5;
+        prev_mask2 = hr_sphere_region[ (kb+k+STRIDE)*n*n   + (jb+j+STRIDE)*n    + (ib+i)        ]   > 0.5;
+        prev_mask3 = hr_sphere_region[ (kb+k+STRIDE)*n*n   + (jb+j)*n           + (ib+i)        ]   > 0.5;
+        prev_mask4 = hr_sphere_region[ (kb+k)*n*n          + (jb+j+STRIDE)*n    + (ib+i)        ]   > 0.5;
+
+        prev_mask5 = hr_sphere_region[ (kb+k+STRIDE-1)*n*n + (jb+i+STRIDE-1)*n  + (ib+j+STRIDE-1)]  > 0.5;
+        prev_mask6 = hr_sphere_region[ (kb+k+STRIDE)*n*n   + (jb+i)*n           + (ib+j+STRIDE)  ]  > 0.5;
+        prev_mask7 = hr_sphere_region[ (kb+k+STRIDE)*n*n   + (jb+i)*n           + (ib+j)         ]  > 0.5;
+        prev_mask8 = hr_sphere_region[ (kb+k)*n*n          + (jb+i)*n           + (ib+j+STRIDE)  ]  > 0.5;
+
+        prev_mask9  = hr_sphere_region[ (kb+i+STRIDE-1)*n*n + (jb+k+STRIDE-1)*n + (ib+j+STRIDE-1)] > 0.5;
+        prev_mask10 = hr_sphere_region[ (kb+i)*n*n          + (jb+k+STRIDE)*n   + (ib+j+STRIDE)  ] > 0.5;
+        prev_mask11 = hr_sphere_region[ (kb+i)*n*n          + (jb+k+STRIDE)*n   + (ib+j)         ] > 0.5;
+        prev_mask12 = hr_sphere_region[ (kb+i)*n*n          + (jb+k)*n          + (ib+j+STRIDE)  ] > 0.5;
+
+        while (j + STRIDE < BLOCK_SIZE) {
+            r1 = hr_sphere_region [ (kb+k+STRIDE)*n*n + (jb+j+STRIDE)*n + (ib+i+STRIDE) ];
+            r2 = hr_sphere_region [ (kb+k+STRIDE)*n*n + (jb+j+STRIDE)*n + (ib+i)        ];
+            r3 = hr_sphere_region [ (kb+k+STRIDE)*n*n + (jb+j)*n        + (ib+i)        ];
+            r4 = hr_sphere_region [ (kb+k)*n*n        + (jb+j+STRIDE)*n + (ib+i)        ];
+
+            r5 = hr_sphere_region [ (kb+k+STRIDE)*n*n + (jb+i+STRIDE)*n + (ib+j+STRIDE) ];
+            r6 = hr_sphere_region [ (kb+k+STRIDE)*n*n + (jb+i)*n        + (ib+j+STRIDE) ];
+            r7 = hr_sphere_region [ (kb+k+STRIDE)*n*n + (jb+i)*n        + (ib+j)        ];
+            r8 = hr_sphere_region [ (kb+k)*n*n        + (jb+i)*n        + (ib+j+STRIDE) ];
+
+            r9  = hr_sphere_region[ (kb+i+STRIDE)*n*n + (jb+k+STRIDE)*n + (ib+j+STRIDE) ];
+            r10 = hr_sphere_region[ (kb+i)*n*n        + (jb+k+STRIDE)*n + (ib+j+STRIDE) ];
+            r11 = hr_sphere_region[ (kb+i)*n*n        + (jb+k+STRIDE)*n + (ib+j)        ];
+            r12 = hr_sphere_region[ (kb+i)*n*n        + (jb+k)*n        + (ib+j+STRIDE) ];
+
+            acc1 += r1; acc5 += r5; acc9  += r9 ;
+            acc2 += r2; acc6 += r6; acc10 += r10;
+            acc3 += r3; acc7 += r7; acc11 += r11;
+            acc4 += r4; acc8 += r8; acc12 += r12;
+
+            /* Calculate masks */
+            curr_mask1 = r1 > 0.5; curr_mask5 = r5 > 0.5; curr_mask9  = r9  > 0.5;
+            curr_mask2 = r2 > 0.5; curr_mask6 = r6 > 0.5; curr_mask10 = r10 > 0.5;
+            curr_mask3 = r3 > 0.5; curr_mask7 = r7 > 0.5; curr_mask11 = r11 > 0.5;
+            curr_mask4 = r4 > 0.5; curr_mask8 = r8 > 0.5; curr_mask12 = r12 > 0.5;
+
+            /* Detect edge and add to counter */
+            edge_count1 += curr_mask1 ^ prev_mask1;
+            edge_count2 += curr_mask2 ^ prev_mask2;
+            edge_count3 += curr_mask3 ^ prev_mask3;
+            edge_count4 += curr_mask4 ^ prev_mask4;
+
+            edge_count5 += curr_mask5 ^ prev_mask5;
+            edge_count6 += curr_mask6 ^ prev_mask6;
+            edge_count7 += curr_mask7 ^ prev_mask7;
+            edge_count8 += curr_mask8 ^ prev_mask8;
+
+            edge_count9  += curr_mask9  ^ prev_mask9 ;
+            edge_count10 += curr_mask10 ^ prev_mask10;
+            edge_count11 += curr_mask11 ^ prev_mask11;
+            edge_count12 += curr_mask12 ^ prev_mask12;
+
+            prev_mask1 = curr_mask1;  prev_mask5 = curr_mask5;  prev_mask9  = curr_mask9 ;
+            prev_mask2 = curr_mask2;  prev_mask6 = curr_mask6;  prev_mask10 = curr_mask10;
+            prev_mask3 = curr_mask3;  prev_mask7 = curr_mask7;  prev_mask11 = curr_mask11;
+            prev_mask4 = curr_mask4;  prev_mask8 = curr_mask8;  prev_mask12 = curr_mask12;
+
+            ++k;
+            ++j;
+            ++i;
+        }
+
+    }
+
+    /* Sum up accumulators */
+    acc1 += acc2;
+    acc3 += acc4;
+    acc5 += acc6;
+    acc7 += acc8;
+    acc9 += acc10;
+    acc11 += acc12;
+    edge_count1  += edge_count2;
+    edge_count3  += edge_count4;
+    edge_count5  += edge_count6;
+    edge_count7  += edge_count8;
+    edge_count9  += edge_count10;
+    edge_count11 += edge_count12;
+
+    bone_length_block += acc1 + acc3 + acc5 + acc7 + acc9 + acc11;
+    intercepts_block  += edge_count1 + edge_count3 + edge_count5 + edge_count7 + edge_count9 + edge_count11;
+//    bone_length[9] += bone_length_block;
+//    intercepts[9]  += intercepts_block;
+
+    gBone2 += bone_length_block;
+    gInter2 += intercepts_block;
+
+    return bone_length_block / intercepts_block;
+
+}
+
 
 ///
 /// Test all vectors.

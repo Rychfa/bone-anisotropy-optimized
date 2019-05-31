@@ -4,7 +4,7 @@
 #include <immintrin.h>
 #include <stdio.h>
 
-#define BLOCK_SIZE 16
+#define BLOCK_SIZE 8
 #define NUM_ACC 4
 #define STRIDE 2
 
@@ -235,73 +235,52 @@
     switch (vecID) {                                                                              \
         case 7: /* Vector (-1,1,0) */                                                             \
             /* Unroll over dimensions x,y */                                                      \
-            prev_mask1 = hr_sphere_region[ k*n*n + j1_prev*n + (i1_prev-1-0*STRIDE) ]  > 0.5;     \
-            prev_mask2 = hr_sphere_region[ k*n*n + (j2_prev+1+0*STRIDE)*n + i2_prev ]  > 0.5;     \
-            prev_mask3 = hr_sphere_region[ k*n*n + j1_prev*n + (i1_prev-1-1*STRIDE) ]  > 0.5;     \
-            prev_mask4 = hr_sphere_region[ k*n*n + (j2_prev+1+1*STRIDE)*n + i2_prev ]  > 0.5;     \
+            prev_mask1 = hr_sphere_region[  k*n*n         +  j1_prev*n    + (i1_prev-1) ] > 0.5;  \
+            prev_mask2 = hr_sphere_region[ (k+STRIDE)*n*n +  j1_prev*n    + (i1_prev-1) ] > 0.5;  \
+            prev_mask3 = hr_sphere_region[  k*n*n         + (j2_prev+1)*n + i2_prev ] > 0.5;      \
+            prev_mask4 = hr_sphere_region[ (k+STRIDE)*n*n + (j2_prev+1)*n + i2_prev ] > 0.5;      \
             break;                                                                                \
         case 8: /* Vector (-1,0,1) */                                                             \
             /* Unroll over dimensions x,z */                                                      \
-            prev_mask1 = hr_sphere_region[ j1_prev*n*n + k*n + (i1_prev-1-0*STRIDE) ]  > 0.5;     \
-            prev_mask2 = hr_sphere_region[ (j2_prev+1+0*STRIDE)*n*n + k*n + i2_prev ]  > 0.5;     \
-            prev_mask3 = hr_sphere_region[ j1_prev*n*n + k*n + (i1_prev-1-1*STRIDE) ]  > 0.5;     \
-            prev_mask4 = hr_sphere_region[ (j2_prev+1+1*STRIDE)*n*n + k*n + i2_prev ]  > 0.5;     \
+            prev_mask1 = hr_sphere_region[  j1_prev*n*n    +  k*n         + (i1_prev-1) ]  > 0.5; \
+            prev_mask2 = hr_sphere_region[  j1_prev*n*n    + (k+STRIDE)*n + (i1_prev-1) ]  > 0.5; \
+            prev_mask3 = hr_sphere_region[ (j2_prev+1)*n*n +  k*n         + i2_prev ]  > 0.5;     \
+            prev_mask4 = hr_sphere_region[ (j2_prev+1)*n*n + (k+STRIDE)*n + i2_prev ]  > 0.5;     \
             break;                                                                                \
         case 9: /* Vector (0,1,-1) */                                                             \
             /* Unroll over dimensions x,z */                                                      \
-            prev_mask1 = hr_sphere_region[ (i1_prev-1-0*STRIDE)*n*n + j1_prev*n + k ]  > 0.5;     \
-            prev_mask2 = hr_sphere_region[ i2_prev*n*n + (j2_prev+1+0*STRIDE)*n + k ]  > 0.5;     \
-            prev_mask3 = hr_sphere_region[ (i1_prev-1-1*STRIDE)*n*n + j1_prev*n + k ]  > 0.5;     \
-            prev_mask4 = hr_sphere_region[ i2_prev*n*n + (j2_prev+1+1*STRIDE)*n + k ]  > 0.5;     \
+            prev_mask1 = hr_sphere_region[ (i1_prev-1)*n*n + j1_prev*n     +  k ]          > 0.5; \
+            prev_mask2 = hr_sphere_region[ (i1_prev-1)*n*n + j1_prev*n     + (k+STRIDE) ]  > 0.5; \
+            prev_mask3 = hr_sphere_region[ i2_prev*n*n     + (j2_prev+1)*n +  k ]          > 0.5; \
+            prev_mask4 = hr_sphere_region[ i2_prev*n*n     + (j2_prev+1)*n + (k+STRIDE) ]  > 0.5; \
             break;                                                                                \
         default: ;                                                                                \
     }
 
-#define LOAD_DATA_SET_2D_NEG                                             \
-    switch (vecID) {                                                     \
-        case 7: /* Vector (-1,1,0) */                                    \
-            /* Unroll over dimensions x,y */                             \
-            r1 = hr_sphere_region[ k*n*n + j1*n + (i1-1-0*STRIDE) ];     \
-            r2 = hr_sphere_region[ k*n*n + (j2+1+0*STRIDE)*n + i2 ];     \
-            if (j2+1+1*STRIDE < jj + BLOCK_SIZE) {                       \
-                r3 = hr_sphere_region[ k*n*n + j1*n + (i1-1-1*STRIDE) ]; \
-                r4 = hr_sphere_region[ k*n*n + (j2+1+1*STRIDE)*n + i2 ]; \
-            } else {                                                     \
-                r3 = 0.0f;                                               \
-                r4 = 0.0f;                                               \
-                prev_mask3 = 0;                                          \
-                prev_mask4 = 0;                                          \
-            }                                                            \
-            break;                                                       \
-        case 8: /* Vector (-1,0,1) */                                    \
-            /* Unroll over dimensions x,y */                             \
-            r1 = hr_sphere_region[ j1*n*n + k*n + (i1-1-0*STRIDE) ];     \
-            r2 = hr_sphere_region[ (j2+1+0*STRIDE)*n*n + k*n + i2 ];     \
-            if (j2+1+1*STRIDE < jj + BLOCK_SIZE) {                       \
-                r3 = hr_sphere_region[ j1*n*n + k*n + (i1-1-1*STRIDE) ]; \
-                r4 = hr_sphere_region[ (j2+1+1*STRIDE)*n*n + k*n + i2 ]; \
-            } else {                                                     \
-                r3 = 0.0f;                                               \
-                r4 = 0.0f;                                               \
-                prev_mask3 = 0;                                          \
-                prev_mask4 = 0;                                          \
-            }                                                            \
-            break;                                                       \
-        case 9: /* Vector (0,1,-1) */                                    \
-            /* Unroll over dimensions x,y */                             \
-            r1 = hr_sphere_region[ (i1-1-0*STRIDE)*n*n + j1*n + k ];     \
-            r2 = hr_sphere_region[ i2*n*n + (j2+1+0*STRIDE)*n + k ];     \
-            if (j2+1+1*STRIDE < jj + BLOCK_SIZE) {                       \
-                r3 = hr_sphere_region[ (i1-1-1*STRIDE)*n*n + j1*n + k ]; \
-                r4 = hr_sphere_region[ i2*n*n + (j2+1+1*STRIDE)*n + k ]; \
-            } else {                                                     \
-                r3 = 0.0f;                                               \
-                r4 = 0.0f;                                               \
-                prev_mask3 = 0;                                          \
-                prev_mask4 = 0;                                          \
-            }                                                            \
-            break;                                                       \
-        default: ;                                                       \
+#define LOAD_DATA_SET_2D_NEG                                              \
+    switch (vecID) {                                                      \
+        case 7: /* Vector (-1,1,0) */                                     \
+            /* Unroll over dimensions x,y */                              \
+            r1 = hr_sphere_region[  k*n*n         +  j1*n    + (i1-1) ];  \
+            r2 = hr_sphere_region[ (k+STRIDE)*n*n +  j1*n    + (i1-1) ];  \
+            r3 = hr_sphere_region[  k*n*n         + (j2+1)*n + i2 ];      \
+            r4 = hr_sphere_region[ (k+STRIDE)*n*n + (j2+1)*n + i2 ];      \
+            break;                                                        \
+        case 8: /* Vector (-1,0,1) */                                     \
+            /* Unroll over dimensions x,y */                              \
+            r1 = hr_sphere_region[  j1*n*n    +  k*n         + (i1-1) ];  \
+            r2 = hr_sphere_region[  j1*n*n    + (k+STRIDE)*n + (i1-1) ];  \
+            r3 = hr_sphere_region[ (j2+1)*n*n +  k*n         + i2 ]  ;    \
+            r4 = hr_sphere_region[ (j2+1)*n*n + (k+STRIDE)*n + i2 ]  ;    \
+            break;                                                        \
+        case 9: /* Vector (0,1,-1) */                                     \
+            /* Unroll over dimensions x,y */                              \
+            r1 = hr_sphere_region[ (i1-1)*n*n + j1*n     +  k ]        ;  \
+            r2 = hr_sphere_region[ (i1-1)*n*n + j1*n     + (k+STRIDE) ];  \
+            r3 = hr_sphere_region[ i2*n*n     + (j2+1)*n +  k ]        ;  \
+            r4 = hr_sphere_region[ i2*n*n     + (j2+1)*n + (k+STRIDE) ];  \
+            break;                                                        \
+        default: ;                                                        \
     }
     // End of LOAD_DATA_SET_2D_NEG
 
@@ -316,10 +295,10 @@
         acc4 += r4;                             \
                                                 \
         /* Calculate masks */                   \
-        curr_mask1 = r1 > 0.5;                 \
-        curr_mask2 = r2 > 0.5;                 \
-        curr_mask3 = r3 > 0.5;                 \
-        curr_mask4 = r4 > 0.5;                 \
+        curr_mask1 = r1 > 0.5;                  \
+        curr_mask2 = r2 > 0.5;                  \
+        curr_mask3 = r3 > 0.5;                  \
+        curr_mask4 = r4 > 0.5;                  \
                                                 \
         /* Detect edge and add to counter */    \
         edge_count1 += curr_mask1 ^ prev_mask1; \
@@ -434,6 +413,130 @@
                     ++i1;                                                          \
                     ++j1;                                                          \
                     ++i2;                                                          \
+                    ++j2;                                                          \
+                }                                                                  \
+            }                                                                      \
+        } /* End iteration over dimension k */                                     \
+                                                                                   \
+        /* Sum up accumulators */                                                  \
+        acc1 += acc2;                                                              \
+        acc3 += acc4;                                                              \
+        edge_count1 += edge_count2;                                                \
+        edge_count3 += edge_count4;                                                \
+                                                                                   \
+        bone_length_block += acc1 + acc3;                                          \
+        intercepts_block  += edge_count1 + edge_count3;                            \
+        bone_length[vecID-1] += bone_length_block;                                 \
+        intercepts[vecID-1]  += intercepts_block;                                  \
+    }
+
+#define BLOCK_KERNEL_2D_NEG(vec, kk, jj, ii) \
+    {                                                                              \
+        const int vecID = vec;                                                     \
+        double bone_length_block = 0.0;                                            \
+        int intercepts_block = 0;                                                  \
+        /* Init accumulators */                                                    \
+        double acc1 = 0.0;                                                         \
+        double acc2 = 0.0;                                                         \
+        double acc3 = 0.0;                                                         \
+        double acc4 = 0.0;                                                         \
+                                                                                   \
+        unsigned int edge_count1 = 0;                                              \
+        unsigned int edge_count2 = 0;                                              \
+        unsigned int edge_count3 = 0;                                              \
+        unsigned int edge_count4 = 0;                                              \
+                                                                                   \
+        for (int k = kk + 1; k < kk + BLOCK_SIZE; k += STRIDE * NUM_ACC / 2) {     \
+            for (int ij = 0; ij < BLOCK_SIZE; ij += STRIDE) {                      \
+                unsigned int i1_prev, i2_prev, j1_prev, j2_prev;                   \
+                unsigned int prev_mask1, prev_mask2, prev_mask3, prev_mask4;       \
+                                                                                   \
+                int i1 = ii + (BLOCK_SIZE-1) - ij;                                 \
+                int j1 = jj;                                                       \
+                int i2 = ii + (BLOCK_SIZE-1);                                      \
+                int j2 = jj + ij;                                                  \
+                /* Initialise previous mask */                                     \
+                LOAD_PREV_2D_NEG                                                   \
+                                                                                   \
+                while (j2 + 1 < jj + BLOCK_SIZE) {                                  \
+                    double r1, r2, r3, r4;                                         \
+                                                                                   \
+                    /* Load working set */                                         \
+                    LOAD_DATA_SET_2D_NEG                                           \
+                                                                                   \
+                    /* Perform computation */                                      \
+                    COMPUTATION                                                    \
+                                                                                   \
+                    /* Update state of prev_mask */                                \
+                    prev_mask1 = curr_mask1;                                       \
+                    prev_mask2 = curr_mask2;                                       \
+                    prev_mask3 = curr_mask3;                                       \
+                    prev_mask4 = curr_mask4;                                       \
+                                                                                   \
+                    --i1;                                                          \
+                    ++j1;                                                          \
+                    --i2;                                                          \
+                    ++j2;                                                          \
+                }                                                                  \
+            }                                                                      \
+        } /* End iteration over dimension k */                                     \
+                                                                                   \
+        /* Sum up accumulators */                                                  \
+        acc1 += acc2;                                                              \
+        acc3 += acc4;                                                              \
+        edge_count1 += edge_count2;                                                \
+        edge_count3 += edge_count4;                                                \
+                                                                                   \
+        bone_length_block += acc1 + acc3;                                          \
+        intercepts_block  += edge_count1 + edge_count3;                            \
+        bone_length[vecID-1] += bone_length_block;                                 \
+        intercepts[vecID-1]  += intercepts_block;                                  \
+    }
+
+#define BLOCK_KERNEL_3D_POS(vec, kk, jj, ii)                                       \
+    {                                                                              \
+        const int vecID = vec;                                                     \
+        double bone_length_block = 0.0;                                            \
+        int intercepts_block = 0;                                                  \
+        /* Init accumulators */                                                    \
+        double acc1 = 0.0, acc5 = 0.0, acc9  = 0.0;                                \
+        double acc2 = 0.0, acc6 = 0.0, acc10 = 0.0;                                \
+        double acc3 = 0.0, acc7 = 0.0, acc11 = 0.0;                                \
+        double acc4 = 0.0, acc8 = 0.0, acc12 = 0.0;                                \
+                                                                                   \
+        unsigned int edge_count1 = 0;                                              \
+        unsigned int edge_count2 = 0;                                              \
+        unsigned int edge_count3 = 0;                                              \
+        unsigned int edge_count4 = 0;                                              \
+                                                                                   \
+        for (int k_start = kk + 1; k_start < kk + BLOCK_SIZE; k_start += STRIDE * 2) {               \
+            for (int j_start = jj + 1; j_start < jj + BLOCK_SIZE; j_start += STRIDE * 2) {           \
+                unsigned int i1_prev, i2_prev, j1_prev, j2_prev;                   \
+                unsigned int prev_mask1, prev_mask2, prev_mask3, prev_mask4;       \
+                                                                                   \
+                int i = ii;                                                        \
+                int j = j_start;                                                   \
+                int k = k_start;                                                   \
+                LOAD_PREV_3D_POS                                                   \
+                                                                                   \
+                while (j + 1 < j + BLOCK_SIZE && k + 1 < k + BLOCK_SIZE) {         \
+                    double r1, r2, r3, r4;                                         \
+                                                                                   \
+                    /* Load working set */                                         \
+                    LOAD_DATA_SET_3D                                               \
+                                                                                   \
+                    /* Perform computation */                                      \
+                    COMPUTATION_3D                                                 \
+                                                                                   \
+                    /* Update state of prev_mask */                                \
+                    prev_mask1 = curr_mask1;                                       \
+                    prev_mask2 = curr_mask2;                                       \
+                    prev_mask3 = curr_mask3;                                       \
+                    prev_mask4 = curr_mask4;                                       \
+                                                                                   \
+                    --i1;                                                          \
+                    ++j1;                                                          \
+                    --i2;                                                          \
                     ++j2;                                                          \
                 }                                                                  \
             }                                                                      \
