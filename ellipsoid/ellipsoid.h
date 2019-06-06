@@ -119,9 +119,9 @@ static const double DIRECTIONS_NORMALIZED[][3] =
 //		{ 1/M_SQRT3,  1/M_SQRT3, -1/M_SQRT3},
 //		{ 1/M_SQRT3,  1/M_SQRT3,  1/M_SQRT3},
 
-        { 1/M_SQRT2,  0,          0},
-        { 0,          1/M_SQRT2,  0},
-        { 0,          0,          1/M_SQRT2},
+        { 1,          0,          0},
+        { 0,          1,          0},
+        { 0,          0,          1},
 
         { 1/M_SQRT2,  1/M_SQRT2,  0},
         { 1/M_SQRT2,  0,          1/M_SQRT2},
