@@ -40,7 +40,8 @@
 using namespace std;
 
 #define CYCLES_REQUIRED 1e7
-#define REP 3
+#define REP 1          /* ? */
+#define MIN_NUM_RUNS 1 /* do at least these many runs */
 #define EPS (1e-3)
 #define CLOCK_FREQ 2.8
 
@@ -82,8 +83,9 @@ void register_functions()
     long int flops = 0;
     //      kernel + regions
     flops = (6*LOW_RES_D3 + 6*LOW_RES_D2*LOW_RES_D3 + 3*LOW_RES_D1*LOW_RES_D2*LOW_RES_D3 + 21*4814) + pow(SPHERE_NDIM,3)*4814;
-    // flops += 1364344127; // ellipsoid
-    flops += 2*SPHERE_NDIM*SPHERE_NDIM*SPHERE_NDIM/4.0*13*LOW_RES_SIZE;
+    flops += 1364344127; // ellipsoid
+    flops += 2*SPHERE_NDIM*SPHERE_NDIM*SPHERE_NDIM/4.0*13*LOW_RES_SIZE/3; // mil; todo: divide by three?
+    flops += 0; // eigen?
 
 
     // TODO: Add correct number of flops
@@ -156,8 +158,8 @@ void add_function(comp_func f, string name, long flops)
 */
 double perf_test(comp_func f, string desc, long flops)
 {
-    double cycles = 0.;
-    long num_runs = 3;
+    double cycles     = 0.;
+    long num_runs     = MIN_NUM_RUNS;
     double multiplier = 1;
     myInt64 start, end;
 
@@ -250,7 +252,7 @@ int main(int argc, char **argv)
     cout << endl;
 
     for (i =1; i < numFuncs; i++) {
-        cout << endl << "*** Check results of " << funcNames[0] << " ***" << endl;
+        cout << endl << "*** Check results of " << funcNames[i] << " ***" << endl;
         build(&sphere, &extracted_region, &ptrHighRes, &ptrLowRes, &rotation_matrix, &ptrEvecOut, &ptrEvalsOut);
 
         comp_func f = userFuncs[i];
