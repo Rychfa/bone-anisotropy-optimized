@@ -72,7 +72,7 @@ extern "C" void mil_test_v7(const double *hr_sphere_region, int n, double *direc
 extern "C" void mil_test_v8(const double *hr_sphere_region, int n, double *directions_vectors_mil);
 extern "C" void mil_test_v9(const double *hr_sphere_region, int n, double *directions_vectors_mil);
 extern "C" void mil_test_all(const double *hr_sphere_region, int n, double *directions_vectors_mil);
-extern "C" void simd_mil_test_all(const double *hr_sphere_region, int n, double *directions_vectors_mil);
+extern "C" void mil2_simd(const double *hr_sphere_region, int n, double *directions_vectors_mil);
 
 void add_function(comp_func f, const string &name, double flop);
 
@@ -133,8 +133,8 @@ void register_functions() {
 //    add_function(&mil_test_v7, "MIL block vector (-1,1,0)", (1.0/4.0)*2.0);
 //    add_function(&mil_test_v8, "MIL block vector (-1,0,1)", (1.0/4.0)*2.0);
 //    add_function(&mil_test_v9, "MIL block vector (0,1,-1)", (1.0/4.0)*2.0);
-    add_function(&mil_test_all, "test all - 4 accumulators", (12.0/4.0)*2.0);
-//    add_function(&simd_mil_test_all, "test all - SIMD 2 vectors of doubles", 1.5);
+//    add_function(&mil_test_all, "test all - 4 accumulators", (12.0/4.0)*2.0);
+    add_function(&mil2_simd, "test all - SIMD 2 vectors of doubles", 1.5);
 }
 
 bool checksum(const double *a, const double *b, int n) {

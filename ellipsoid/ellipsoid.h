@@ -33,7 +33,7 @@
 /// Pre-processor 
 ///
 
-// #define DEBUG  // TODO move somewhere more centralized?
+// #define ELLIPSOID_DEBUG  // TODO move somewhere more centralized?
 
 #ifdef linux
 #define M_SQRT3 1.7320508075688772935
@@ -84,14 +84,10 @@ static int DIRECTIONS[][3] =
         { -1,  0, 1},
         { 0,  1, -1},
 
-        { 1,  0,  0},
-        { 0,  1,  0},
-        { 0,  0,  1}
-//
-//        { 1,  1,  1},
-//        { 1,  1, -1},
-//        { 1, -1,  1},
-//        {-1,  1,  1},
+       { 1,  1,  1},
+       { 1,  1, -1},
+       { 1, -1,  1},
+       {-1,  1,  1},
 	};
 
 static const double DIRECTIONS_NORMALIZED[][3] = 
@@ -123,16 +119,18 @@ static const double DIRECTIONS_NORMALIZED[][3] =
 //		{ 1/M_SQRT3,  1/M_SQRT3, -1/M_SQRT3},
 //		{ 1/M_SQRT3,  1/M_SQRT3,  1/M_SQRT3},
 
-        { 0,          0,          1/M_SQRT2},
-        { 0,          1/M_SQRT2,  0},
         { 1/M_SQRT2,  0,          0},
+        { 0,          1/M_SQRT2,  0},
+        { 0,          0,          1/M_SQRT2},
 
-        { 0,          1/M_SQRT2,  1/M_SQRT2},
-        { 0,          1/M_SQRT2, -1/M_SQRT2},
-        { 1/M_SQRT2,  0,          1/M_SQRT2},
-        { 1/M_SQRT2,  0,         -1/M_SQRT2},
         { 1/M_SQRT2,  1/M_SQRT2,  0},
+        { 1/M_SQRT2,  0,          1/M_SQRT2},
+        { 0,          1/M_SQRT2,  1/M_SQRT2},
+
         {-1/M_SQRT2,  1/M_SQRT2,  0},
+        {-1/M_SQRT2,  0,          1/M_SQRT2},
+        { 0,          1/M_SQRT2, -1/M_SQRT2},        
+        
 
         { 1/M_SQRT3,  1/M_SQRT3,  1/M_SQRT3},
         { 1/M_SQRT3,  1/M_SQRT3, -1/M_SQRT3},
@@ -182,7 +180,7 @@ void fit_ellipsoid_mils_simd(const double *mils, double (*Q)[3][3]);
 /*
  * debugging tools
  */
-#ifdef DEBUG
+#ifdef ELLIPSOID_DEBUG
 void fit_ellipsoid_debug_init(void);
 long fit_ellipsoid_debug_deinit(void);
 #endif

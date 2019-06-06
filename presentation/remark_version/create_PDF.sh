@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-FILENAME="workshop_numerical_computing"
+FILENAME="fastcode_presentation"
 head -n 5 ${FILENAME}.html > tmp.html
 echo "<style>" >> tmp.html
 cat css/common.css >> tmp.html

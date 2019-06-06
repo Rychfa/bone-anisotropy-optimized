@@ -198,7 +198,7 @@ double simd_mil_2D_pos(const double *hr_sphere_region, int* intercepts, int n, c
             int j2 = jj + ij;
 
             /* Initialise previous mask */
-            LOAD_PREV_2D_POS
+            SIMD_LOAD_PREV_2D_POS
 
             while (i1 + 1 < ii + BLOCK_SIZE && j2 + 1 < jj + BLOCK_SIZE) {
                 __m256d region1;
@@ -315,7 +315,7 @@ double simd_mil_2D_neg(const double *hr_sphere_region, int* intercepts, int n, c
 ///
 /// Test all vectors with SIMD.
 ///
-void simd_mil_test_all(const double *hr_sphere_region, int n, double *directions_vectors_mil) {
+void mil2_simd(const double *hr_sphere_region, int n, double *directions_vectors_mil) {
 
     double bone_length[13] = {0.0};
     int intercepts[13] = {0};
@@ -323,14 +323,18 @@ void simd_mil_test_all(const double *hr_sphere_region, int n, double *directions
         for (int jj_b = 0; jj_b < n; jj_b+=BLOCK_SIZE) {
             for (int ii_b = 0; ii_b < n; ii_b+=BLOCK_SIZE) {
 
-//                for (int v = 0; v < 2; ++v) {
+               for (int v = 0; v < 2; ++v) {
                     BLOCK_KERNEL_1D_SIMD(1, kk_b, jj_b, ii_b)
-//                    BLOCK_KERNEL_1D_SIMD(2, kk_b, ii_b, jj_b)
-//                    BLOCK_KERNEL_1D_SIMD(3, jj_b, ii_b, kk_b)
-//                    BLOCK_KERNEL_2D_POS_SIMD(4, kk_b, jj_b, ii_b)
-//                    BLOCK_KERNEL_2D_POS_SIMD(5, jj_b, kk_b, ii_b)
-//                    BLOCK_KERNEL_2D_POS_SIMD(6, ii_b, jj_b, kk_b)
-//                }
+                    BLOCK_KERNEL_1D_SIMD(2, kk_b, ii_b, jj_b)
+                    BLOCK_KERNEL_1D_SIMD(3, jj_b, ii_b, kk_b)
+                    BLOCK_KERNEL_2D_POS_SIMD(4, kk_b, jj_b, ii_b)
+                    BLOCK_KERNEL_2D_POS_SIMD(5, jj_b, kk_b, ii_b)
+                    BLOCK_KERNEL_2D_POS_SIMD(6, ii_b, jj_b, kk_b)
+                    BLOCK_KERNEL_2D_NEG_SIMD(7, kk_b, jj_b, ii_b)
+                    BLOCK_KERNEL_2D_NEG_SIMD(8, jj_b, kk_b, ii_b)
+                    BLOCK_KERNEL_2D_NEG_SIMD(9, ii_b, jj_b, kk_b)
+               }
+//               BLOCK_KERNEL_1D_SIMD(1, kk_b, jj_b, ii_b)
             }
         }
     }

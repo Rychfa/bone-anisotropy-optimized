@@ -309,6 +309,13 @@ void mil2_baseline(const double *hr_sphere_region, int n, double *directions_vec
     gBone1 = directions_vectors_bone_length[9];
     gInter1 = directions_vectors_intercepts[9];
 
+//    directions_vectors_mil[6] = 0;
+//    directions_vectors_mil[7] = 0;
+//    directions_vectors_mil[8] = 0;
+//    directions_vectors_mil[9] = 0;
+//    directions_vectors_mil[10] = 0;
+//    directions_vectors_mil[11] = 0;
+//    directions_vectors_mil[12] = 0;
 }
 
 #if 0
@@ -403,7 +410,7 @@ double mil_2D_pos_uneven(const double *hr_sphere_region, int* intercepts, int n,
             int j2 = jj + ij;
 
             /* Initialise previous mask */
-            LOAD_PREV_2D_POS
+            SIMD_LOAD_PREV_2D_POS
 
             while (i1 + 1 < ii + BLOCK_SIZE && j2 + 1 < jj + BLOCK_SIZE) {
                 double r1, r2, r3, r4;
@@ -471,7 +478,7 @@ double mil_2D_pos(const double *hr_sphere_region, int* intercepts, int n, const 
             int j2 = jj + ij;
 
             /* Initialise previous mask */
-            LOAD_PREV_2D_POS
+            SIMD_LOAD_PREV_2D_POS
 
             while (i1 + 1 < ii + BLOCK_SIZE && j2 + 1 < jj + BLOCK_SIZE) {
                 double r1, r2, r3, r4;

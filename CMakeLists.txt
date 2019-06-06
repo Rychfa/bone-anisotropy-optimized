@@ -33,6 +33,7 @@ set(SOURCE_FILES
         mil/mil2_simd.c
 #        mil/test_mil.c
         ellipsoid/ellipsoid.c
+        ellipsoid/ellipsoid_simd_points.c
         reader/reader.c
         regions/region_extraction.c
         eigen/eigen.c
