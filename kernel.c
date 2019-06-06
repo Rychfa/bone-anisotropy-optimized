@@ -422,15 +422,15 @@ void kernel_opt1 (double* sphere, double* extracted_region, double* ptrHighRes, 
                     j_hr = (int) ty_hr;
                     k_hr = (int) tz_hr;
                     
-                    region_extraction(i_hr, j_hr, k_hr, sphere, extracted_region, ptrHighRes);
+                    region_extraction_opt1(i_hr, j_hr, k_hr, sphere, extracted_region, ptrHighRes);
 
                     // compute fabric */
                     double mils[NUM_DIRECTIONS];
-                    mil2_baseline(extracted_region, SPHERE_NDIM, mils);
+                    mil2_simd(extracted_region, SPHERE_NDIM, mils);
                     // print_vector(mils, NUM_DIRECTIONS); 
 
                     double Q[3][3];
-                    fit_ellipsoid_mils_simd(mils, (double (*)[3][3])Q);
+                    fit_ellipsoid_mils(mils, (double (*)[3][3])Q);
                     // print_matrix3(Q);
                     
                     eigen3(Q, &ptrEvecOut[ii_lr*9], &ptrEvalsOut[ii_lr*3]);
