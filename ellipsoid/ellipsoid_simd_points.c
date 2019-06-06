@@ -387,6 +387,19 @@ void fit_ellipsoid_simd_points(const double (*p)[3], int n, double (*Q)[3][3])
 
 void fit_ellipsoid_mils_simd(const double *mils, double (*Q)[3][3])
 {
+       /* construct the points */
+       double p[NUM_DIRECTIONS][3];
+       for (int i=0; i<NUM_DIRECTIONS; i++) {
+               for (int j=0; j<3; j++) {
+                       p[i][j] = mils[i] * DIRECTIONS_NORMALIZED[i][j];
+               }
+       }
+       /* call the main routine */
+       fit_ellipsoid_simd_points(p, NUM_DIRECTIONS, Q);
+}
+
+void fit_ellipsoid_mils_simd2(const double *mils, double (*Q)[3][3])
+{
 	__m256d Q00, Q01, Q02, Q11, Q12, Q22;
 	Q00 = _mm256_set1_pd(1);
 	Q01 = _mm256_set1_pd(0);
