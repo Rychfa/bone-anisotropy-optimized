@@ -995,9 +995,7 @@
 
 
 /* Function declarations*/
-double mil_1D(const double *hr_sphere_region, int* intercepts, int n, const int kk, const int jj, const int ii,  const int vecID);
-double mil_2D_pos(const double *hr_sphere_region, int* intercepts, int n, const int kk, const int jj, const int ii,  const int vecID);
-double mil_2D_neg(const double *hr_sphere_region, int* intercepts, int n, const int kk, const int jj, const int ii,  const int vecID);
 void mil2_baseline(const double *hr_sphere_region, int n, double *directions_vectors_mil);
+void mil2_scalar(const double *hr_sphere_region, int n, double *directions_vectors_mil);
 #endif //BONEMAP_MIL2_H
 

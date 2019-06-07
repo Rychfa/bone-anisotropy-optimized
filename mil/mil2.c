@@ -294,11 +294,7 @@ void mil2_baseline(const double *hr_sphere_region, int n, double *directions_vec
 
 }
 
-///
-/// Test all vectors.
-///
-void mil_test_all(const double *hr_sphere_region, int n, double *directions_vectors_mil) {
-
+void mil2_scalar(const double *hr_sphere_region, int n, double *directions_vectors_mil) {
     double bone_length[13] = {0.0};
     int intercepts[13] = {0};
 
