@@ -39,7 +39,7 @@
 #include <time.h>
 #include <math.h>
 #include <string.h>
-#include "..\utils\tsc_x86.h"
+#include "tsc_x86.h"
 
 using namespace std;
 
