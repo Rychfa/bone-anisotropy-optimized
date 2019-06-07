@@ -4,7 +4,7 @@
 #include <immintrin.h>
 #include <stdio.h>
 
-#define BLOCK_SIZE n
+#define BLOCK_SIZE 16
 #define NUM_ACC 4
 #define STRIDE 2
 

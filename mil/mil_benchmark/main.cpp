@@ -61,18 +61,8 @@ double perf_test(comp_func f, int n);
 //You can delcare your functions here
 extern int gBone1, gBone2, gInter1, gInter2;
 extern "C" void mil2_baseline(const double *hr_sphere_region, int n, double *directions_vectors_mil);
-extern "C" void mil2_o1(const double *hr_sphere_region, int n, double *directions_vectors_mil);
-extern "C" void mil_test_v1(const double *hr_sphere_region, int n, double *directions_vectors_mil);
-extern "C" void mil_test_v2(const double *hr_sphere_region, int n, double *directions_vectors_mil);
-extern "C" void mil_test_v3(const double *hr_sphere_region, int n, double *directions_vectors_mil);
-extern "C" void mil_test_v4(const double *hr_sphere_region, int n, double *directions_vectors_mil);
-extern "C" void mil_test_v5(const double *hr_sphere_region, int n, double *directions_vectors_mil);
-extern "C" void mil_test_v6(const double *hr_sphere_region, int n, double *directions_vectors_mil);
-extern "C" void mil_test_v7(const double *hr_sphere_region, int n, double *directions_vectors_mil);
-extern "C" void mil_test_v8(const double *hr_sphere_region, int n, double *directions_vectors_mil);
-extern "C" void mil_test_v9(const double *hr_sphere_region, int n, double *directions_vectors_mil);
 extern "C" void mil_test_all(const double *hr_sphere_region, int n, double *directions_vectors_mil);
-extern "C" void mil2_simd(const double *hr_sphere_region, int n, double *directions_vectors_mil);
+extern "C" void simd_mil_test_all(const double *hr_sphere_region, int n, double *directions_vectors_mil);
 
 void add_function(comp_func f, const string &name, double flop);
 
@@ -88,12 +78,7 @@ void rands(T *m, size_t n) {
     std::mt19937 gen{rd()};
     std::uniform_real_distribution<double> dist(-1.0, 1.0);
     for (size_t i = 0; i < n; ++i) {
-        if (false) {
-            m[i] = 1.0;
-        }
-        else {
-            m[i] = dist(gen) > 0.0 ? 1 : 0;
-        }
+        m[i] = dist(gen) > 0.0 ? 1 : 0;
     }
 }
 
@@ -123,25 +108,14 @@ void destroy(void *m) {
 void register_functions() {
 //    add_function(&mil2, "mil2", 3.25 * 2);
     add_function(&mil2_baseline, "mil2_baseline", (13.0/4.0)*2.0);
-//    add_function(&mil2_o1, "Base opt1", 3.25);
-//    add_function(&mil_test_v1, "MIL block vector (1,0,0)", (13.0/4.0)*2.0);
-//    add_function(&mil_test_v2, "MIL block vector (0,1,0)", (13.0/4.0)*2.0);
-//    add_function(&mil_test_v3, "MIL block vector (0,0,1)", (13.0/4.0)*2.0);
-//    add_function(&mil_test_v4, "MIL block vector (1,1,0)", (13.0/4.0)*2.0);
-//    add_function(&mil_test_v5, "MIL block vector (1,0,1)", (13.0/4.0)*2.0);
-//    add_function(&mil_test_v6, "MIL block vector (0,1,1)", (13.0/4.0)*2.0);
-//    add_function(&mil_test_v7, "MIL block vector (-1,1,0)", (1.0/4.0)*2.0);
-//    add_function(&mil_test_v8, "MIL block vector (-1,0,1)", (1.0/4.0)*2.0);
-//    add_function(&mil_test_v9, "MIL block vector (0,1,-1)", (1.0/4.0)*2.0);
-//    add_function(&mil_test_all, "test all - 4 accumulators", (12.0/4.0)*2.0);
-    add_function(&mil2_simd, "test all - SIMD 2 vectors of doubles", 1.5);
+    add_function(&mil_test_all, "test all - 4 accumulators", (13.0/4.0)*2.0);
+//    add_function(&simd_mil_test_all, "test all - SIMD 2 vectors of doubles", (12.0/4.0)*2.0);
 }
 
 bool checksum(const double *a, const double *b, int n) {
 
     for (int i = 0; i < n; i++) {
         if ((b[i] < a[i] - TOLERANCE) || (b[i] > a[i] + TOLERANCE)) {
-            printf("value %d: %0.10f -> %0.10f\n",i, a[i], b[i]);
             return true;
         }
     }
@@ -170,15 +144,14 @@ int main(int argc, char **argv) {
     }
     cout << numFuncs << " functions registered." << endl;
 
-    //Check validity of functions. 
-//    int n = 30;
+    //Check validity of functions.
     double *region;
     double *output;
     double *outputBaseline;
 
-    for (int n = 16; n <= 16; n += 16) {
-//    for (int n = 20; n <= MAX_SIZE; n += 20) {
+    for (int n = 80; n <= 80; n += 32) {
         cout << endl << "Testing size " << n << endl;
+//        cout << endl << n << " ";
 
         // Compute with base line first.
         if (numFuncs > 1) {
@@ -193,7 +166,7 @@ int main(int argc, char **argv) {
             {
                 comp_func f = userFuncs[i];
                 f(region, n, output);
-                bool error = checksum(outputBaseline, output, 9);
+                bool error = checksum(outputBaseline, output, 13);
                 if (error)
                     cout << "ERROR: the results for function " << i << " are incorrect." << std::endl;
             }
@@ -204,15 +177,12 @@ int main(int argc, char **argv) {
             destroy(outputBaseline);
         }
 
-//        cout <<  gBone1 <<  " " << gBone2  << endl;
-//        cout << gInter1 <<  " " << gInter2 << endl;
-
         for (i = 0; i < numFuncs; i++) {
             cout << endl << "** Running: " << funcNames[i] << " **" << endl;
             cycles = perf_test(userFuncs[i], n);
             cout << "Runtime: " << cycles << " cycles" << endl;
             cout << "Performance: " << (1.0 * funcFlops[i] * n * n * n) / cycles << " flops per cycle" << endl;
-//            cout << (1.0 * funcFlops[i] * n * n * n) / cycles << endl;
+//            cout << (1.0 * funcFlops[i] * n * n * n) / cycles << " ";
         }
     }
 
