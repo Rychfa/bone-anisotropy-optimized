@@ -62,7 +62,7 @@ double perf_test(comp_func f, int n);
 extern int gBone1, gBone2, gInter1, gInter2;
 extern "C" void mil2_baseline(const double *hr_sphere_region, int n, double *directions_vectors_mil);
 extern "C" void mil2_scalar(const double *hr_sphere_region, int n, double *directions_vectors_mil);
-extern "C" void simd_mil_test_all(const double *hr_sphere_region, int n, double *directions_vectors_mil);
+extern "C" void mil2_simd(const double *hr_sphere_region, int n, double *directions_vectors_mil);
 
 void add_function(comp_func f, const string &name, double flop);
 
@@ -109,7 +109,7 @@ void register_functions() {
 //    add_function(&mil2, "mil2", 3.25 * 2);
     add_function(&mil2_baseline, "mil2_baseline", (13.0/4.0)*2.0);
     add_function(&mil2_scalar, "test all - 4 accumulators", (13.0/4.0)*2.0);
-//    add_function(&simd_mil_test_all, "test all - SIMD 2 vectors of doubles", (12.0/4.0)*2.0);
+    add_function(&mil2_simd, "test all - SIMD 2 vectors of doubles", (13.0/4.0)*2.0);
 }
 
 bool checksum(const double *a, const double *b, int n) {

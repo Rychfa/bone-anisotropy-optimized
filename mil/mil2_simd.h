@@ -522,6 +522,550 @@
         intercepts[vecID-1] += intercepts_block;                                         \
     }
 
+
+#define LOAD_PREV_3D_SIMD(vecID, kb, jb, ib)                                                      \
+    __m256d tmp_reg1, tmp_reg2, tmp_reg3, prev_mask_d1, prev_mask_d2, prev_mask_d3;               \
+    __m256i tmp_comp1, tmp_comp2, tmp_comp3;                                                      \
+    int vector1_id0, vector1_id1, vector1_id2, vector1_id3;                                       \
+    int vector2_id0, vector2_id1, vector2_id2, vector2_id3;                                       \
+    int vector3_id0, vector3_id1, vector3_id2, vector3_id3;                                       \
+    switch (vecID) {                                                                              \
+        case 10: /* Vector (1,1,1) */                                                             \
+            prev1 = (ib > 0) ? 1 : 0;                                                                                            \
+            prev2 = (ib > 0 && jb+j2 > 0) ? 1 : 0;                                                                               \
+            vector1_id0 = (kb+k1-prev1)*n*n        + (jb+j1-prev1)*n        + (ib+i-prev1);                                      \
+            vector1_id1 = (kb+k1+STRIDE-prev1)*n*n + (jb+j1-prev1)*n        + (ib+i-prev1);                                      \
+            vector1_id2 = (kb+k2-prev2)*n*n        + (jb+j2-prev2)*n        + (ib+i-prev2);                                      \
+            vector1_id3 = (kb+k2-prev1)*n*n        + (jb+j2+STRIDE-prev1)*n + (ib+i-prev1);                                      \
+                                                                                                                                 \
+            prev3 = (jb > 0) ? 1 : 0;                                                                                            \
+            prev4 = (jb > 0 && kb+j2 > 0) ? 1 : 0;                                                                               \
+            vector2_id0 = (kb+j1-prev3)*n*n        + (jb+i-prev3)*n         + (ib+k1)-prev3;                                     \
+            vector2_id1 = (kb+j1-prev3)*n*n        + (jb+i-prev3)*n         + (ib+k1+STRIDE)-prev3;                              \
+            vector2_id2 = (kb+j2-prev4)*n*n        + (jb+i-prev4)*n         + (ib+k2)-prev4;                                     \
+            vector2_id3 = (kb+j2+STRIDE-prev3)*n*n + (jb+i-prev3)*n         + (ib+k2)-prev3;                                     \
+                                                                                                                                 \
+            prev5 = (kb > 0) ? 1 : 0;                                                                                            \
+            prev6 = (kb > 0 && ib+j2 > 0) ? 1 : 0;                                                                               \
+            vector3_id0 = (kb+i-prev5)*n*n        + (jb+k1-prev5)*n         + (ib+j1-prev5);                                     \
+            vector3_id1 = (kb+i-prev5)*n*n        + (jb+k1+STRIDE-prev5)*n  + (ib+j1-prev5);                                     \
+            vector3_id2 = (kb+i-prev6)*n*n        + (jb+k2-prev6)*n         + (ib+j2-prev6);                                     \
+            vector3_id3 = (kb+i-prev5)*n*n        + (jb+k2-prev5)*n         + (ib+j2+STRIDE-prev5);                              \
+            break;                                                                                                               \
+        case 11: /* Vector (1,1,-1) */                                                                                           \
+            prev1 = (ib > 0) ? 1 : 0;                                                                                            \
+            prev2 = (ib > 0 && jb+j2 > 0) ? 1 : 0;                                                                               \
+            vector1_id0 = (kb+BLOCK_SIZE-1-k1+prev1)*n*n        + (jb+j1-prev1)*n        + (ib+i-prev1);                         \
+            vector1_id1 = (kb+BLOCK_SIZE-1-k1-STRIDE+prev1)*n*n + (jb+j1-prev1)*n        + (ib+i-prev1);                         \
+            vector1_id2 = (kb+BLOCK_SIZE-1-k2+prev2)*n*n        + (jb+j2-prev2)*n        + (ib+i-prev2);                         \
+            vector1_id3 = (kb+BLOCK_SIZE-1-k2+prev1)*n*n        + (jb+j2+STRIDE-prev1)*n + (ib+i-prev1);                         \
+                                                                                                                                 \
+            prev3 = (jb > 0) ? 1 : 0;                                                                                            \
+            prev4 = (jb > 0 && kb+BLOCK_SIZE-1-j2 < n-1) ? 1 : 0;                                                                \
+            vector2_id0 = (kb+BLOCK_SIZE-1-j1+prev3)*n*n        + (jb+i-prev3)*n         + (ib+k1)-prev3;                        \
+            vector2_id1 = (kb+BLOCK_SIZE-1-j1+prev3)*n*n        + (jb+i-prev3)*n         + (ib+k1+STRIDE)-prev3;                 \
+            vector2_id2 = (kb+BLOCK_SIZE-1-j2+prev4)*n*n        + (jb+i-prev4)*n         + (ib+k2)-prev4;                        \
+            vector2_id3 = (kb+BLOCK_SIZE-1-j2-STRIDE+prev3)*n*n + (jb+i-prev3)*n         + (ib+k2)-prev3;                        \
+                                                                                                                                 \
+            prev5 = (kb+BLOCK_SIZE-1-i < n-1) ? 1 : 0;                                                                           \
+            prev6 = (kb+BLOCK_SIZE-1-i < n-1 && ib+j2 > 0) ? 1 : 0;                                                              \
+            vector3_id0 = (kb+BLOCK_SIZE-1-i+prev5)*n*n        + (jb+k1-prev5)*n         + (ib+j1-prev5);                        \
+            vector3_id1 = (kb+BLOCK_SIZE-1-i+prev5)*n*n        + (jb+k1+STRIDE-prev5)*n  + (ib+j1-prev5);                        \
+            vector3_id2 = (kb+BLOCK_SIZE-1-i+prev6)*n*n        + (jb+k2-prev6)*n         + (ib+j2-prev6);                        \
+            vector3_id3 = (kb+BLOCK_SIZE-1-i+prev5)*n*n        + (jb+k2-prev5)*n         + (ib+j2+STRIDE-prev5);                 \
+            break;                                                                                                               \
+        case 12: /* Vector (1,-1,1) */                                                                                           \
+            prev1 = (ib > 0) ? 1 : 0;                                                                                            \
+            prev2 = (ib > 0 && jb+BLOCK_SIZE-j2-1 < n-1) ? 1 : 0;                                                                \
+            vector1_id0 = (kb+k1-prev1)*n*n        + (jb+BLOCK_SIZE-j1-1+prev1)*n        + (ib+i-prev1);                         \
+            vector1_id1 = (kb+k1+STRIDE-prev1)*n*n + (jb+BLOCK_SIZE-j1-1+prev1)*n        + (ib+i-prev1);                         \
+            vector1_id2 = (kb+k2-prev2)*n*n        + (jb+BLOCK_SIZE-j2-1+prev2)*n        + (ib+i-prev2);                         \
+            vector1_id3 = (kb+k2-prev1)*n*n        + (jb+BLOCK_SIZE-j2-1-STRIDE+prev1)*n + (ib+i-prev1);                         \
+                                                                                                                                 \
+            prev3 = (jb+BLOCK_SIZE-i-1 < n-1) ? 1 : 0;                                                                           \
+            prev4 = (jb+BLOCK_SIZE-i-1 < n-1 && kb+j2 > 0) ? 1 : 0;                                                              \
+            vector2_id0 = (kb+j1-prev3)*n*n        + (jb+BLOCK_SIZE-i-1+prev3)*n         + (ib+k1)-prev3;                        \
+            vector2_id1 = (kb+j1-prev3)*n*n        + (jb+BLOCK_SIZE-i-1+prev3)*n         + (ib+k1+STRIDE)-prev3;                 \
+            vector2_id2 = (kb+j2-prev4)*n*n        + (jb+BLOCK_SIZE-i-1+prev4)*n         + (ib+k2)-prev4;                        \
+            vector2_id3 = (kb+j2+STRIDE-prev3)*n*n + (jb+BLOCK_SIZE-i-1+prev3)*n         + (ib+k2)-prev3;                        \
+                                                                                                                                 \
+            prev5 = (kb > 0) ? 1 : 0;                                                                                            \
+            prev6 = (kb > 0 && ib+j2 > 0) ? 1 : 0;                                                                               \
+            vector3_id0 = (kb+i-prev5)*n*n        + (jb+BLOCK_SIZE-k1-1+prev5)*n         + (ib+j1-prev5);                        \
+            vector3_id1 = (kb+i-prev5)*n*n        + (jb+BLOCK_SIZE-k1-1-STRIDE+prev5)*n  + (ib+j1-prev5);                        \
+            vector3_id2 = (kb+i-prev6)*n*n        + (jb+BLOCK_SIZE-k2-1+prev6)*n         + (ib+j2-prev6);                        \
+            vector3_id3 = (kb+i-prev5)*n*n        + (jb+BLOCK_SIZE-k2-1+prev5)*n         + (ib+j2+STRIDE-prev5);                 \
+            break;                                                                                                               \
+        case 13: /* Vector (-1,1,1) */                                                                                           \
+            prev1 = (ib+BLOCK_SIZE-1-i < n-1) ? 1 : 0;                                                                           \
+            prev2 = (ib+BLOCK_SIZE-1-i < n-1 && jb+j2 > 0) ? 1 : 0;                                                              \
+            vector1_id0 = (kb+k1-prev1)*n*n        + (jb+j1-prev1)*n        + (ib+BLOCK_SIZE-1-i+prev1);                         \
+            vector1_id1 = (kb+k1+STRIDE-prev1)*n*n + (jb+j1-prev1)*n        + (ib+BLOCK_SIZE-1-i+prev1);                         \
+            vector1_id2 = (kb+k2-prev2)*n*n        + (jb+j2-prev2)*n        + (ib+BLOCK_SIZE-1-i+prev2);                         \
+            vector1_id3 = (kb+k2-prev1)*n*n        + (jb+j2+STRIDE-prev1)*n + (ib+BLOCK_SIZE-1-i+prev1);                         \
+                                                                                                                                 \
+            prev3 = (jb > 0) ? 1 : 0;                                                                                            \
+            prev4 = (jb > 0 && kb+j2 > 0) ? 1 : 0;                                                                               \
+            vector2_id0 = (kb+j1-prev3)*n*n        + (jb+i-prev3)*n         + (ib+BLOCK_SIZE-1-k1+prev3);                        \
+            vector2_id1 = (kb+j1-prev3)*n*n        + (jb+i-prev3)*n         + (ib+BLOCK_SIZE-1-k1-STRIDE+prev3);                 \
+            vector2_id2 = (kb+j2-prev4)*n*n        + (jb+i-prev4)*n         + (ib+BLOCK_SIZE-1-k2+prev4);                        \
+            vector2_id3 = (kb+j2+STRIDE-prev3)*n*n + (jb+i-prev3)*n         + (ib+BLOCK_SIZE-1-k2+prev3);                        \
+                                                                                                                                 \
+            prev5 = (kb > 0) ? 1 : 0;                                                                                            \
+            prev6 = (kb > 0 && ib+BLOCK_SIZE-1-j2 < n-1) ? 1 : 0;                                                                \
+            vector3_id0 = (kb+i-prev5)*n*n        + (jb+k1-prev5)*n         + (ib+BLOCK_SIZE-1-j1+prev5);                        \
+            vector3_id1 = (kb+i-prev5)*n*n        + (jb+k1+STRIDE-prev5)*n  + (ib+BLOCK_SIZE-1-j1+prev5);                        \
+            vector3_id2 = (kb+i-prev6)*n*n        + (jb+k2-prev6)*n         + (ib+BLOCK_SIZE-1-j2+prev6);                        \
+            vector3_id3 = (kb+i-prev5)*n*n        + (jb+k2-prev5)*n         + (ib+BLOCK_SIZE-1-j2-STRIDE+prev5);                 \
+            break;                                                                                                               \
+        default: ;                                                                                                               \
+    }                                                                                             \
+    double vector1_val0 = hr_sphere_region[vector1_id0];                                          \
+    double vector1_val1 = hr_sphere_region[vector1_id1];                                          \
+    double vector1_val2 = hr_sphere_region[vector1_id2];                                          \
+    double vector1_val3 = hr_sphere_region[vector1_id3];                                          \
+    double vector2_val0 = hr_sphere_region[vector2_id0];                                          \
+    double vector2_val1 = hr_sphere_region[vector2_id1];                                          \
+    double vector2_val2 = hr_sphere_region[vector2_id2];                                          \
+    double vector2_val3 = hr_sphere_region[vector2_id3];                                          \
+    double vector3_val0 = hr_sphere_region[vector3_id0];                                          \
+    double vector3_val1 = hr_sphere_region[vector3_id1];                                          \
+    double vector3_val2 = hr_sphere_region[vector3_id2];                                          \
+    double vector3_val3 = hr_sphere_region[vector3_id3];                                          \
+    tmp_reg1 = _mm256_set_pd(vector1_val0, vector1_val1, vector1_val2, vector1_val3);             \
+    tmp_reg2 = _mm256_set_pd(vector2_val0, vector2_val1, vector2_val2, vector2_val3);             \
+    tmp_reg3 = _mm256_set_pd(vector3_val0, vector3_val1, vector3_val2, vector3_val3);             \
+    prev_mask_d1 = _mm256_cmp_pd(tmp_reg1, threshold, _CMP_GT_OQ);                                \
+    prev_mask_d2 = _mm256_cmp_pd(tmp_reg2, threshold, _CMP_GT_OQ);                                \
+    prev_mask_d3 = _mm256_cmp_pd(tmp_reg3, threshold, _CMP_GT_OQ);                                \
+    tmp_comp1 = _mm256_castpd_si256(prev_mask_d1);                                                \
+    tmp_comp2 = _mm256_castpd_si256(prev_mask_d2);                                                \
+    tmp_comp3 = _mm256_castpd_si256(prev_mask_d3);                                                \
+    prev_mask1 = _mm256_and_si256(tmp_comp1, ONES);                                               \
+    prev_mask2 = _mm256_and_si256(tmp_comp2, ONES);                                               \
+    prev_mask3 = _mm256_and_si256(tmp_comp3, ONES);
+
+#define LOAD_DATA_3D_SIMD(vecID, kb, jb, ib)                                                       \
+    switch (vecID) {                                                                               \
+        case 10: /* Vector (1,1,1) */                                                              \
+            vector1_id0 = (kb+k1)*n*n        + (jb+j1)*n        + (ib+i);                          \
+            vector1_id1 = (kb+k1+STRIDE)*n*n + (jb+j1)*n        + (ib+i);                          \
+            vector1_id2 = (kb+k2)*n*n        + (jb+j2)*n        + (ib+i);                          \
+            vector1_id3 = (kb+k2)*n*n        + (jb+j2+STRIDE)*n + (ib+i);                          \
+                                                                                                   \
+            vector2_id0 = (kb+j1)*n*n        + (jb+i)*n         + (ib+k1);                         \
+            vector2_id1 = (kb+j1)*n*n        + (jb+i)*n         + (ib+k1+STRIDE);                  \
+            vector2_id2 = (kb+j2)*n*n        + (jb+i)*n         + (ib+k2);                         \
+            vector2_id3 = (kb+j2+STRIDE)*n*n + (jb+i)*n         + (ib+k2);                         \
+                                                                                                   \
+            vector3_id0 = (kb+i)*n*n        + (jb+k1)*n         + (ib+j1);                         \
+            vector3_id1 = (kb+i)*n*n        + (jb+k1+STRIDE)*n  + (ib+j1);                         \
+            vector3_id2 = (kb+i)*n*n        + (jb+k2)*n         + (ib+j2);                         \
+            vector3_id3 = (kb+i)*n*n        + (jb+k2)*n         + (ib+j2+STRIDE);                  \
+            break;                                                                                 \
+        case 11: /* Vector (1,1,-1) */                                                             \
+            vector1_id0 = (kb+BLOCK_SIZE-1-k1)*n*n        + (jb+j1)*n        + (ib+i);                            \
+            vector1_id1 = (kb+BLOCK_SIZE-1-k1-STRIDE)*n*n + (jb+j1)*n        + (ib+i);                            \
+            vector1_id2 = (kb+BLOCK_SIZE-1-k2)*n*n        + (jb+j2)*n        + (ib+i);                            \
+            vector1_id3 = (kb+BLOCK_SIZE-1-k2)*n*n        + (jb+j2+STRIDE)*n + (ib+i);                            \
+                                                                                                                  \
+            vector2_id0 = (kb+BLOCK_SIZE-1-j1)*n*n        + (jb+i)*n         + (ib+k1);                           \
+            vector2_id1 = (kb+BLOCK_SIZE-1-j1)*n*n        + (jb+i)*n         + (ib+k1+STRIDE);                    \
+            vector2_id2 = (kb+BLOCK_SIZE-1-j2)*n*n        + (jb+i)*n         + (ib+k2);                           \
+            vector2_id3 = (kb+BLOCK_SIZE-1-j2-STRIDE)*n*n + (jb+i)*n         + (ib+k2);                           \
+                                                                                                                  \
+            vector3_id0 = (kb+BLOCK_SIZE-1-i)*n*n        + (jb+k1)*n         + (ib+j1);                           \
+            vector3_id1 = (kb+BLOCK_SIZE-1-i)*n*n        + (jb+k1+STRIDE)*n  + (ib+j1);                           \
+            vector3_id2 = (kb+BLOCK_SIZE-1-i)*n*n        + (jb+k2)*n         + (ib+j2);                           \
+            vector3_id3 = (kb+BLOCK_SIZE-1-i)*n*n        + (jb+k2)*n         + (ib+j2+STRIDE);                    \
+            break;                                                                                                \
+        case 12: /* Vector (1,-1,1) */                                                                            \
+            vector1_id0 = (kb+k1)*n*n        + (jb+BLOCK_SIZE-j1-1)*n        + (ib+i);                            \
+            vector1_id1 = (kb+k1+STRIDE)*n*n + (jb+BLOCK_SIZE-j1-1)*n        + (ib+i);                            \
+            vector1_id2 = (kb+k2)*n*n        + (jb+BLOCK_SIZE-j2-1)*n        + (ib+i);                            \
+            vector1_id3 = (kb+k2)*n*n        + (jb+BLOCK_SIZE-j2-1-STRIDE)*n + (ib+i);                            \
+                                                                                                                  \
+            vector2_id0 = (kb+j1)*n*n        + (jb+BLOCK_SIZE-i-1)*n         + (ib+k1);                           \
+            vector2_id1 = (kb+j1)*n*n        + (jb+BLOCK_SIZE-i-1)*n         + (ib+k1+STRIDE);                    \
+            vector2_id2 = (kb+j2)*n*n        + (jb+BLOCK_SIZE-i-1)*n         + (ib+k2);                           \
+            vector2_id3 = (kb+j2+STRIDE)*n*n + (jb+BLOCK_SIZE-i-1)*n         + (ib+k2);                          \
+                                                                                                                  \
+            vector3_id0 = (kb+i)*n*n        + (jb+BLOCK_SIZE-k1-1)*n         + (ib+j1);                           \
+            vector3_id1 = (kb+i)*n*n        + (jb+BLOCK_SIZE-k1-1-STRIDE)*n  + (ib+j1);                           \
+            vector3_id2 = (kb+i)*n*n        + (jb+BLOCK_SIZE-k2-1)*n         + (ib+j2);                           \
+            vector3_id3 = (kb+i)*n*n        + (jb+BLOCK_SIZE-k2-1)*n         + (ib+j2+STRIDE);                    \
+    break;                                                                                                        \
+        case 13: /* Vector (-1,1,1) */                                                                            \
+            vector1_id0 = (kb+k1)*n*n        + (jb+j1)*n        + (ib+BLOCK_SIZE-1-i);                            \
+            vector1_id1 = (kb+k1+STRIDE)*n*n + (jb+j1)*n        + (ib+BLOCK_SIZE-1-i);                            \
+            vector1_id2 = (kb+k2)*n*n        + (jb+j2)*n        + (ib+BLOCK_SIZE-1-i);                            \
+            vector1_id3 = (kb+k2)*n*n        + (jb+j2+STRIDE)*n + (ib+BLOCK_SIZE-1-i);                            \
+                                                                                                                  \
+            vector2_id0 = (kb+j1)*n*n        + (jb+i)*n         + (ib+BLOCK_SIZE-1-k1);                           \
+            vector2_id1 = (kb+j1)*n*n        + (jb+i)*n         + (ib+BLOCK_SIZE-1-k1-STRIDE);                    \
+            vector2_id2 = (kb+j2)*n*n        + (jb+i)*n         + (ib+BLOCK_SIZE-1-k2);                           \
+            vector2_id3 = (kb+j2+STRIDE)*n*n + (jb+i)*n         + (ib+BLOCK_SIZE-1-k2);                           \
+                                                                                                                  \
+            vector3_id0 = (kb+i)*n*n        + (jb+k1)*n         + (ib+BLOCK_SIZE-1-j1);                           \
+            vector3_id1 = (kb+i)*n*n        + (jb+k1+STRIDE)*n  + (ib+BLOCK_SIZE-1-j1);                           \
+            vector3_id2 = (kb+i)*n*n        + (jb+k2)*n         + (ib+BLOCK_SIZE-1-j2);                           \
+            vector3_id3 = (kb+i)*n*n        + (jb+k2)*n         + (ib+BLOCK_SIZE-1-j2-STRIDE);                    \
+            break;                                                                                \
+        default: ;                                                                                \
+    }                                                                                             \
+    double vector1_val0 = hr_sphere_region[vector1_id0];                                          \
+    double vector1_val1 = hr_sphere_region[vector1_id1];                                          \
+    double vector1_val2 = hr_sphere_region[vector1_id2];                                          \
+    double vector1_val3 = hr_sphere_region[vector1_id3];                                          \
+    double vector2_val0 = hr_sphere_region[vector2_id0];                                          \
+    double vector2_val1 = hr_sphere_region[vector2_id1];                                          \
+    double vector2_val2 = hr_sphere_region[vector2_id2];                                          \
+    double vector2_val3 = hr_sphere_region[vector2_id3];                                          \
+    double vector3_val0 = hr_sphere_region[vector3_id0];                                          \
+    double vector3_val1 = hr_sphere_region[vector3_id1];                                          \
+    double vector3_val2 = hr_sphere_region[vector3_id2];                                          \
+    double vector3_val3 = hr_sphere_region[vector3_id3];                                          \
+    region1 = _mm256_set_pd(vector1_val0, vector1_val1, vector1_val2, vector1_val3);              \
+    region2 = _mm256_set_pd(vector2_val0, vector2_val1, vector2_val2, vector2_val3);              \
+    region3 = _mm256_set_pd(vector3_val0, vector3_val1, vector3_val2, vector3_val3);              \
+
+#define LOAD_PREV_REMAINDER_3D_SIMD(vecID, kb, jb, ib)                                            \
+    __m256d tmp_reg1, tmp_reg2, prev_mask_d1, prev_mask_d2;                                       \
+    __m256i tmp_comp1, tmp_comp2;                                                                 \
+    int vector1_id0, vector1_id1, vector1_id2;                                                    \
+    int vector2_id0, vector2_id1, vector2_id2;                                                    \
+    switch (vecID) {                                                                                                       \
+        case 10: /* Vector (1,1,1) */                                                                                      \
+            prev1 = (ib > 0) ? 1 : 0;                                                                                      \
+            prev2 = (ib > 0 && jb+j > STRIDE) ? 1 : 0;                                                                     \
+            vector1_id0 = (kb+k-prev1)*n*n        + (jb+j-prev1)*n        + (ib+i-prev1);                                  \
+            vector1_id1 = (kb+k-prev2)*n*n        + (jb+j-STRIDE-prev2)*n + (ib+i-prev2);                                  \
+                                                                                                                           \
+            prev3 = (jb > 0) ? 1 : 0;                                                                                      \
+            prev4 = (jb > 0 && kb+k > STRIDE) ? 1 : 0;                                                                     \
+            vector1_id2 = (kb+k-prev3)*n*n        + (jb+i-prev3)*n        + (ib+j-prev3);                                  \
+            vector2_id0 = (kb+k-STRIDE-prev4)*n*n + (jb+i-prev4)*n        + (ib+j-prev4);                                  \
+                                                                                                                           \
+            prev5 = (kb > 0) ? 1 : 0;                                                                                      \
+            prev6 = (kb > 0 && ib+j > STRIDE) ? 1 : 0;                                                                     \
+            vector2_id1 = (kb+i-prev5)*n*n       + (jb+k-prev5)*n        + (ib+j-prev5);                                   \
+            vector2_id2 = (kb+i-prev6)*n*n       + (jb+k-prev6)*n        + (ib+j-STRIDE-prev6);                            \
+            break;                                                                                                         \
+        case 11: /* Vector (1,1,-1) */                                                                                     \
+            prev1 = (ib > 0) ? 1 : 0;                                                                                      \
+            prev2 = (ib > 0 && jb+j > STRIDE) ? 1 : 0;                                                                     \
+            vector1_id0 = (kb+BLOCK_SIZE-1-k+prev1)*n*n        + (jb+j-prev1)*n        + (ib+i-prev1);                     \
+            vector1_id1 = (kb+BLOCK_SIZE-1-k+prev2)*n*n        + (jb+j-STRIDE-prev2)*n + (ib+i-prev2);                     \
+                                                                                                                           \
+            prev3 = (jb > 0) ? 1 : 0;                                                                                      \
+            prev4 = (jb > 0 && kb+BLOCK_SIZE-1-k+STRIDE < n-1) ? 1 : 0;                                                    \
+            vector1_id2 = (kb+BLOCK_SIZE-1-k+prev3)*n*n        + (jb+i-prev3)*n        + (ib+j-prev3);                     \
+            vector2_id0 = (kb+BLOCK_SIZE-1-k+STRIDE+prev4)*n*n + (jb+i-prev4)*n        + (ib+j-prev4);                     \
+                                                                                                                           \
+            prev5 = (kb+BLOCK_SIZE-1-i < n-1) ? 1 : 0;                                                                     \
+            prev6 = ((kb+BLOCK_SIZE-1-i < n-1) && ib+j > STRIDE) ? 1 : 0;                                                  \
+            vector2_id1 = (kb+BLOCK_SIZE-1-i+prev5)*n*n       + (jb+k-prev5)*n        + (ib+j-prev5);                      \
+            vector2_id2 = (kb+BLOCK_SIZE-1-i+prev6)*n*n       + (jb+k-prev6)*n        + (ib+j-STRIDE-prev6);               \
+            break;                                                                                                         \
+        case 12: /* Vector (1,-1,1) */                                                                                     \
+            prev1 = (ib > 0) ? 1 : 0;                                                                                      \
+            prev2 = (ib > 0 && jb+BLOCK_SIZE-k-1+STRIDE < n-1) ? 1 : 0;                                                    \
+            vector1_id0 = (kb+k-prev1)*n*n        + (jb+BLOCK_SIZE-k-1+prev1)*n        + (ib+i-prev1);                     \
+            vector1_id1 = (kb+k-prev2)*n*n        + (jb+BLOCK_SIZE-k-1+STRIDE+prev2)*n + (ib+i-prev2);                     \
+                                                                                                                           \
+            prev3 = (jb+BLOCK_SIZE-i-1 < n-1) ? 1 : 0;                                                                     \
+            prev4 = (jb+BLOCK_SIZE-i-1 < n-1 && kb+k > STRIDE) ? 1 : 0;                                                    \
+            vector1_id2 = (kb+k-prev3)*n*n        + (jb+BLOCK_SIZE-i-1+prev3)*n        + (ib+k-prev3);                     \
+            vector2_id0 = (kb+k-STRIDE-prev4)*n*n + (jb+BLOCK_SIZE-i-1+prev4)*n        + (ib+k-prev4);                     \
+                                                                                                                           \
+            prev5 = (kb > 0) ? 1 : 0;                                                                                      \
+            prev6 = (kb > 0 && ib+k-STRIDE > 0) ? 1 : 0;                                                                   \
+            vector2_id1 = (kb+i-prev5)*n*n       + (jb+BLOCK_SIZE-k-1+prev5)*n        + (ib+k-prev5);                      \
+            vector2_id2 = (kb+i-prev6)*n*n       + (jb+BLOCK_SIZE-k-1+prev6)*n        + (ib+k-STRIDE-prev6);               \
+            break;                                                                                                         \
+        case 13: /* Vector (-1,1,1) */                                                                                     \
+            prev1 = (ib+BLOCK_SIZE-1-i < n-1) ? 1 : 0;                                                                     \
+            prev2 = (ib+BLOCK_SIZE-1-i < n-1 && jb+j > STRIDE) ? 1 : 0;                                                    \
+            vector1_id0 = (kb+k-prev1)*n*n        + (jb+j-prev1)*n        + (ib+BLOCK_SIZE-1-i+prev1);                     \
+            vector1_id1 = (kb+k-prev2)*n*n        + (jb+j-STRIDE-prev2)*n + (ib+BLOCK_SIZE-1-i+prev2);                     \
+                                                                                                                           \
+            prev3 = (jb > 0) ? 1 : 0;                                                                                      \
+            prev4 = (jb > 0 && kb+k > STRIDE) ? 1 : 0;                                                                     \
+            vector1_id2 = (kb+k-prev3)*n*n        + (jb+i-prev3)*n        + (ib+BLOCK_SIZE-1-j+prev3);                     \
+            vector2_id0 = (kb+k-STRIDE-prev4)*n*n + (jb+i-prev4)*n        + (ib+BLOCK_SIZE-1-j+prev4);                     \
+                                                                                                                           \
+            prev5 = (kb > 0) ? 1 : 0;                                                                                      \
+            prev6 = (kb > 0 && ib+BLOCK_SIZE-1-j+STRIDE < n-1) ? 1 : 0;                                                    \
+            vector2_id1 = (kb+i-prev5)*n*n       + (jb+k-prev5)*n        + (ib+BLOCK_SIZE-1-j+prev5);                      \
+            vector2_id2 = (kb+i-prev6)*n*n       + (jb+k-prev6)*n        + (ib+BLOCK_SIZE-1-j+STRIDE+prev6);               \
+            break;                                                                                                         \
+        default: ;                                                                                \
+    }                                                                                             \
+    double vector1_val0 = hr_sphere_region[vector1_id0];                                          \
+    double vector1_val1 = hr_sphere_region[vector1_id1];                                          \
+    double vector1_val2 = hr_sphere_region[vector1_id2];                                          \
+    double vector1_val3 = 0.0;                                                                    \
+    double vector2_val0 = hr_sphere_region[vector2_id0];                                          \
+    double vector2_val1 = hr_sphere_region[vector2_id1];                                          \
+    double vector2_val2 = hr_sphere_region[vector2_id2];                                          \
+    double vector2_val3 = 0.0;                                                                    \
+    tmp_reg1 = _mm256_set_pd(vector1_val0, vector1_val1, vector1_val2, vector1_val3);             \
+    tmp_reg2 = _mm256_set_pd(vector2_val0, vector2_val1, vector2_val2, vector2_val3);             \
+    prev_mask_d1 = _mm256_cmp_pd(tmp_reg1, threshold, _CMP_GT_OQ);                                \
+    prev_mask_d2 = _mm256_cmp_pd(tmp_reg2, threshold, _CMP_GT_OQ);                                \
+    tmp_comp1 = _mm256_castpd_si256(prev_mask_d1);                                                \
+    tmp_comp2 = _mm256_castpd_si256(prev_mask_d2);                                                \
+    prev_mask1 = _mm256_and_si256(tmp_comp1, ONES);                                               \
+    prev_mask2 = _mm256_and_si256(tmp_comp2, ONES);
+
+
+#define LOAD_DATA_REMAINDER_3D_SIMD(vecID, kb, jb, ib)                                            \
+    switch (vecID) {                                                                              \
+        case 10: /* Vector (1,1,1) */                                                             \
+            vector1_id0 = (kb+k)*n*n        + (jb+j)*n        + (ib+i);                           \
+            vector1_id1 = (kb+k)*n*n        + (jb+j-STRIDE)*n + (ib+i);                           \
+                                                                                                  \
+            vector1_id2 = (kb+k)*n*n        + (jb+i)*n        + (ib+j);                           \
+            vector2_id0 = (kb+k-STRIDE)*n*n + (jb+i)*n        + (ib+j);                           \
+                                                                                                  \
+            vector2_id1 = (kb+i)*n*n       + (jb+k)*n        + (ib+j);                            \
+            vector2_id2 = (kb+i)*n*n       + (jb+k)*n        + (ib+j-STRIDE);                     \
+            break;                                                                                \
+        case 11: /* Vector (-1,0,1) */                                                            \
+            vector1_id0 = (kb+BLOCK_SIZE-1-k)*n*n        + (jb+j)*n        + (ib+i);              \
+            vector1_id1 = (kb+BLOCK_SIZE-1-k)*n*n        + (jb+j-STRIDE)*n + (ib+i);              \
+                                                                                                  \
+            vector1_id2 = (kb+BLOCK_SIZE-1-k)*n*n        + (jb+i)*n        + (ib+j);              \
+            vector2_id0 = (kb+BLOCK_SIZE-1-k+STRIDE)*n*n + (jb+i)*n        + (ib+j);              \
+                                                                                                  \
+            vector2_id1 = (kb+BLOCK_SIZE-1-i)*n*n       + (jb+k)*n        + (ib+j);               \
+            vector2_id2 = (kb+BLOCK_SIZE-1-i)*n*n       + (jb+k)*n        + (ib+j-STRIDE);        \
+            break;                                                                                \
+        case 12: /* Vector (1,-1,1) */                                                            \
+            vector1_id0 = (kb+k)*n*n        + (jb+BLOCK_SIZE-k-1)*n        + (ib+i);              \
+            vector1_id1 = (kb+k)*n*n        + (jb+BLOCK_SIZE-k-1+STRIDE)*n + (ib+i);              \
+                                                                                                  \
+            vector1_id2 = (kb+k)*n*n        + (jb+BLOCK_SIZE-i-1)*n        + (ib+k);              \
+            vector2_id0 = (kb+k-STRIDE)*n*n + (jb+BLOCK_SIZE-i-1)*n        + (ib+k);              \
+                                                                                                  \
+            vector2_id1 = (kb+i)*n*n       + (jb+BLOCK_SIZE-k-1)*n        + (ib+k);               \
+            vector2_id2 = (kb+i)*n*n       + (jb+BLOCK_SIZE-k-1)*n        + (ib+k-STRIDE);        \
+            break;                                                                                \
+        case 13: /* Vector (-1,1,1) */                                                            \
+            vector1_id0 = (kb+k)*n*n        + (jb+j)*n        + (ib+BLOCK_SIZE-1-i);              \
+            vector1_id1 = (kb+k)*n*n        + (jb+j-STRIDE)*n + (ib+BLOCK_SIZE-1-i);              \
+                                                                                                  \
+            vector1_id2 = (kb+k)*n*n        + (jb+i)*n        + (ib+BLOCK_SIZE-1-j);              \
+            vector2_id0 = (kb+k-STRIDE)*n*n + (jb+i)*n        + (ib+BLOCK_SIZE-1-j);              \
+                                                                                                  \
+            vector2_id1 = (kb+i)*n*n       + (jb+k)*n        + (ib+BLOCK_SIZE-1-j);               \
+            vector2_id2 = (kb+i)*n*n       + (jb+k)*n        + (ib+BLOCK_SIZE-1-j+STRIDE);        \
+            break;                                                                                \
+        default: ;                                                                                \
+    }                                                                                             \
+    double vector1_val0 = hr_sphere_region[vector1_id0];                                          \
+    double vector1_val1 = hr_sphere_region[vector1_id1];                                          \
+    double vector1_val2 = hr_sphere_region[vector1_id2];                                          \
+    double vector1_val3 = 0.0;                                                                    \
+    double vector2_val0 = hr_sphere_region[vector2_id0];                                          \
+    double vector2_val1 = hr_sphere_region[vector2_id1];                                          \
+    double vector2_val2 = hr_sphere_region[vector2_id2];                                          \
+    double vector2_val3 = 0.0;                                                                    \
+    region1 = _mm256_set_pd(vector1_val0, vector1_val1, vector1_val2, vector1_val3);              \
+    region2 = _mm256_set_pd(vector2_val0, vector2_val1, vector2_val2, vector2_val3);
+
+
+#define BLOCK_KERNEL_3D_DIAGONALS_SIMD(kb, jb, ib)                                                \
+{                                                                                                 \
+    __m256d region1;                                                                              \
+    __m256d bone_count = _mm256_setzero_pd();                                                     \
+    __m256i edge_count = _mm256_set1_epi64x(0);                                                   \
+    __m256i compi1;                                                                               \
+                                                                                                  \
+                                                                                                  \
+    /* load prev */                                                                               \
+    __m256d tmp_reg1, prev_mask_d1;                                                               \
+    __m256i tmp_comp1, curr_mask1, prev_mask1;                                                    \
+    int vector1_id0, vector1_id1, vector1_id2, vector1_id3, prev1, prev2, prev3, prev4;           \
+    double vector1_val0, vector1_val1, vector1_val2, vector1_val3;                                \
+                                                                                                  \
+    prev1 = (kb >0 && jb > 0 && ib > 0) ? 1 : 0;                                                  \
+    prev2 = (kb+BLOCK_SIZE-1 < n-1 && jb > 0 && ib > 0) ? 1 : 0;                                  \
+    prev3 = (kb >0 && jb+BLOCK_SIZE-1 < n-1 && ib > 0) ? 1 : 0;                                   \
+    prev4 = (kb >0 && jb > 0 && ib+BLOCK_SIZE-1 < n-1) ? 1 : 0;                                   \
+    vector1_id0 = (kb-prev1)*n*n + (jb-prev1)*n + (ib-prev1);                                     \
+    vector1_id1 = (kb+BLOCK_SIZE-1+prev2)*n*n + (jb-prev2)*n + (ib-prev2);                        \
+    vector1_id2 = (kb-prev3)*n*n + (jb+BLOCK_SIZE-1+prev3)*n + (ib-prev3);                        \
+    vector1_id3 = (kb-prev4)*n*n + (jb-prev4)*n + (ib+BLOCK_SIZE-1+prev4);                        \
+    vector1_val0 = hr_sphere_region[vector1_id0];                                                 \
+    vector1_val1 = hr_sphere_region[vector1_id1];                                                 \
+    vector1_val2 = hr_sphere_region[vector1_id2];                                                 \
+    vector1_val3 = hr_sphere_region[vector1_id3];                                                 \
+    tmp_reg1 = _mm256_set_pd(vector1_val0, vector1_val1, vector1_val2, vector1_val3);             \
+    prev_mask_d1 = _mm256_cmp_pd(tmp_reg1, threshold, _CMP_GT_OQ);                                \
+    tmp_comp1 = _mm256_castpd_si256(prev_mask_d1);                                                \
+    prev_mask1 = _mm256_and_si256(tmp_comp1, ONES);                                               \
+                                                                                                  \
+                                                                                                  \
+    /* load diagonals */                                                                          \
+    for (int i = 0; i < BLOCK_SIZE; ++i) {                                                        \
+        vector1_id0 = (kb+i)*n*n + (jb+i)*n + (ib+i);                                             \
+        vector1_id1 = (kb+BLOCK_SIZE-i-1)*n*n + (jb+i)*n + (ib+i);                                \
+        vector1_id2 = (kb+i)*n*n + (jb+BLOCK_SIZE-i-1)*n + (ib+i);                                \
+        vector1_id3 = (kb+i)*n*n + (jb+i)*n + (ib+BLOCK_SIZE-i-1);                                \
+        vector1_val0 = hr_sphere_region[vector1_id0];                                             \
+        vector1_val1 = hr_sphere_region[vector1_id1];                                             \
+        vector1_val2 = hr_sphere_region[vector1_id2];                                             \
+        vector1_val3 = hr_sphere_region[vector1_id3];                                             \
+        region1 = _mm256_set_pd(vector1_val0, vector1_val1, vector1_val2, vector1_val3);          \
+                                                                                                  \
+                                                                                                  \
+        compi1 = _mm256_castpd_si256(_mm256_cmp_pd(region1, threshold, _CMP_GT_OQ));              \
+        curr_mask1 = _mm256_and_si256(compi1, ONES);                                              \
+        __m256i edge1 = _mm256_xor_si256(curr_mask1, prev_mask1);                                  \
+        bone_count = _mm256_add_pd(bone_count, region1);                                          \
+        edge_count  = _mm256_add_epi64(edge_count, edge1);                                        \
+        prev_mask1 = curr_mask1;                                                                  \
+    }                                                                                             \
+                                                                                                  \
+    double bone_length_block_diagonals[4];                                                        \
+    _mm256_store_pd(bone_length_block_diagonals, bone_count);                                     \
+    bone_length[9] += bone_length_block_diagonals[0];                                             \
+    intercepts[9] += _mm256_extract_epi64(edge_count, 0);                                         \
+    bone_length[10] += bone_length_block_diagonals[1];                                            \
+    intercepts[10] += _mm256_extract_epi64(edge_count, 1);                                        \
+    bone_length[11] += bone_length_block_diagonals[2];                                            \
+    intercepts[11] += _mm256_extract_epi64(edge_count, 2);                                        \
+    bone_length[12] += bone_length_block_diagonals[3];                                            \
+    intercepts[12] += _mm256_extract_epi64(edge_count, 3);                                        \
+}
+
+
+
+#define BLOCK_KERNEL_3D_SIMD(vec, kb, jb, ib)                                                             \
+    {                                                                                                         \
+        const int vecID = vec;                                                                                \
+        double bone_length_block = 0.0;                                                                       \
+        int intercepts_block = 0;                                                                             \
+                                                                                                              \
+        /* Init accumulators */                                                                               \
+        __m256d bone_count1 = _mm256_setzero_pd();                                                            \
+        __m256d bone_count2 = _mm256_setzero_pd();                                                            \
+        __m256d bone_count3 = _mm256_setzero_pd();                                                            \
+                                                                                                              \
+        __m256i edge_count1 = _mm256_set1_epi64x(0);                                                          \
+        __m256i edge_count2 = _mm256_set1_epi64x(0);                                                          \
+        __m256i edge_count3 = _mm256_set1_epi64x(0);                                                          \
+                                                                                                              \
+        __m256i curr_mask1;                                                                                   \
+        __m256i curr_mask2;                                                                                   \
+        __m256i curr_mask3;                                                                                   \
+                                                                                                              \
+        __m256i prev_mask1;                                                                                   \
+        __m256i prev_mask2;                                                                                   \
+        __m256i prev_mask3;                                                                                   \
+                                                                                                              \
+        int prev1, prev3, prev5;                                                                              \
+        int prev2, prev4, prev6;                                                                              \
+                                                                                                              \
+        __m256d region1, region2, region3;                                                                    \
+        __m256i compi1, compi2, compi3;                                                                       \
+                                                                                                              \
+        for (int ks = 2; ks < BLOCK_SIZE; ks += 2*STRIDE) {                                                   \
+            for (int js = ks + 2; js < BLOCK_SIZE; js += STRIDE) {                                            \
+                int k1 = ks;                                                                                  \
+                int j1 = js;                                                                                  \
+                int k2 = js;                                                                                  \
+                int j2 = ks - 2;                                                                              \
+                int i = 0;                                                                                    \
+                                                                                                              \
+                LOAD_PREV_3D_SIMD(vecID, kb, jb, ib)                                                                      \
+                                                                                                              \
+                while (j1 < BLOCK_SIZE) {                                                                     \
+                                                                                                              \
+                    LOAD_DATA_3D_SIMD(vecID, kb, jb, ib)                                                                  \
+                                                                                                              \
+                    bone_count1 = _mm256_add_pd(bone_count1, region1);                                        \
+                    bone_count2 = _mm256_add_pd(bone_count2, region2);                                        \
+                    bone_count3 = _mm256_add_pd(bone_count3, region3);                                        \
+                                                                                                              \
+                    /* Calculate masks */                                                                     \
+                    compi1 = _mm256_castpd_si256(_mm256_cmp_pd(region1, threshold, _CMP_GT_OQ));              \
+                    curr_mask1 = _mm256_and_si256(compi1, ONES);                                              \
+                    compi2 = _mm256_castpd_si256(_mm256_cmp_pd(region2, threshold, _CMP_GT_OQ));              \
+                    curr_mask2 = _mm256_and_si256(compi2, ONES);                                              \
+                    compi3 = _mm256_castpd_si256(_mm256_cmp_pd(region3, threshold, _CMP_GT_OQ));              \
+                    curr_mask3 = _mm256_and_si256(compi3, ONES);                                              \
+                    /* Detect edge and add to counter */                                                      \
+                    __m256i edge1 = _mm256_xor_si256(curr_mask1, prev_mask1);                                 \
+                    __m256i edge2 = _mm256_xor_si256(curr_mask2, prev_mask2);                                 \
+                    __m256i edge3 = _mm256_xor_si256(curr_mask3, prev_mask3);                                 \
+                                                                                                              \
+                    edge_count1 = _mm256_add_epi64(edge_count1, edge1);                                       \
+                    edge_count2 = _mm256_add_epi64(edge_count2, edge2);                                       \
+                    edge_count3 = _mm256_add_epi64(edge_count3, edge3);                                       \
+                                                                                                              \
+                    prev_mask1 = curr_mask1;                                                                  \
+                    prev_mask2 = curr_mask2;                                                                  \
+                    prev_mask3 = curr_mask3;                                                                  \
+                                                                                                              \
+                    ++k1;                                                                                     \
+                    ++j1;                                                                                     \
+                    ++k2;                                                                                     \
+                    ++j2;                                                                                     \
+                    ++i;                                                                                      \
+                }                                                                                             \
+            }                                                                                                 \
+        }                                                                                                     \
+                                                                                                              \
+        /* Calculate remainder */                                                                             \
+        for (int jk_s = 2; jk_s < BLOCK_SIZE; jk_s += 2*STRIDE) {                                             \
+            int k = jk_s;                                                                                     \
+            int j = jk_s;                                                                                     \
+            int i = 0;                                                                                        \
+                                                                                                              \
+            /* Start remainder complete vectors */                                                            \
+            LOAD_PREV_REMAINDER_3D_SIMD(vecID, kb, jb, ib)                                                                \
+                                                                                                              \
+            while (j < BLOCK_SIZE) {                                                                          \
+                LOAD_DATA_REMAINDER_3D_SIMD(vecID, kb, jb, ib)                                                            \
+                                                                                                              \
+                bone_count1 = _mm256_add_pd(bone_count1, region1);                                            \
+                bone_count2 = _mm256_add_pd(bone_count2, region2);                                            \
+                                                                                                              \
+                /* Calculate masks */                                                                         \
+                compi1 = _mm256_castpd_si256(_mm256_cmp_pd(region1, threshold, _CMP_GT_OQ));                  \
+                curr_mask1 = _mm256_and_si256(compi1, ONES);                                                  \
+                compi2 = _mm256_castpd_si256(_mm256_cmp_pd(region2, threshold, _CMP_GT_OQ));                  \
+                curr_mask2 = _mm256_and_si256(compi2, ONES);                                                  \
+                /* Detect edge and add to counter */                                                          \
+                __m256i edge1 = _mm256_xor_si256(curr_mask1, prev_mask1);                                     \
+                __m256i edge2 = _mm256_xor_si256(curr_mask2, prev_mask2);                                     \
+                edge_count1 = _mm256_add_epi64(edge_count1, edge1);                                           \
+                edge_count2 = _mm256_add_epi64(edge_count2, edge2);                                           \
+                                                                                                              \
+                prev_mask1 = curr_mask1;                                                                      \
+                prev_mask2 = curr_mask2;                                                                      \
+                                                                                                              \
+                ++k;                                                                                          \
+                ++j;                                                                                          \
+                ++i;                                                                                          \
+            }                                                                                                 \
+        }                                                                                                     \
+                                                                                                              \
+        /* Sum up accumulators */                                                                             \
+        __m256d bone_count23 = _mm256_add_pd(bone_count2, bone_count3);                                       \
+        __m256i edge_count23 = _mm256_add_epi64(edge_count2, edge_count3);                                    \
+        bone_count1 = _mm256_add_pd(bone_count1, bone_count23);                                               \
+        edge_count1 = _mm256_add_epi64(edge_count1, edge_count23);                                            \
+                                                                                                              \
+        bone_length_block = horizontal_add(bone_count1);                                                      \
+        intercepts_block  = horizontal_addi(edge_count1);                                                     \
+                                                                                                              \
+        bone_length[vecID-1] += bone_length_block;                                                            \
+        intercepts[vecID-1]  += intercepts_block;                                                             \
+    }
+
 double simd_mil_1D(const double *hr_sphere_region, int* intercepts, int n, const int kk, const int jj, const int ii,  const int vecID);
 double simd_mil_2D_pos(const double *hr_sphere_region, int* intercepts, int n, const int kk, const int jj, const int ii,  const int vecID);
 double simd_mil_2D_neg(const double *hr_sphere_region, int* intercepts, int n, const int kk, const int jj, const int ii,  const int vecID);

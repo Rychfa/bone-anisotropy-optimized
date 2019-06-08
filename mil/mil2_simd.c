@@ -322,8 +322,6 @@ void mil2_simd(const double *hr_sphere_region, int n, double *directions_vectors
     for (int kk_b = 0; kk_b < n; kk_b+=BLOCK_SIZE) {
         for (int jj_b = 0; jj_b < n; jj_b+=BLOCK_SIZE) {
             for (int ii_b = 0; ii_b < n; ii_b+=BLOCK_SIZE) {
-
-               for (int v = 0; v < 2; ++v) {
                     BLOCK_KERNEL_1D_SIMD(1, kk_b, jj_b, ii_b)
                     BLOCK_KERNEL_1D_SIMD(2, kk_b, ii_b, jj_b)
                     BLOCK_KERNEL_1D_SIMD(3, jj_b, ii_b, kk_b)
@@ -333,8 +331,11 @@ void mil2_simd(const double *hr_sphere_region, int n, double *directions_vectors
                     BLOCK_KERNEL_2D_NEG_SIMD(7, kk_b, jj_b, ii_b)
                     BLOCK_KERNEL_2D_NEG_SIMD(8, jj_b, kk_b, ii_b)
                     BLOCK_KERNEL_2D_NEG_SIMD(9, ii_b, jj_b, kk_b)
-               }
-//               BLOCK_KERNEL_1D_SIMD(1, kk_b, jj_b, ii_b)
+                    BLOCK_KERNEL_3D_SIMD(10, kk_b, jj_b, ii_b)
+                    BLOCK_KERNEL_3D_SIMD(11, kk_b, jj_b, ii_b)
+                    BLOCK_KERNEL_3D_SIMD(12, kk_b, jj_b, ii_b)
+                    BLOCK_KERNEL_3D_SIMD(13, kk_b, jj_b, ii_b)
+                    BLOCK_KERNEL_3D_DIAGONALS_SIMD(kk_b, jj_b, ii_b)
             }
         }
     }
