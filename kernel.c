@@ -43,7 +43,7 @@ static double* ptrLowResGlobal = NULL;
 void print_vector(double *vector, int n) {
     for (int i = 0; i < n; ++i) {
         char coma_or_space = i < n - 1 ? ',' : ' ';
-        printf("%f%c", vector[i], coma_or_space);
+        printf("%g%c", vector[i], coma_or_space);
     }
     printf("\n*******\n");
 }
@@ -52,7 +52,7 @@ void print_matrix3(double matrix[3][3]) {
     for (int i = 0; i < 3; ++i) {
         for (int j = 0; j < 3; ++j) {
             char coma_or_space = j < 3 - 1 ? ',' : ' ';
-            printf("%f%c", matrix[i][j], coma_or_space);
+            printf("%7.20f%c", matrix[i][j], coma_or_space);
         }
         printf("\n");
     }
@@ -282,13 +282,18 @@ void kernel_basic (double* sphere, double* extracted_region, double* ptrHighRes,
                     /* compute fabric */
                     double mils[NUM_DIRECTIONS];
                     mil2_baseline(extracted_region, SPHERE_NDIM, mils);
-                    // print_vector(mils, NUM_DIRECTIONS); 
                     
                     double Q[3][3];
                     fit_ellipsoid_mils(mils, (double (*)[3][3])Q);
-                    // print_matrix3(Q);
 
                     eigen3(Q, &ptrEvecOut[ii_lr*9], &ptrEvalsOut[ii_lr*3]);
+
+                    if (i_lr == 1 && j_lr == 4 && k_lr == 13) {
+                        print_vector(mils, NUM_DIRECTIONS); 
+                        print_matrix3(Q);
+                        print_vector(&ptrEvecOut[ii_lr*9], 9);
+                    }
+
                 }
             }
         }
@@ -426,14 +431,22 @@ void kernel_opt1 (double* sphere, double* extracted_region, double* ptrHighRes, 
 
                     // compute fabric */
                     double mils[NUM_DIRECTIONS];
-                    mil2_simd(extracted_region, SPHERE_NDIM, mils);
+                    mil2_baseline(extracted_region, SPHERE_NDIM, mils);
+                    // mil2_simd(extracted_region, SPHERE_NDIM, mils);
                     // print_vector(mils, NUM_DIRECTIONS); 
 
                     double Q[3][3];
-                    fit_ellipsoid_mils(mils, (double (*)[3][3])Q);
-                    // print_matrix3(Q);
-                    
+                    // fit_ellipsoid_mils(mils, (double (*)[3][3])Q);
+                    fit_ellipsoid_mils_simd(mils, (double (*)[3][3])Q);
+
                     eigen3(Q, &ptrEvecOut[ii_lr*9], &ptrEvalsOut[ii_lr*3]);
+
+                    if (i_lr == 1 && j_lr == 4 && k_lr == 13) {
+                        print_vector(mils, NUM_DIRECTIONS); 
+                        print_matrix3(Q);
+                        print_vector(&ptrEvecOut[ii_lr*9], 9);
+                    }
+                    
                 }
             }
         }
