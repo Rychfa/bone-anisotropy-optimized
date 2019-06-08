@@ -99,13 +99,14 @@ void register_functions()
  * test evals and evecs against ground truth file
  *
  */
-double checksum(double (*evals)[3], double (*evecs)[3][3], int n) 
+bool checksum(double (*evals)[3], double (*evecs)[3][3], int n) 
 {
     FILE *fd = fopen("ground_truth.txt", "r");
 
     double evecs_true[3][3], evals_true[3];
     int index[3];
-    double error = 0;
+    double error;
+    bool ret = true;
 
     for (int i=0; i<n; i++) {
         /* read in ground truth */
@@ -123,17 +124,25 @@ double checksum(double (*evals)[3], double (*evecs)[3][3], int n)
         
         /* assumption: index already matches */
         
-        /* accumulate errors */
+        /* check errors */
         for (int j=0; j<3; j++) {
-            error += fabs(evals_true[j] - evals[i][j]);
+            error = fabs(evals_true[j] - evals[i][j]);
+            if (error > EPS) {
+                printf(" Error: row %d, index=(%d,%d,%d) -- eval[%d]: |%g-%g| = %g --\n", i, index[0], index[1], index[2], j, evals_true[j], evals[i][j], error);
+                ret = false;
+            }
             for (int k=0; k<3; k++) {
-                error += fabs(evecs_true[k][j] - evecs[i][k][j]);
+                error = fabs(evecs_true[k][j] - evecs[i][k][j]);
+                if (error > EPS) {
+                    printf(" Error: row %d, index=(%d,%d,%d) -- evec[%d][%d]: |%g-%g| = %g --\n", i, index[0], index[1], index[2], k,j, evecs_true[k][j], evecs[i][k][j], error);
+                    ret = false;
+                }
             }
         }
     }
 
     fclose(fd);
-    return error;
+    return ret;
 }
 
 /*
@@ -257,12 +266,10 @@ int main(int argc, char **argv)
 
         comp_func f = userFuncs[i];
         f(sphere, extracted_region, ptrHighRes, ptrLowRes, rotation_matrix, ptrEvecOut, ptrEvalsOut);
-        double error = checksum((double (*)[3]) ptrEvalsOut, 
+        if (!checksum((double (*)[3]) ptrEvalsOut, 
                                 (double (*)[3][3]) ptrEvecOut, 
-                                LOW_RES_SIZE);
-        if (error > EPS) {
+                                LOW_RES_SIZE)) {
             cout << "ERROR: the results for function " << i << " are incorrect -> ";
-            printf(" %g\n", error);
         } else {
             printf("userFuncs[%d] is correct!\n", i);
         }

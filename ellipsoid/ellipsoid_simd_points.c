@@ -9,7 +9,7 @@
 #include <stdlib.h>
 
 /* some parameters */
-static const double EPSILON = 1e-3;
+static const double EPSILON = 1e-4;
 static const double ALPHA   = 0.25;
 static const double BETA    = 0.5;
 

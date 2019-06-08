@@ -43,7 +43,7 @@ static double* ptrLowResGlobal = NULL;
 void print_vector(double *vector, int n) {
     for (int i = 0; i < n; ++i) {
         char coma_or_space = i < n - 1 ? ',' : ' ';
-        printf("%f%c", vector[i], coma_or_space);
+        printf("%g%c", vector[i], coma_or_space);
     }
     printf("\n*******\n");
 }
@@ -52,7 +52,7 @@ void print_matrix3(double matrix[3][3]) {
     for (int i = 0; i < 3; ++i) {
         for (int j = 0; j < 3; ++j) {
             char coma_or_space = j < 3 - 1 ? ',' : ' ';
-            printf("%f%c", matrix[i][j], coma_or_space);
+            printf("%7.20f%c", matrix[i][j], coma_or_space);
         }
         printf("\n");
     }
@@ -276,18 +276,28 @@ void kernel_basic (double* sphere, double* extracted_region, double* ptrHighRes,
                     i_hr = (int) tx_hr;
                     j_hr = (int) ty_hr;
                     k_hr = (int) tz_hr;
- 
+
+                    /* profile results:
+                     *  up to (excl) region extraction = Runtime:     196245 cycles Runtime:     0.0700875 mse  --> 0%
+                     *  + region_extraction            = Runtime:     1.47688e+10 cycles Runtime:     5274.56 msec --> 20%
+                     *  + mil                          = Runtime:     7.09528e+10 cycles Runtime:     25340.3 msec --> 72%
+                     *  + ellipsoid(1e-4)              = Runtime:     7.27063e+10 cycles Runtime:     25966.5 msec --> 8%
+                     *  + eigen                        = Runtime:     7.27063e+10 cycles Runtime:     .4 msec --> 0%
+                     */
+                    // ptrEvalsOut[ii_lr*3] = i_hr+j_hr+k_hr;
+
                     region_extraction(i_hr, j_hr, k_hr, sphere, extracted_region, ptrHighRes);
+                    // ptrEvalsOut[ii_lr*3] = extracted_region[0];
 
                     /* compute fabric */
                     double mils[NUM_DIRECTIONS];
                     mil2_baseline(extracted_region, SPHERE_NDIM, mils);
-                    // print_vector(mils, NUM_DIRECTIONS); 
+                    // ptrEvalsOut[ii_lr*3] = mils[0];
                     
                     double Q[3][3];
                     fit_ellipsoid_mils(mils, (double (*)[3][3])Q);
-                    // print_matrix3(Q);
-
+                    // ptrEvalsOut[ii_lr*3] = Q[0][0];
+                    
                     eigen3(Q, &ptrEvecOut[ii_lr*9], &ptrEvalsOut[ii_lr*3]);
                 }
             }
@@ -426,13 +436,13 @@ void kernel_opt1 (double* sphere, double* extracted_region, double* ptrHighRes, 
 
                     // compute fabric */
                     double mils[NUM_DIRECTIONS];
-                    mil2_simd(extracted_region, SPHERE_NDIM, mils);
-                    // print_vector(mils, NUM_DIRECTIONS); 
+                    mil2_baseline(extracted_region, SPHERE_NDIM, mils);
+                    // mil2_simd(extracted_region, SPHERE_NDIM, mils);
 
                     double Q[3][3];
-                    fit_ellipsoid_mils(mils, (double (*)[3][3])Q);
-                    // print_matrix3(Q);
-                    
+                    // fit_ellipsoid_mils(mils, (double (*)[3][3])Q);
+                    fit_ellipsoid_mils_simd(mils, (double (*)[3][3])Q);
+
                     eigen3(Q, &ptrEvecOut[ii_lr*9], &ptrEvalsOut[ii_lr*3]);
                 }
             }
