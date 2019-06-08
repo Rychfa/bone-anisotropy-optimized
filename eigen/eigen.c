@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <math.h>
 
-#define TOLERANCE 1e-10
+#define TOLERANCE 1e-7
 
 void print_vec (double* v, int n) {
     for (int i = 0; i < n; ++i) {

@@ -288,11 +288,11 @@ void kernel_basic (double* sphere, double* extracted_region, double* ptrHighRes,
 
                     eigen3(Q, &ptrEvecOut[ii_lr*9], &ptrEvalsOut[ii_lr*3]);
 
-                    if (i_lr == 1 && j_lr == 4 && k_lr == 13) {
-                        print_vector(mils, NUM_DIRECTIONS); 
-                        print_matrix3(Q);
-                        print_vector(&ptrEvecOut[ii_lr*9], 9);
-                    }
+                    // if (i_lr == 1 && j_lr == 4 && k_lr == 13) {
+                        // print_vector(mils, NUM_DIRECTIONS); 
+                        // print_matrix3(Q);
+                        // print_vector(&ptrEvecOut[ii_lr*9], 9);
+                    // }
 
                 }
             }
@@ -441,11 +441,11 @@ void kernel_opt1 (double* sphere, double* extracted_region, double* ptrHighRes, 
 
                     eigen3(Q, &ptrEvecOut[ii_lr*9], &ptrEvalsOut[ii_lr*3]);
 
-                    if (i_lr == 1 && j_lr == 4 && k_lr == 13) {
-                        print_vector(mils, NUM_DIRECTIONS); 
-                        print_matrix3(Q);
-                        print_vector(&ptrEvecOut[ii_lr*9], 9);
-                    }
+                    // if (i_lr == 1 && j_lr == 4 && k_lr == 13) {
+                        // print_vector(mils, NUM_DIRECTIONS); 
+                        // print_matrix3(Q);
+                        // print_vector(&ptrEvecOut[ii_lr*9], 9);
+                    // }
                     
                 }
             }
