@@ -276,24 +276,29 @@ void kernel_basic (double* sphere, double* extracted_region, double* ptrHighRes,
                     i_hr = (int) tx_hr;
                     j_hr = (int) ty_hr;
                     k_hr = (int) tz_hr;
- 
+
+                    /* profile results:
+                     *  up to (excl) region extraction = Runtime:     196245 cycles Runtime:     0.0700875 mse  --> 0%
+                     *  + region_extraction            = Runtime:     1.47688e+10 cycles Runtime:     5274.56 msec --> 20%
+                     *  + mil                          = Runtime:     7.09528e+10 cycles Runtime:     25340.3 msec --> 72%
+                     *  + ellipsoid(1e-4)              = Runtime:     7.27063e+10 cycles Runtime:     25966.5 msec --> 8%
+                     *  + eigen                        = Runtime:     7.27063e+10 cycles Runtime:     .4 msec --> 0%
+                     */
+                    // ptrEvalsOut[ii_lr*3] = i_hr+j_hr+k_hr;
+
                     region_extraction(i_hr, j_hr, k_hr, sphere, extracted_region, ptrHighRes);
+                    // ptrEvalsOut[ii_lr*3] = extracted_region[0];
 
                     /* compute fabric */
                     double mils[NUM_DIRECTIONS];
                     mil2_baseline(extracted_region, SPHERE_NDIM, mils);
+                    // ptrEvalsOut[ii_lr*3] = mils[0];
                     
                     double Q[3][3];
                     fit_ellipsoid_mils(mils, (double (*)[3][3])Q);
-
+                    // ptrEvalsOut[ii_lr*3] = Q[0][0];
+                    
                     eigen3(Q, &ptrEvecOut[ii_lr*9], &ptrEvalsOut[ii_lr*3]);
-
-                    // if (i_lr == 1 && j_lr == 4 && k_lr == 13) {
-                        // print_vector(mils, NUM_DIRECTIONS); 
-                        // print_matrix3(Q);
-                        // print_vector(&ptrEvecOut[ii_lr*9], 9);
-                    // }
-
                 }
             }
         }
@@ -433,20 +438,12 @@ void kernel_opt1 (double* sphere, double* extracted_region, double* ptrHighRes, 
                     double mils[NUM_DIRECTIONS];
                     mil2_baseline(extracted_region, SPHERE_NDIM, mils);
                     // mil2_simd(extracted_region, SPHERE_NDIM, mils);
-                    // print_vector(mils, NUM_DIRECTIONS); 
 
                     double Q[3][3];
                     // fit_ellipsoid_mils(mils, (double (*)[3][3])Q);
                     fit_ellipsoid_mils_simd(mils, (double (*)[3][3])Q);
 
                     eigen3(Q, &ptrEvecOut[ii_lr*9], &ptrEvalsOut[ii_lr*3]);
-
-                    // if (i_lr == 1 && j_lr == 4 && k_lr == 13) {
-                        // print_vector(mils, NUM_DIRECTIONS); 
-                        // print_matrix3(Q);
-                        // print_vector(&ptrEvecOut[ii_lr*9], 9);
-                    // }
-                    
                 }
             }
         }
