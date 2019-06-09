@@ -124,13 +124,13 @@ The mean intercept length of a vector ${v}$ can be expressed as
 \begin{equation}
   MIL({v}) = \frac{h({v})}{C({v})},
 \end{equation}
-where $h(v)$ is the summation of the bone intensities ``touched" by all the rays formed by direction vector $v$, and $C(v)$ is the number of intercepts of the vector $v$.  In general, each ray is separated by a stride $s=2$. Thus, each direction vector touches only $\frac{n^3}{s^2}$ voxels in the region for $n$ even. We consider only 13 direction vectors.
+where $h(v)$ is the summation of the bone intensities ``touched" by all the rays formed by direction vector $v$, and $C(v)$ is the number of intercepts of the vector $v$.  In general, each ray is separated by a stride $s=2$. Thus, each direction vector touches only $\frac{n^3}{s^2}$ voxels in the region for $n$ even. We consider only $N_{vec}=13$ direction vectors.
 
 As an example, consider the (2-D) extracted region in Figure \ref{fig:} with horizontal vector $\vec{v} = (1,0,0)$. In this region, $C({v})$ is the number of green dots, whereas $h({v})$ is calculated summing up all voxels touched by the horizontal doted lines.
 
 %More precisely, let $R(\vec{v})$ be the set of rays formed by vector $\vec{v}$, where a ray $r\in R(\vec{v})$ is represented by the values of all voxels touched by such a ray. Thus, h and C can be calculated as follows:
 
-The algorithm includes floating point additions to calculate $h({v})$ and comparisons to detect interceptions. Note that additions performed to calculate $C({v})$ are not considered in the cost analysis because those are performed over integers.
+The algorithm includes floating point additions to calculate $h({v})$ and comparisons to detect interceptions. Note that additions performed to calculate $C({v})$ are not considered in the cost analysis because those are performed over integers. In addition, one division is performed per direction vector. The total cost of the MIL algorithm per extracted region is therefore $C(n) = N_{vec}(\frac{2n^3}{s^2}+1)$. Table \ref{tab:cost} provides a detailed breakdown of the cost analysis.
 
 % todo: algorithm for ellipsoid fitting
 \mypar{Ellipsoid fitting}  
@@ -184,9 +184,9 @@ void mil_base(double* reg, int n, double* mil){
   double h[13] = 0; int C[13] = 0;
   // Core of MIL
   for (int v = 0; v < 13; ++v)
-    for every ray r of v  do {
+    for every ray r of v  do
       {k,j,i} = get_start_of_ray(r);
-      while ( {k,j,i} < n && {k,j,i} > 0 ) {
+      while ( {k,j,i} < n && {k,j,i} > 0 )
         h[v] += reg[k][j][i];
         curr = reg[k][j][i] > 0.5; //Is it bone?
         C[v] += curr ^ prev; // interception
@@ -199,8 +199,16 @@ As can be seen, the baseline implementation iterates through all rays of all 13 
 
 The first performance bottleneck in the baseline implementation is due to the non-associativity of floating point additions in line 8. This creates inter-loop dependencies between addition operations that limit the instruction level parallelism (ILP) of the implementation. Assuming a latency of floating point additions of 4 cycles, an upper bound on the performance due to this dependency is 0.5 flops/cycle (1 \texttt{add} + 1 \texttt{cmp} every 4 cycles).
 
-In order to improve ILP, we used accumulators with loop-unrolling. We first unrolled the loop in line 5, to get four different rays of the same vector. We created an accumulator for each ray; thus, now we can perform 4 additions and 4 comparisons in parallel. Note that the rays for each accumulator should be of the same length to avoid handling leftovers at the end. For 1-Dimensional direction vectors, e.g. (1,0,0), all rays have the same length (equal to $n$); however, this is not the case for 2-D and 3-D vectors. Thus, we split the implementation for 1-D, 2-D and 3-D direction vectors in order to select suitable rays of the same length for each case.
- 
+In order to improve ILP, we used accumulators with loop-unrolling. We first unrolled the loop in line 5, to get four different rays of the same vector. We created an accumulator for each ray; thus, now we can perform 4 additions and 4 comparisons in parallel. Note that the rays for each accumulator should be of the same length to avoid handling leftovers at the end. For 1-Dimensional direction vectors, e.g. (1,0,0), all rays have the same length (equal to $n$); however, this is not the case for 2-D and 3-D vectors. Thus, we split the implementation for 1-D, 2-D and 3-D direction vectors in order to select a suitable set of rays of the same length for the inner most loop in each case.
+{\color{red} If space, explain that the set of rays where chosen close to each other on the $x$ dimension to try to exploit some spacial locality.}
+
+The second performance blocker are memory accesses. Assume that the extracted region is much larger than the size of the last level cache, i.e. $8n^3 >> N_{L3}$. For the first horizontal direction vector $v_1 = (1,0,0)$, a lower bound for the data read from memory is $Q_1(n) \geq \frac{n^3}{4}$ doubles. Recall that rays are spaced by a stride $s=2$; thus, not all data in the region is accessed by a vector. The bound of $Q_1(n)$ is close to tight for the horizontal vector because data is accessed sequentially for each ray. Thus, when a (mandatory) cache miss occurs, the data in the whole cache line that is brought to cache will be used in the following iterations taking advantage of spacial locality (except for the first or last cache line in the ray in case of misalignment). 
+
+The second direction vector, $v_2 = (0,1,0)$, iterates through the extracted region vertically. Since we assumed a very large data-set, there is no reuse of data from the previous vector. Further, note that for the vertical vector, only half of the data in a cache line will be used in the best case because we have a stride of $s=2$ for consecutive rays. Since unused data in a cache line still have to be read from memory, a lower bound for the data read for the vertical vector is $Q_2(n) \geq \frac{n^3}{2}$ doubles. The remaining vectors will behave similarly as the vertical vector. Hence, a lower bound on the total amount of data read from memory is $Q(n) \geq \frac{n^3}{4} + \frac{12n^3}{2} = 6.25n^3$. Recall from the cost analysis of the previous section that the total number of flops performed by MIL is $W(n)=13(\frac{n^{3}}{2}+1) \approx 6.5n^3$. An upper bound on the operation intensity of MIL for a large $n$ is therefore $I(n) \leq \frac{6.5n^3}{6.25n^3} = 1.04$ flops/double. We conclude that the implementation of the algorithm is memory bound when the data does not longer fit in the cache. 
+
+In order to improve the operational intensity and cache locality, the next optimization applied was blocking. Instead of calculating
+
+Observe that all vectors iterate through the same region in a predefined pattern.
 
 \mypar{Ellipsoid fitting} moving loop invariant code, SIMD
 
