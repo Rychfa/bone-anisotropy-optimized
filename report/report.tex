@@ -103,16 +103,13 @@ Subsequently, the anisotropy of the extracted bone region is quantified by using
 % ellipsoid fitting
 The MIL values can be plots as a cloud of points in the direction vector space and an ellipsoid can be fitted to obtain a representative two dimensional tensor, for which three eigenvalues and three eigenvectors are calculated. The eigenvector associated with the minimum eigenvalue is the major direction of that bone region.
 
-{\color{red} Add $n$ to this picture (size of extracted region) and stride $s$}
 \begin{figure}[ht]
   \centering
-  \includegraphics[width=3.5in]{figs/overview.png}
-  \caption{Methodology}
+  \includegraphics[width=3.25in]{figs/overview.pdf}
+  \caption{Bone anisotropy mapping methodology includes coordinate mapping from low to high resolution image, region extraction from the high resolution image, MIL calculation, ellipsoid fitting to obtain a fabric tensor and eigendecomposition of the fabric tensor from which the major eigenvector can be visualized. $n$ is the extracted region dimension in one direction. $s$ is the stride between parallel direction vectors.}
   \label{fig:method}
 \end{figure}
 
-{\color{red} Should we move this paragraph till the end (after we explain each algorithm)?}
-From the basic implementation, MIL calculation, ellipsoid fitting and region extraction consume approximately {\color{red} 80\%, 15\% and 5 \%} of the overall computing time, respectively. Therefore, we focused on these three algorithms for the optimization. The run time was measured by using time stamp counter (TSC).  We define our cost measure as the number of floating point operations (flops) performed by the algorithms. The cost analysis for each algorithm is shown in Table~\ref{tab:cost}, where $n$ is the size of the region extracted during RE. Note that each algorithm is performed once per non-zero voxel in the low resolution image. {\color{red} (This can be omitted)} Thus, the cost of the whole program is ${\color{red} total}\cdot N_{nz}$, where $N_{nz}$ is the number of non-zero voxels in the low resolution image.
 
 \mypar{Region extraction}
 This algorithm applies a sphere mask on the high resolution image and copies the extraction region to a separate array. A multiplication was performed for each image voxel.
@@ -126,7 +123,7 @@ The mean intercept length of a vector ${v}$ can be expressed as
 \end{equation}
 where $h(v)$ is the summation of the bone intensities ``touched" by all the rays formed by direction vector $v$, and $C(v)$ is the number of intercepts of the vector $v$.  In general, each ray is separated by a stride $s=2$. Thus, each direction vector touches only $\frac{n^3}{s^2}$ voxels in the region for $n$ even. We consider only $N_{vec}=13$ direction vectors.
 
-As an example, consider the (2-D) extracted region in Figure \ref{fig:} with horizontal vector $\vec{v} = (1,0,0)$. In this region, $C({v})$ is the number of green dots, whereas $h({v})$ is calculated summing up all voxels touched by the horizontal doted lines.
+As an example, consider the (2-D) extracted region in Fig~\ref{fig:method} with horizontal vector $\vec{v} = (1,0,0)$. In this region, $C({v})$ is the number of green dots, whereas $h({v})$ is calculated summing up all voxels touched by the horizontal doted lines.
 
 %More precisely, let $R(\vec{v})$ be the set of rays formed by vector $\vec{v}$, where a ray $r\in R(\vec{v})$ is represented by the values of all voxels touched by such a ray. Thus, h and C can be calculated as follows:
 
@@ -151,14 +148,17 @@ The algorithm includes floating point additions to calculate $h({v})$ and compar
 %  \end{tabular}
 %\end{table}
 
-\begin{table}
-    \caption{Cost analysis per non-zero voxel.}
+%{\color{red} Should we move this paragraph till the end (after we explain each algorithm)?}
+From the basic implementation, MIL calculation, ellipsoid fitting and region extraction consume approximately {\color{red} 80\%, 15\% and 5 \%} of the overall computing time, respectively. Therefore, we focused on these three algorithms for the optimization. The run time was measured by using time stamp counter (TSC).  We define our cost measure as the number of floating point operations (flops) performed by the algorithms. The cost analysis for each algorithm is shown in Table~\ref{tab:cost}, where $n$ is the size of the region extracted during RE. Note that each algorithm is performed once per non-zero voxel in the low resolution image. {\color{red} (This can be omitted)} Thus, the cost of the whole program is ${\color{red} total}\cdot N_{nz}$, where $N_{nz}$ is the number of non-zero voxels in the low resolution image which represent the bone voxel.
+
+\begin{table}[H]
+    \caption{Cost analysis per low-resolution bone voxel.}
     \label{tab:cost}
     \begin{tabular}{l c c c c | c}
         \toprule
         & $N_{add}$ & $N_{mul}$ & $N_{div}$ & $N_{cmp}$ & Total\\
         \midrule
-        RE & &  & & & \\
+        RE & - & $n^{3}$ & - & - &   $n^{3}$\\
         MIL & $\frac{13n^{3}}{4}$ & -  & 13 & $\frac{13n^{3}}{4}$ &  $13(\frac{n^{3}}{2}+1)$\\
         EF & & & & & \\
         \bottomrule
@@ -167,13 +167,13 @@ The algorithm includes floating point additions to calculate $h({v})$ and compar
 
 
 \section{Methods}\label{sec:yourmethod}
-{\color{red} Add overview of the section}
+%{\color{red} Add overview of the section}
 % todo: 
 % - basic implementation, quantify the perentage of each algorithm takes.
 % - testing machine
+This section explains the baseline implementation and optimization strategies of each focused algorithm.
 
-
-\mypar{Region extraction} Loop unrolling
+\mypar{Region extraction} The baseline implementation loops over all voxels in the sphere mask with the size of $n^{3}$. For each sphere mask voxel, if a corresponding voxel in the high resolution image is found, the extracted region voxel is set as the multiplication of the sphere mask voxel and the high resolution image voxel. Therefore, loop unrolling with four parallel multiplications and scalar replacement were applied to speed up the computation and avoid aliasing. 
 
 
 \mypar{MIL}
@@ -193,7 +193,7 @@ void mil_base(double* reg, int n, double* mil){
         prev = curr;
         {k,j,i} = next_voxel_indices({k,j,i}, v);
     mil[v] = h[v] / C[v];
-}
+ }
 \end{ccode}
 As can be seen, the baseline implementation iterates through all rays of all 13 direction vectors (see the \texttt{for} loop in lines 4-5). For each ray, we first get its starting voxel to begin iterating from (line 6). Finally, the inner loop iterates through the whole ray and computes $h(v)$ and $C(v)$. Note that $C(v)$ is an integer array; thus, the only floating point operations in this loop are the addition and comparison in lines 8-9.
 
@@ -219,11 +219,12 @@ The experimental results are presenting here according to the algorithms.
 
 \mypar{Region extraction} \textit{Experimental setup} The tests were performed on Intel i7 U7600 (Kaby Lake), 2.8 GHz without Turboboost. The L1, L2 and L3 cache size were 32KB, 256KB, and 8MB, respectively. The highest optimization flag was used without vectorization (\texttt{-O3 -fno-vectorize-tree}). The sphere region size were ranged from $n=8^{3}$ to $128^{3}$.
 
-\textit{Results} As seen in Fig.~\ref{res:regions}, the loop unrolling method did not improve the performance for the region extraction algorithms.
+\textit{Results} As seen in Fig.~\ref{res:regions}, the loop unrolling and scalar replacement did not improve the performance for the region extraction algorithms. The compiler might already perform well in alias checking and parallelizing the multiplications. When the extracted region size fitted in the cache, the performance was bound to 1 flops/cylce due to the instruction combinations. On the other hand, when the extracted region size was too large for the cache, the performance was bound to 0.5 flops/cycle due to the memory. The results shows that the algoirthm reached around 0.8 flops/cycle in the cache and stayed around 0.2 flops/cycle in the memory.
+   
 \begin{figure}[H]
   \centering
  
-  \includegraphics[width=3.5in]{figs/plots/regions/regions_performance_labelled.png}
+  \includegraphics[width=3.5in]{figs/plots/regions/regions_performance.pdf}
   \caption{Performance of region extraction}
   \label{res:regions}
 \end{figure}
@@ -235,7 +236,7 @@ The experimental results are presenting here according to the algorithms.
 
 \begin{figure}[H]
   \centering
-  \includegraphics[width=3.5in]{figs/plots/mil/mil_performance_labelled.png}
+  \includegraphics[width=3.5in]{figs/plots/mil/mil_performance.pdf}
   \caption{Performance of MIL}
   \label{res:mil}
 \end{figure}
@@ -246,7 +247,7 @@ The experimental results are presenting here according to the algorithms.
 \textit{Results}
  
 \begin{figure}[H]
-  \centering \includegraphics[width=3.5in]{figs/plots/ellipsoid/ellipsoid_performance_labelled.png}
+  \centering \includegraphics[width=3.5in]{figs/plots/ellipsoid/ellipsoid_performance.pdf}
   \caption{Performance of ellipsoid}
   \label{res:ellipsoid}
 \end{figure}
@@ -275,8 +276,8 @@ Here we provide some further tips.
 % BiBTeX files (here: bibl_conf). The IEEEbib.bst bibliography
 % style file from IEEE produces unsorted bibliography list.
 % -------------------------------------------------------------------------
-\bibliographystyle{IEEEbib}
-\bibliography{bibl_conf}
+% \bibliographystyle{IEEEbib}
+% \bibliography{bibl_conf}
 
 \end{document}
 
