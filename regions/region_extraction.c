@@ -29,6 +29,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <immintrin.h>
 
 ///
 /// Write a sphere mask
@@ -196,5 +197,62 @@ void region_extraction_opt1 (int i_hr, int j_hr, int k_hr, double *sphere, doubl
     region_extraction_flop_count += 4;
 #endif
 
+    }}}
+}
+///
+/// Skeleton for region extraction
+///
+void region_extraction_simd (int i_hr, int j_hr, int k_hr, double *sphere, double *extracted_region, double *ptrHighRes) {
+
+    int ihr_min, jhr_min, khr_min;
+    int ihr_max, jhr_max, khr_max;
+    int i, j, k, ii;
+    int ihr, jhr, khr, ii_hr;
+
+    __m256d sphere_vec, highres_vec, extract_vec;
+
+    // find min for sphere
+    ihr_min = i_hr - SPHERE_HALF_NDIM;
+    jhr_min = j_hr - SPHERE_HALF_NDIM;
+    khr_min = k_hr - SPHERE_HALF_NDIM;
+    // find max for sphere
+    ihr_max = i_hr + SPHERE_HALF_NDIM;
+    jhr_max = j_hr + SPHERE_HALF_NDIM;
+    khr_max = k_hr + SPHERE_HALF_NDIM;
+    //
+    if (ihr_max > HIGH_RES_D1) {
+       ihr_max = HIGH_RES_D1;
+    }
+    if (jhr_max > HIGH_RES_D2) {
+       jhr_max = HIGH_RES_D2;
+    }
+    if (khr_max > HIGH_RES_D3) {
+       khr_max = HIGH_RES_D3;
+    }
+
+    extract_vec = _mm256_set1_pd(0.0);
+    for (k=0; k < SPHERE_NDIM; k++) {
+        for (j=0; j < SPHERE_NDIM; j++) {
+            for (i=0; i < SPHERE_NDIM; i+=4) {
+                ii = i + j*SPHERE_NDIM + k*SPHERE_NDIM*SPHERE_NDIM;
+                _mm256_store_pd(extracted_region + ii, extract_vec);
+                
+    }}}
+
+    for (khr=khr_min; khr < khr_max; khr++) {
+        k = khr - khr_min;
+        for (jhr=jhr_min; jhr < jhr_max; jhr++) {
+            j = jhr - jhr_min;
+            for (ihr=ihr_min; ihr < ihr_max; ihr+=4) {
+                i = ihr - ihr_min;
+                // calculate index
+                ii =  i + j*SPHERE_NDIM + k*SPHERE_NDIM*SPHERE_NDIM;
+                ii_hr =  ihr + jhr*HIGH_RES_D1 + khr*HIGH_RES_D1*HIGH_RES_D2;
+                // 
+                sphere_vec = _mm256_load_pd(sphere + ii);
+                highres_vec = _mm256_load_pd(ptrHighRes + ii_hr);
+                extract_vec = _mm256_mul_pd(sphere_vec, highres_vec);
+                // store
+                _mm256_store_pd(extracted_region + ii, extract_vec);
     }}}
 }
