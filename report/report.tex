@@ -212,8 +212,7 @@ As can be seen, the baseline implementation iterates through all rays of all 13 
 \mypar{Improving ILP}
 The first performance bottleneck in the baseline implementation is due to the non-associativity of floating point additions in line 9. This creates inter-loop dependencies between addition operations that limit the instruction level parallelism (ILP) of the implementation. Assuming a latency of floating point additions of 4 cycles, an upper bound on the performance due to this dependency is 0.5 flops/cycle (1 \texttt{add} + 1 \texttt{cmp} every 4 cycles).
 
-In order to improve ILP, we used accumulators with loop-unrolling. We first unrolled the loop in line 5, to get four different rays of the same vector. We created an accumulator for each ray; thus, now we can perform 4 additions and 4 comparisons in parallel. Note that the rays for each accumulator should be of the same length to avoid handling leftovers at the end. For 1-Dimensional direction vectors, e.g. (1,0,0), all rays have the same length (equal to $n$); however, this is not the case for 2-D and 3-D vectors. Thus, we split the implementation for 1-D, 2-D and 3-D direction vectors in order to select a suitable set of rays of the same length for the inner most loop in each case.
-{\color{red} If space, explain that the set of rays where chosen close to each other on the $x$ dimension to try to exploit some spacial locality.}
+In order to improve ILP, we used accumulators with loop-unrolling. We first unrolled the loop in line 5, to get four different rays of the same vector. We created an accumulator for each ray; thus, now we can perform 4 additions and 4 comparisons in parallel. Note that the rays for each accumulator should be of the same length to avoid handling leftovers at the endy. For 1-Dimensional direction vectors, e.g. (1,0,0), all rays have the same length (equal to $n$); however, this is not the case for 2-D and 3-D vectors. Thus, we split the implementation for 1-D, 2-D and 3-D direction vectors in order to select a suitable set of rays of the same length for the inner most loop in each case. Also we choose, rays close to each other to leverage spacial locality.
 
 \mypar{Intensity analysis}
 The second performance blocker are memory accesses. Assume that the extracted region is much larger than the size of the last level cache, i.e. $8n^3 >> N_{L3}$. For the first horizontal direction vector $v_1 = (1,0,0)$, a lower bound for the data read from memory is $Q_1(n) \geq \frac{n^3}{4}$ doubles. Recall that rays are spaced by a stride $s=2$; thus, not all data in the region is accessed by a vector. The bound of $Q_1(n)$ is close to tight for the horizontal vector because data is accessed sequentially for each ray. Thus, when a (mandatory) cache miss occurs, the data in the whole cache line that is brought to cache will be used in the following iterations taking advantage of spacial locality (except for the first or last cache line in the ray in case of misalignment). 
@@ -236,7 +235,7 @@ It is also worth noting that 3-D direction vectors have inherently more overhead
 
 \begin{figure}[H]
     \centering
-    \includegraphics[width=3.4in]{figs/simd_mil2.eps}
+    \includegraphics[width=3.2in]{figs/simd_mil2.eps}
     \caption{SIMD vectorization of four rays in MIL.}
     \label{fig:simd_mil}
 \end{figure}
@@ -261,8 +260,7 @@ In this case, the intensity is still high enough to be compute bound.
 -vectorize across points: each point ...
 
 \section{Experimental Results}\label{sec:exp}
-
-The experimental results are presenting here according to the algorithms.
+This section presents the performance results for each of the discussed algorithms.
 
 \mypar{RE} \textit{Experimental setup} The tests were performed on Intel i7 U7600 (Kaby Lake), 2.8 GHz without Turboboost. The L1, L2 and L3 cache size were 32KB, 256KB, and 8MB, respectively. The highest optimization flag was used without vectorization (\texttt{-O3 -fno-vectorize-tree}). The sphere region size were ranged from $n=8^{3}$ to $128^{3}$.
 
@@ -277,9 +275,13 @@ The experimental results are presenting here according to the algorithms.
 \end{figure}
 
 
-\mypar{MIL} \textit{Experimental setup}
+\subsection{MIL results} 
+\textit{Experimental setup}. 
+All experiments in this section were performed on an Intel Xeon E-2176M machine (Coffee Lake) with TurboBoost disabled using gcc 7.3.0 compiler with flags \texttt{-O3 -std=c++11 -mavx2}, and under Ubuntu 18.04. The sphere region size were ranged from $n=16$ to $400$ for each dimension.
 
-\textit{Results}
+\textit{Results}. 
+{\color{red} correct speedup numbers after updating the plot.}
+Figure \ref{res:mil} shows the performance plot for MIL for four different configurations, namely the \textit{baseline},\textit{ scalar non-blocking}, \textit{scalar with blocking} and \textit{SIMD with blocking}. As can be seen, the performance of \textit{scalar non-blocking} (blue line) already improves the performance by around {\color{red} 2x} for small sizes compared to the baseline. This is mainly due to an improvement in ILP as discussed in the previous section. However, performance drops considerably when the data does not longer fits in L3 cache because this implementation is \textit{memory bound}. As expected \textit{scalar with blocking} (green line) implementation improves the performance by {\color{red} 4x} for large sizes by reducing the number of cache misses. Finally, the \textit{SIMD with blocking} (red line) achieves a maximum performance gain of {\color{red} 8x} compared to the baseline when the data does not fit cache. For a small $n$, we observe a maximum performance of {\color{red} 1.4} flops/cycle. Since MIL only uses floating point additions and comparisons, the peak performance of the machine for these operations is 8 flops/cycle. Thus, we are only getting at most {\color{red} 17.5\%} of the peak performance. We attribute this low percentage of peak performance to the extra non floating point instructions performed in the core of MIL, as well as the overhead of changing to another set of rays, the latter is specially true for 2-D and 3-D direction vectors where there are more and shorter rays. Observe that for $n$ multiple of 64, the performance drops significantly. We believe this is due to conflict misses as explained in the following subsection.
 
 \begin{figure}[H]
   \centering
