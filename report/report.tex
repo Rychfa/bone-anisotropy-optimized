@@ -87,11 +87,11 @@
 
 \section{Introduction}\label{sec:intro}
 
-Bone fabric anisotropy or microstructure orientation was recently included in finite element (FE) models to improve the accuracy in predicting bone stiffness and strength. To save computing cost, an FE model of bone is generated from a clinical computer tomography (CT) scanned image with low resolution (1-3mm). However, the bone microstructure details can be obtained only by high resolution peripheral CT with the resolution of 60-82 $\mu$m. Therefore, bone anisotropy mapping methodology was required to map the bone microstructure orientation from the high resolution image onto the low resolution image.
+Bone fabric anisotropy or microstructure orientation was recently included in finite element (FE) models to improve the accuracy in predicting bone stiffness and strength \cite{Maquer:2015, Musy:2017}. To save computing cost, an FE model of bone is generated from a clinical computer tomography (CT) scanned image with low resolution (1-3mm). However, the bone microstructure details can be obtained only by high resolution peripheral CT with the resolution of 60-82 $\mu$m. Therefore, bone anisotropy mapping methodology was required to map the bone microstructure orientation from the high resolution image onto the low resolution image.
 
-Bone anisotropy mapping methodology includes coordinates mapping between a low and a high-resolution images, region extraction, the mean intercept length (MIL) method for quantification of the microstructure orientation, ellipsoid fitting of MIL and eigendecomposition to obtain the major direction of the microstructure.
+Bone anisotropy mapping methodology includes coordinates mapping between a low and a high-resolution images, region extraction (RE), the mean intercept length (MIL) method for quantification of the microstructure orientation, ellipsoid fitting (EF) of MIL and eigendecomposition to obtain the major direction of the microstructure.
 
-\mypar{Motivation} In the recent study, bone anisotropy mapping algorithms are performed for all low resolution image voxels and for all pairs (n=71) of low and high resolution images. This preprocessing step consumes a significant amount of computing time. Moreover, researchers expect larger dataset to create a more general FE models of bone. Therefore, the performance of these algorithms are crucial. Two software packages for image processing which include MIL calculation are Medtool, a commercialized PYTHON package, and BoneJ, an open-source JAVA plugin for ImageJ. The external packages needed to be integrated to the computation pipeline and optimization is not straightforward. 
+\mypar{Motivation} In the recent study, bone anisotropy mapping algorithms are performed for all low resolution image voxels and for all pairs (n=71) of low and high resolution images \cite{Panyasantisuk:18}. This preprocessing step consumes a significant amount of computing time. Moreover, researchers expect larger dataset to create a more general FE models of bone. Therefore, the performance of these algorithms are crucial. Two software packages for image processing which include MIL calculation are Medtool, a commercialized PYTHON package, and BoneJ, an open-source JAVA plugin for ImageJ. The external packages needed to be integrated to the computation pipeline and optimization is not straightforward. 
 
 In this paper, we are presenting an integrated and optimized methodology of bone anisotropy mapping. At our best knowledge, this is the first paper to study and optimize the performance of MIL calculation depending on the extracted region size.
   
@@ -99,19 +99,19 @@ In this paper, we are presenting an integrated and optimized methodology of bone
 % Coord mapping & region extraction
 The methodology is shown in Fig.~\ref{fig:method}. Coordinates from a low resolution image were mapped to its own high resolution image. Then, a sphere region is extracted and centered at the mapped coordinate in the high resolution image. 
 % MIL
-Subsequently, the anisotropy of the extracted bone region is quantified by using the mean intercept length (MIL) method which imposed direction vectors on the regions. The mean length of each vector is the sum of the length inside the bone region devided by the number of intercepts which intersect with bone/non-bone transition.
+Subsequently, the anisotropy of the extracted bone region is quantified by using MIL method which imposed direction vectors on the regions. The mean length of each vector is the sum of the length inside the bone region devided by the number of intercepts which intersect with bone/non-bone transition.
 % ellipsoid fitting
 The MIL values can be plots as a cloud of points in the direction vector space and an ellipsoid can be fitted to obtain a representative two dimensional tensor, for which three eigenvalues and three eigenvectors are calculated. The eigenvector associated with the minimum eigenvalue is the major direction of that bone region.
 
 \begin{figure}[ht]
   \centering
   \includegraphics[width=3.25in]{figs/overview.pdf}
-  \caption{Bone anisotropy mapping methodology includes coordinate mapping from low to high resolution image, region extraction from the high resolution image, MIL calculation, ellipsoid fitting to obtain a fabric tensor and eigendecomposition of the fabric tensor from which the major eigenvector can be visualized. $n$ is the extracted region dimension in one direction. $s$ is the stride between parallel direction vectors.}
+  \caption{Bone anisotropy mapping methodology includes coordinate mapping from low to high resolution image, RE from the high resolution image, MIL calculation, EF to obtain a fabric tensor and eigendecomposition of the fabric tensor from which the major eigenvector can be visualized. $n$ is the extracted region dimension in one direction. $s$ is the stride between parallel direction vectors.}
   \label{fig:method}
 \end{figure}
 
 
-\mypar{Region extraction}
+\mypar{Region extraction (RE)}
 This algorithm applies a sphere mask on the high resolution image and copies the extraction region to a separate array. A multiplication was performed for each image voxel.
 
 \mypar{Mean Intercept Length (MIL) method}
@@ -130,7 +130,7 @@ As an example, consider the (2-D) extracted region in Fig~\ref{fig:method} with 
 The algorithm includes floating point additions to calculate $h({v})$ and comparisons to detect interceptions. Note that additions performed to calculate $C({v})$ are not considered in the cost analysis because those are performed over integers. In addition, one division is performed per direction vector. The total cost of the MIL algorithm per extracted region is therefore $C(n) = N_{vec}(\frac{2n^3}{s^2}+1)$. Table \ref{tab:cost} provides a detailed breakdown of the cost analysis.
 
 % todo: algorithm for ellipsoid fitting
-\mypar{Ellipsoid fitting}  
+\mypar{Ellipsoid fitting (EF)}  
 {\color{red}Todo}
 
 %\begin{table}
@@ -149,7 +149,7 @@ The algorithm includes floating point additions to calculate $h({v})$ and compar
 %\end{table}
 
 %{\color{red} Should we move this paragraph till the end (after we explain each algorithm)?}
-From the basic implementation, MIL calculation, ellipsoid fitting and region extraction consume approximately {\color{red} 80\%, 15\% and 5 \%} of the overall computing time, respectively. Therefore, we focused on these three algorithms for the optimization. The run time was measured by using time stamp counter (TSC).  We define our cost measure as the number of floating point operations (flops) performed by the algorithms. The cost analysis for each algorithm is shown in Table~\ref{tab:cost}, where $n$ is the size of the region extracted during RE. Note that each algorithm is performed once per non-zero voxel in the low resolution image. {\color{red} (This can be omitted)} Thus, the cost of the whole program is ${\color{red} total}\cdot N_{nz}$, where $N_{nz}$ is the number of non-zero voxels in the low resolution image which represent the bone voxel.
+From the basic implementation, MIL calculation, EF and RE consume approximately {\color{red} 80\%, 15\% and 5 \%} of the overall computing time, respectively. Therefore, we focused on these three algorithms for the optimization. The run time was measured by using time stamp counter (TSC).  We define our cost measure as the number of floating point operations (flops) performed by the algorithms. The cost analysis for each algorithm is shown in Table~\ref{tab:cost}, where $n$ is the size of the region extracted during RE. Note that each algorithm is performed once per non-zero voxel in the low resolution image. {\color{red} (This can be omitted)} Thus, the cost of the whole program is ${\color{red} total}\cdot N_{nz}$, where $N_{nz}$ is the number of non-zero voxels in the low resolution image which represent the bone voxel.
 
 \begin{table}[H]
     \caption{Cost analysis per low-resolution bone voxel.}
@@ -173,7 +173,7 @@ From the basic implementation, MIL calculation, ellipsoid fitting and region ext
 % - testing machine
 This section explains the baseline implementation and optimization strategies of each focused algorithm.
 
-\mypar{Region extraction} The baseline implementation loops over all voxels in the sphere mask with the size of $n^{3}$. For each sphere mask voxel, if a corresponding voxel in the high resolution image is found, the extracted region voxel is set as the multiplication of the sphere mask voxel and the high resolution image voxel. Therefore, loop unrolling with four parallel multiplications and scalar replacement were applied to speed up the computation and avoid aliasing. 
+\subsection{RE optimization} The baseline implementation loops over all voxels in the sphere mask with the size of $n^{3}$. For each sphere mask voxel, if a corresponding voxel in the high resolution image is found, the extracted region voxel is set as the multiplication of the sphere mask voxel and the high resolution image voxel. Therefore, loop unrolling with four parallel multiplications and scalar replacement were applied to speed up the computation and avoid aliasing. 
 
 \subsection{MIL optimizations}
 The following C-like pseudo code summarizes the baseline implementation of MIL algorithm:
@@ -220,14 +220,14 @@ Assuming that the block fits completely in L1 cache, a lower bound for the data 
 \mypar{SIMD vectorization}
 
 
-\mypar{Ellipsoid fitting} moving loop invariant code, SIMD
+\subsection{EF} moving loop invariant code, SIMD
 
 
 \section{Experimental Results}\label{sec:exp}
 
 The experimental results are presenting here according to the algorithms.
 
-\mypar{Region extraction} \textit{Experimental setup} The tests were performed on Intel i7 U7600 (Kaby Lake), 2.8 GHz without Turboboost. The L1, L2 and L3 cache size were 32KB, 256KB, and 8MB, respectively. The highest optimization flag was used without vectorization (\texttt{-O3 -fno-vectorize-tree}). The sphere region size were ranged from $n=8^{3}$ to $128^{3}$.
+\mypar{RE} \textit{Experimental setup} The tests were performed on Intel i7 U7600 (Kaby Lake), 2.8 GHz without Turboboost. The L1, L2 and L3 cache size were 32KB, 256KB, and 8MB, respectively. The highest optimization flag was used without vectorization (\texttt{-O3 -fno-vectorize-tree}). The sphere region size were ranged from $n=8^{3}$ to $128^{3}$.
 
 \textit{Results} As seen in Fig.~\ref{res:regions}, the loop unrolling and scalar replacement did not improve the performance for the region extraction algorithms. The compiler might already perform well in alias checking and parallelizing the multiplications. When the extracted region size fitted in the cache, the performance was bound to 1 flops/cylce due to the instruction combinations. On the other hand, when the extracted region size was too large for the cache, the performance was bound to 0.5 flops/cycle due to the memory. The results shows that the algoirthm reached around 0.8 flops/cycle in the cache and stayed around 0.2 flops/cycle in the memory.
    
@@ -235,12 +235,12 @@ The experimental results are presenting here according to the algorithms.
   \centering
  
   \includegraphics[width=3.5in]{figs/plots/regions/regions_performance.pdf}
-  \caption{Performance of region extraction}
+  \caption{Performance of RE}
   \label{res:regions}
 \end{figure}
 
 
-\mypar{MIL calculation} \textit{Experimental setup}
+\mypar{MIL} \textit{Experimental setup}
 
 \textit{Results}
 
@@ -252,13 +252,13 @@ The experimental results are presenting here according to the algorithms.
 \end{figure}
 
 
-\mypar{Ellipsoid fitting} \textit{Experimental setup}
+\mypar{EF} \textit{Experimental setup}
 
 \textit{Results}
  
 \begin{figure}[H]
   \centering \includegraphics[width=3.5in]{figs/plots/ellipsoid/ellipsoid_performance.pdf}
-  \caption{Performance of ellipsoid}
+  \caption{Performance of EF}
   \label{res:ellipsoid}
 \end{figure}
 
@@ -267,18 +267,18 @@ The experimental results are presenting here according to the algorithms.
 
 \section{Conclusions}
 
-The bone anisotropy mapping was integrated and optimized. MIL calculation consumes the large percentage of the overall computation time, followed by ellipsoid fitting and region extraction. 
+The bone anisotropy mapping was integrated and optimized. MIL calculation consumes the large percentage of the overall computation time, followed by EF and RE. 
 
-The performance of region extraction was bounded by the intructions mix when it was in cache and memory bound when in memory. The loop unrolling did not improve the performance and the compiler already optimized the alias checking in the basic implementation.
+The performance of RE was bounded by the intructions mix when it was in cache and memory bound when in memory. The loop unrolling did not improve the performance and the compiler already optimized the alias checking in the basic implementation.
 
 MIL calculation\\
 
-Ellipsoid fitting\\
+EF\\
 
 
 \section{Further comments}
 
-Here we provide some further tips.
+Here we provide some further tips. 
 
 \mypar{Further general guidelines}
 
@@ -286,8 +286,8 @@ Here we provide some further tips.
 % BiBTeX files (here: bibl_conf). The IEEEbib.bst bibliography
 % style file from IEEE produces unsorted bibliography list.
 % -------------------------------------------------------------------------
-% \bibliographystyle{IEEEbib}
-% \bibliography{bibl_conf}
+\bibliographystyle{IEEEbib}
+\bibliography{bibl_conf}
 
 \end{document}
 
