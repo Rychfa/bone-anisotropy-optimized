@@ -298,7 +298,7 @@ The experimental results are presenting here according to the algorithms.
 \end{figure}
 
 \textit{Conflict Misses}
-When the block size $N_b = 16$, then the 16x16x16 block entirely fits in L1 cache, assuming full associativity. Thus, as we walk across this block over all direction vectors, there will only be compulsory misses on the very first pass of the block. However, the results in Figure~\ref{res:mil} shows that for $n=64x$, where $x=0,1,2,...$, we see a drop in performance, most notably in the blocking case. This reduced performance can be attributed to the increase in cache misses due to conflicts, as L1 cache has limited associativity: L1 cache has 64 sets, and is 8 way associative, with each cache block holding 8 doubles. When $n=64x$, it can be shown that for fixed $i,j$, the indexes in the set 
+When the block size $N_b = 16$, then the 16x16x16 block barely fits in L1 cache, assuming full associativity. Thus, as we walk across this block over all direction vectors, there will only be compulsory misses on the very first pass of the block. However, the results in Figure~\ref{res:mil} shows that for $n=64x$, where $x=0,1,2,...$, we see a drop in performance, most notably in the blocking case. This reduced performance can be attributed to the increase in cache misses due to conflicts, as L1 cache has limited associativity: L1 cache has 64 sets, and is 8 way associative, with each cache-block holding 8 doubles. When $n=64x$, it can be shown that for fixed $i,j$, the indexes in the set 
 \begin{align}
   \{(i,j,k) | k=0,1,2,... \}
 \end{align}
@@ -312,17 +312,17 @@ map to the same cache line. Similarly, for fixed $i,k$ and for some index $j_0$,
                               \end{cases}
   \right. \right\}
 \end{align}
-also map to the same cache line. This is visualized in Figure~\ref{res:conflict_miss_64}. This is a lot of conflicts, much more than the 8-way associativity can handle. Thus what happens then is after one pass of the block along one direction, when we start another pass of the same block for the next direction vector, there is no reuse due to all the conflict misses. When $n$ is 65, for example, (see Figure~\ref{res:conflict_miss_65}), the cache line mapping becomes a lot better for conflicts. To summarize, since the block is not stored contiguously, the strides that we take is associated with $n$, and so in this case for $n$ a multiple of 64 presents a particularly nasty scenario for cache line conflicts. In practice, a simple solution is to ensure that $n$ is not a multiple of 64. 
+also map to the same cache set. This is visualized in Figure~\ref{res:conflict_miss_64} for the $x=1$ case. From the figure, we can see that some cache lines are not being used. Furthermore, the cache set 0 is used to hold 2 cache-blocks of data per $k$, thus cache set 0 is mapped to a total of 32 times over all $k$, which is greater than 8. Thus in this case, we effectively only utilize 25\% of the L1 cache. As a consequence, after one pass of the block for one direction vector, when we start another pass of the same block for the next direction vector, there is no reuse from the previous pass due to conflict misses. However, when $n$ is e.g. 65, the cache set mapping becomes much more diverse and thus the conflict misses become mitigated. To summarize, since the block is not stored contiguously, the strides that we take is associated with $n$, and so in this case for $n$ a multiple of 64 presents a particularly nasty scenario for cache set conflicts. In practice, a simple solution is to ensure that $n$ is not a multiple of 64. 
 \begin{figure}[H]
   \inputpgf{figs/conflict_miss}{mil_blocking_conflicts_64.pgf}\vspace{-1cm}
-  \caption{Cache line mappings for the first 16x16x16 block of a 64x64x64 region (all units are in doubles). Note that a single cache block is 8 doubles. The grey circle represents the start of a cache block (memory is contiguous along $i$). The numbers represent the cache line numbers for the associated $i,j$ entry and for $k=0,1,2,3,...$. Thus it can be seen that for the same $i,j$ entry, all entries along $k$ share the same cache line. }
+  \caption{Cache set mappings for the first 16x16x16 block of a 64x64x64 region (all units are in doubles). Note that a single cache block is 8 doubles. The grey circle represents the start of a cache block (memory is contiguous along $i$). The numbers represent the cache set numbers for the associated cache-block. }
   \label{res:conflict_miss_64}
 \end{figure}
-\begin{figure}[H]
-  \inputpgf{figs/conflict_miss}{mil_blocking_conflicts_65.pgf}\vspace{-1cm}
-  \caption{Cache line mappings for the first 16x16x16 block of a 65x65x65 region. Notice now that cache lines used are more diverse, thereby reducing conflicts. }
-  \label{res:conflict_miss_65}
-\end{figure}
+% \begin{figure}[H]
+%   \inputpgf{figs/conflict_miss}{mil_blocking_conflicts_65.pgf}\vspace{-1cm}
+%   \caption{Cache line mappings for the first 16x16x16 block of a 65x65x65 region. Notice now that cache lines used are more diverse, thereby reducing conflicts. }
+%   \label{res:conflict_miss_65}
+% \end{figure}
 
 \mypar{EF} \textit{Experimental setup}
 
