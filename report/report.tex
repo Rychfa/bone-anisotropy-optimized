@@ -9,6 +9,7 @@
 \usepackage{float}
 \usepackage{xcolor}
 \usepackage{listings}
+\usepackage{pgf}
 
 % Example definitions.
 % --------------------
@@ -45,6 +46,13 @@
     belowskip=-2em,
 }
 \lstnewenvironment{ccode}{\lstset{language=C, numbers=left}}{}
+
+%%% PATCH STARTS https://tex.stackexchange.com/questions/127667/matplotlib-pgf-images-in-subdirectory
+\newcommand\inputpgf[2]{{
+\let\pgfimageWithoutPath\pgfimage
+\renewcommand{\pgfimage}[2][]{\pgfimageWithoutPath[##1]{#1/##2}}
+\input{#1/#2}
+}}
 
 % Title.
 % ------
@@ -261,6 +269,18 @@ The experimental results are presenting here according to the algorithms.
   \label{res:mil}
 \end{figure}
 
+\textit{Conflict Misses}
+
+\begin{figure}[H]
+  \inputpgf{figs/conflict_miss}{mil_blocking_conflicts_64.pgf}\vspace{-1cm}
+  \caption{Cache line mappings for the first 16x16x16 block of a 64x64x64 region (all units are in doubles). Note that a single cache block is 8 doubles. The grey circle represents the start of a cache block. The numbers represent the cache line numbers for the associated $i,j$ entry and for $k=0,1,2,3,...$. }
+  \label{res:conflict_miss_64}
+\end{figure}
+\begin{figure}[H]
+  \inputpgf{figs/conflict_miss}{mil_blocking_conflicts_65.pgf}\vspace{-1cm}
+  \caption{Cache line mappings for the first 16x16x16 block of a 65x65x65 region (all units are in doubles). Note that a single cache block is 8 doubles. The grey circle represents the start of a cache block. The numbers represent the cache line numbers for the associated $i,j$ entry and for $k=0,1,2,3,...$. }
+  \label{res:conflict_miss_65}
+\end{figure}
 
 \mypar{EF} \textit{Experimental setup}
 
