@@ -179,16 +179,16 @@ This section explains the baseline implementation and optimization strategies of
 The following C-like pseudo code summarizes the baseline implementation of MIL algorithm:
 
 \begin{ccode}[caption={My Caption},captionpos=b]
-void mil_base(double* reg, int n, double* mil){
+void mil_base(double* region, int n, double* mil){
   double h[13] = 0; int C[13] = 0;
   // Core of MIL
   for (int v = 0; v < 13; ++v)
     for every ray r of v  do
       {k,j,i} = get_start_of_ray(r);
-      int prev = reg[k][j][i];
+      int prev = region[k][j][i];
       while ( {k,j,i} < n && {k,j,i} > 0 )
-        h[v] += reg[k][j][i];
-        curr = reg[k][j][i] > 0.5; //Is it bone?
+        h[v] += region[k][j][i];
+        curr = region[k][j][i] > 0.5; // bone?
         C[v] += curr ^ prev; // interception
         prev = curr;
         {k,j,i} = next_voxel_indices({k,j,i}, v);
@@ -218,6 +218,16 @@ The second aspect to consider when blocking is the correct initialization of \te
 Assuming that the block fits completely in L1 cache, a lower bound for the data read from memory when processing a block is $Q_B(n) \geq N_B^3$ doubles. Ignoring conflict misses, this lower bound is tight. Since there are $\frac{n^3}{N_B^3}$ blocks in total, the amount of data read from memory to process the whole region using blocking is bounded by $Q(n) \geq N_B^3 \cdot \frac{n^3}{N_B^3} = n^3$ doubles. An upper bound on the operational intensity is therefore $I(n) \leq \frac{6.5n^3}{n^3} = 6.5$ flops/double. Thus, the implementation now became \textit{compute bound}. For the final implementation, we choose $N_B = 16$ which is the size that achieves the best performance.
 
 \mypar{SIMD vectorization}
+After using blocking to improve locality, we vectorized the code using SIMD instructions. Recall that four accumulators were used to improve ILP in the first optimization. Since the data is in double precision, we can store the accumulators in a SIMD AVX register and apply vector instructions. We also used loop unrolling to expose an additional rays that can be handled in a vector, therefore improving ILP. Note that we always choose rays with the same length to avoid the overhead of handling leftovers. Similar to the scalar version, the implementation for 1-D, 2-D and 3-D direction vectors are treated separately to choose suitable rays for each case. In summary, in most cases we are procession 8 rays simultaneously per loop iteration, stored in two SIMD register. The only exception is 3-D vectors in which processing 12 rays simultaneously in three SIMD registers was a more suitable option. 
+Figure \ref{fig:simd_mil} shows the vectorized diagram for the main operations used in MIL.
+It is also worth noting that 3-D direction vectors have inherently more overhead that 2-D or 1-D vectors because they have more and shorter rays. Thus, there is more overhead when determining the starting points for the next set of rays to be processed.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=3.4in]{figs/simd_mil2.eps}
+    \caption{SIMD vectorization of four rays in MIL.}
+    \label{fig:simd_mil}
+\end{figure}
 
 
 \subsection{EF} moving loop invariant code, SIMD
