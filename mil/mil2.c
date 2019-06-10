@@ -255,7 +255,10 @@ void mil2_baseline(const double *hr_sphere_region, int n, double *directions_vec
                         int i = start.i;
 
                         unsigned int current_mask;
-                        unsigned int prev_mask = hr_sphere_region[ k*n*n + j*n + i] > 0.5;
+                        unsigned int prev_mask;
+                        if ((k < n && k >= 0) && (j < n && j >= 0) && (i < n && i >= 0)) {
+                            prev_mask = hr_sphere_region[ k*n*n + j*n + i] > 0.5;
+                        }
                         while ((k < n && k >= 0) && (j < n && j >= 0) && (i < n && i >= 0)) {
 
                             directions_vectors_bone_length[v] += hr_sphere_region[ k*n*n + j*n + i];
@@ -284,12 +287,9 @@ void mil2_baseline(const double *hr_sphere_region, int n, double *directions_vec
     }
 
 #ifdef DEBUG
-    printf("TRUE 0 - BONE LENGTH = %.8f, INTERCEPTS = %d\n", directions_vectors_bone_length[0], directions_vectors_intercepts[0]);
-    printf("TRUE 1 - BONE LENGTH = %.8f, INTERCEPTS = %d\n", directions_vectors_bone_length[1], directions_vectors_intercepts[1]);
-    printf("TRUE 2 - BONE LENGTH = %.8f, INTERCEPTS = %d\n", directions_vectors_bone_length[2], directions_vectors_intercepts[2]);
-
-    gBone1 = directions_vectors_bone_length[10];
-    gInter1 = directions_vectors_intercepts[10];
+    for (int i = 9; i < n_vectors; ++i) {
+        printf("mil2_baseline direction vector %d - BONE LENGTH = %.8f, INTERCEPTS = %d\n", i, directions_vectors_bone_length[i], directions_vectors_intercepts[i]);
+    }
 #endif
 
 }
@@ -325,4 +325,10 @@ void mil2_scalar(const double *hr_sphere_region, int n, double *directions_vecto
         }
         directions_vectors_mil[i] = bone_length[i] / intercepts[i];
     }
+
+#ifdef DEBUG
+    for (int i = 9; i < 13; ++i) {
+        printf("mil2_scalar direction vector %d - BONE LENGTH = %.8f, INTERCEPTS = %d\n", i, bone_length[i], intercepts[i]);
+    }
+#endif
 }

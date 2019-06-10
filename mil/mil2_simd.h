@@ -930,14 +930,14 @@
                                                                                                   \
     double bone_length_block_diagonals[4];                                                        \
     _mm256_store_pd(bone_length_block_diagonals, bone_count);                                     \
-    bone_length[9] += bone_length_block_diagonals[0];                                             \
-    intercepts[9] += _mm256_extract_epi64(edge_count, 0);                                         \
-    bone_length[10] += bone_length_block_diagonals[1];                                            \
-    intercepts[10] += _mm256_extract_epi64(edge_count, 1);                                        \
-    bone_length[11] += bone_length_block_diagonals[2];                                            \
-    intercepts[11] += _mm256_extract_epi64(edge_count, 2);                                        \
-    bone_length[12] += bone_length_block_diagonals[3];                                            \
-    intercepts[12] += _mm256_extract_epi64(edge_count, 3);                                        \
+    bone_length[9] += bone_length_block_diagonals[3];                                             \
+    intercepts[9] += _mm256_extract_epi64(edge_count, 3);                                         \
+    bone_length[10] += bone_length_block_diagonals[2];                                            \
+    intercepts[10] += _mm256_extract_epi64(edge_count, 2);                                        \
+    bone_length[11] += bone_length_block_diagonals[1];                                            \
+    intercepts[11] += _mm256_extract_epi64(edge_count, 1);                                        \
+    bone_length[12] += bone_length_block_diagonals[0];                                            \
+    intercepts[12] += _mm256_extract_epi64(edge_count, 0);                                        \
 }
 
 
