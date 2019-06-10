@@ -64,8 +64,10 @@ void init (double** sphere, double** extracted_region, double** ptrHighRes, doub
     //
     // Create sphere mask
     //
-    *extracted_region = malloc( (sizeof (double)) * SPHERE_ARRAY_SIZE);
-    *sphere = malloc( (sizeof (double)) * SPHERE_ARRAY_SIZE);
+    // *extracted_region = malloc( (sizeof (double)) * SPHERE_ARRAY_SIZE);
+    *extracted_region = aligned_alloc(32,  (sizeof (double)) * SPHERE_ARRAY_SIZE);
+    // *sphere = malloc( (sizeof (double)) * SPHERE_ARRAY_SIZE);
+    *sphere = aligned_alloc(32,  (sizeof (double)) * SPHERE_ARRAY_SIZE);
     createSphereMask(*sphere);
     //
     // Read input images
@@ -432,7 +434,7 @@ void kernel_opt1 (double* sphere, double* extracted_region, double* ptrHighRes, 
                     j_hr = (int) ty_hr;
                     k_hr = (int) tz_hr;
                     
-                    region_extraction_opt1(i_hr, j_hr, k_hr, sphere, extracted_region, ptrHighRes);
+                    region_extraction_simd(i_hr, j_hr, k_hr, sphere, extracted_region, ptrHighRes);
 
                     // compute fabric */
                     double mils[NUM_DIRECTIONS];
