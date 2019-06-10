@@ -44,7 +44,7 @@
 using namespace std;
 
 #define CYCLES_REQUIRED 1e7
-#define REP 5
+#define REP 20
 #define EPS (1e-3)
 #define FREQ 2.7
 #define TOLERANCE 1e-8
@@ -151,7 +151,6 @@ int main(int argc, char **argv) {
 
     for (int n = 80; n <= 80; n += 32) {
         cout << endl << "Testing size " << n << endl;
-//        cout << endl << n << " ";
 
         // Compute with base line first.
         if (numFuncs > 1) {
@@ -182,7 +181,6 @@ int main(int argc, char **argv) {
             cycles = perf_test(userFuncs[i], n);
             cout << "Runtime: " << cycles << " cycles" << endl;
             cout << "Performance: " << (1.0 * funcFlops[i] * n * n * n) / cycles << " flops per cycle" << endl;
-//            cout << (1.0 * funcFlops[i] * n * n * n) / cycles << " ";
         }
     }
 

@@ -312,6 +312,9 @@ double simd_mil_2D_neg(const double *hr_sphere_region, int* intercepts, int n, c
 }
 
 #endif
+
+//#define DEBUG
+
 ///
 /// Test all vectors with SIMD.
 ///
@@ -346,4 +349,10 @@ void mil2_simd(const double *hr_sphere_region, int n, double *directions_vectors
         }
         directions_vectors_mil[i] = bone_length[i] / intercepts[i];
     }
+
+#ifdef DEBUG
+    for (int i = 9; i < 13; ++i) {
+        printf("mil2_simd direction vector %d - BONE LENGTH = %.8f, INTERCEPTS = %d\n", i, bone_length[i], intercepts[i]);
+    }
+#endif
 }
