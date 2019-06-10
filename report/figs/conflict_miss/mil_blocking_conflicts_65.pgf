@@ -1465,7 +1465,7 @@
 \definecolor{textcolor}{rgb}{0.000000,0.000000,0.000000}%
 \pgfsetstrokecolor{textcolor}%
 \pgfsetfillcolor{textcolor}%
-\pgftext[x=1.897758in,y=0.424857in,,top]{\color{textcolor}\rmfamily\fontsize{8.000000}{9.600000}\selectfont i}%
+\pgftext[x=1.897758in,y=0.424857in,,top]{\color{textcolor}\rmfamily\fontsize{8.000000}{9.600000}\selectfont \(\displaystyle i\)}%
 \end{pgfscope}%
 \begin{pgfscope}%
 \pgfpathrectangle{\pgfqpoint{0.470950in}{0.656956in}}{\pgfqpoint{2.853617in}{2.853617in}}%
@@ -2079,7 +2079,7 @@
 \definecolor{textcolor}{rgb}{0.000000,0.000000,0.000000}%
 \pgfsetstrokecolor{textcolor}%
 \pgfsetfillcolor{textcolor}%
-\pgftext[x=0.219559in,y=2.083765in,,bottom,rotate=90.000000]{\color{textcolor}\rmfamily\fontsize{8.000000}{9.600000}\selectfont j}%
+\pgftext[x=0.219559in,y=2.083765in,,bottom,rotate=90.000000]{\color{textcolor}\rmfamily\fontsize{8.000000}{9.600000}\selectfont \(\displaystyle j\)}%
 \end{pgfscope}%
 \begin{pgfscope}%
 \pgfsetrectcap%
