@@ -143,7 +143,7 @@ The ellipsoid fitting problem can be formalized as follows:
 \begin{align}
   \mathrm{minimize}_{Q\in\mathbb{R}^{3x3}} \sum_{i=1}^{N_{vec}} (p_i^T Q p_i - 1)^2
 \end{align}
-where $p_i = MIL(v_i) v_i/||v_i||_2$. The above corresponds to a least squares regression problem. The algorithm we choose to solve this is gradient decent with a backtracking line search~\cite{boyd2004convex} for finding the step size. Both the outer gradient descent and the inner line search are iterative algorithms and terminates depending on the input data-set based on some sort of error criteria. The next iteration of the gradient descent cannot proceed before the current iteration is completed. The total number of flops, per call of the ellipsoid fitting algorithm, is  $C(k_\text{g iters},k_\text{bt iters},N_{vec}) = (51N_{vec} + k_\text{bt,iters}23N_{vec})k_\text{g,iters}$ flops, where $k_\text{bt,iters}$ is the number of back tracking line search iterations and $k_\text{g,iters}$ is the number of outer gradient descent iterations. The iteration counts differ depending on the input points $p_i$. Since the flop count is not deterministic, the code is instrumented to get the total flop count. {\color{red}{per voxel I cannot give a flop count..}}.
+where $p_i = MIL(v_i) v_i/||v_i||_2$. The above corresponds to a least squares regression problem. The algorithm we choose to solve this is gradient decent with a backtracking line search~\cite{boyd2004convex} for finding the step size. Both the outer gradient descent and the inner line search are iterative algorithms and terminates depending on the input data-set based on some sort of error criteria. The next iteration of the gradient descent cannot proceed before the current iteration is completed. The total number of flops, per call of the ellipsoid fitting algorithm, is  $C(k_\text{g iters},k_\text{bt iters},N_{vec}) = (51N_{vec} + k_\text{bt,iters}23N_{vec})k_\text{g,iters}$ flops, where $k_\text{bt,iters}$ is the number of back tracking line search iterations and $k_\text{g,iters}$ is the number of outer gradient descent iterations. Note that the cost does not depend on $n$. The iteration counts differ depending on the input points $p_i$. Since the flop count is not deterministic, the code is instrumented to get the total flop count. 
 
 %\begin{table}
 %  \caption{Cost analysis}
@@ -172,7 +172,7 @@ From the basic implementation, MIL calculation, EF and RE consume approximately 
         \midrule
         RE & - & $n^{3}$ & - & - &   $n^{3}$\\
         MIL & $\frac{13n^{3}}{4}$ & -  & 13 & $\frac{13n^{3}}{4}$ &  $13(\frac{n^{3}}{2}+1)$\\
-        EF & & & & & \\
+        EF & $O(1)$ & $O(1)$ & 0 & 0 & $O(1)$\\
         \bottomrule
     \end{tabular}
 \end{table}
