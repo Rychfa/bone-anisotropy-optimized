@@ -139,7 +139,11 @@ The algorithm includes floating point additions to calculate $h({v})$ and compar
 
 % todo: algorithm for ellipsoid fitting
 \mypar{Ellipsoid fitting (EF)}  
-{\color{red}Todo}
+The ellipsoid fitting problem can be formalized as follows:
+\begin{align}
+  \mathrm{minimize}_{Q\in\mathbb{R}^{3x3}} \sum_{i=1}^{N_{vec}} (p_i^T Q p_i - 1)^2
+\end{align}
+where $p_i = MIL(v_i) v_i/||v_i||_2$. The above corresponds to a least squares regression problem. The algorithm we choose to solve this is gradient decent with a backtracking line search~\cite{boyd2004convex} for finding the step size. Both the outer gradient descent and the inner line search are iterative algorithms and terminates depending on the input data-set based on some sort of error criteria. The next iteration of the gradient descent cannot proceed before the current iteration is completed. The total number of flops, per call of the ellipsoid fitting algorithm, is  $C(k_\text{g iters},k_\text{bt iters},N_{vec}) = (51N_{vec} + k_\text{bt,iters}23N_{vec})k_\text{g,iters}$ flops, where $k_\text{bt,iters}$ is the number of back tracking line search iterations and $k_\text{g,iters}$ is the number of outer gradient descent iterations. The iteration counts differ depending on the input points $p_i$. Since the flop count is not deterministic, the code is instrumented to get the total flop count. {\color{red}{per voxel I cannot give a flop count..}}.
 
 %\begin{table}
 %  \caption{Cost analysis}
@@ -238,8 +242,23 @@ It is also worth noting that 3-D direction vectors have inherently more overhead
 \end{figure}
 
 
-\subsection{EF} moving loop invariant code, SIMD
+\subsection{Ellipsoid fitting optimizations} 
+\mypar{Intensity analysis}  In the context of the overall algorithm, $N_{vec}$ is fixed to 13. Thus, the 13 points is small enough for the points $p_i$ to all fit in L1 cache. Whether we assume cold or warm cache, the operational intensity is going to be very high (infinity if we assume warm cache). However, we choose to investigate what happens for varying $N_{vec}$ out of curiosity. {\color{red}n in plot should be Nvec} 
 
+If the working set (i.e. all the points $p_i$) don't fit in L1, then each time we compute the gradient, and every iteration of the back tracking line search, we have to reload the points into L1 cache, and thus $Q\geq (3N_{vec} + k_\text{bt,iters}3N_{vec})k_\text{g,iters}$ [doubles]. Thus,
+\begin{align}
+  I(N_{vec}) &\leq \frac{(51N_{vec} + k_\text{bt,iters}23N_{vec})k_\text{g,iters}}{(3N_{vec} + k_\text{bt,iters}3N_{vec})k_\text{g,iters}} \\
+  &= \frac{51N_{vec} + k_\text{bt,iters}23N_{vec}}{3N_{vec} + k_\text{bt,iters}3N_{vec}} \approx 8 \\
+  &\sim O(1)
+\end{align}
+In this case, the intensity is still high enough to be compute bound.
+
+\mypar{Scalar optimization}
+-ilp doesn't help, pipeline already filled with some computations
+-loop invariant code was removed (didn't modify flop count), and achieve max based on instruction mix of 3
+
+\mypar{SIMD vectorization}
+-vectorize across points: each point ...
 
 \section{Experimental Results}\label{sec:exp}
 
