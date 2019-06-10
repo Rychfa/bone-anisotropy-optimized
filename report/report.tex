@@ -251,14 +251,23 @@ If the working set (i.e. all the points $p_i$) don't fit in L1, then each time w
   &= \frac{51N_{vec} + k_\text{bt,iters}23N_{vec}}{3N_{vec} + k_\text{bt,iters}3N_{vec}} \approx 8 \\
   &\sim O(1)
 \end{align}
-In this case, the intensity is still high enough to be compute bound.
+In this case, the intensity is still high enough to be compute bound. 
 
 \mypar{Scalar optimization}
--ilp doesn't help, pipeline already filled with some computations
--loop invariant code was removed (didn't modify flop count), and achieve max based on instruction mix of 3
+Loop unrolling and breaking up dependencies to increase ILP doesn't really help, as the pipeline is already filled with some computations and aliasing is not an issue (don't write constantly to one of the input arrays). For example, when computing the gradient or when computing the cost during the line search, a quadratic form is computed for each of the points. Each quadratic form can fill the pipeline as some dependencies are inherently not there. However, one particular optimization that proved effective was removing loop invariant code: in the backtracking line search, a condition is checked which involves comparing the cost of the current best guess of $Q^*$ with that of the previous best guess, and the compiler was not able to move the cost of the previous best guess outside the loop (didn't modify flop count). Doing this hits the maximum achievable flop count of 3, which is derived using the instruction mix.
 
 \mypar{SIMD vectorization}
--vectorize across points: each point ...
+Each of the points $p_i$ contribute to the gradient as well as to the cost (as a quadratic form, as mentioned earlier). Thus, a vectorization strategy is to vectorize across the points to simultaneously compute the quadratic forms for four points at a time, and then sum the results at the end. Doing so involves shuffling the input array of points, which is in the format 
+\begin{align}
+  [x_0, y_0, z_0, x_1, y_1, z_1, x_2, y_2, ...]
+\end{align}
+to a format suitable for vectorization
+\begin{align}
+  &[x_0, x_1, x_2, ...] \\
+  &[y_0, y_1, y_2, ...] \\
+  &[z_0, z_1, z_2, ...]
+\end{align}
+This is similar to the complex conversion problem of homework 3, except for 3D rather than 2D. Now every time the gradient or cost needs to be computed, the above shuffled loads take place to fill up 4 points worth of data before the flops can be computed. However, an additional optimization is to pre-shuffle the points before commencing with the gradient decent algorithm and store the shuffled data into memory. Subsequently, during the gradient decent computations, only loads from the already shuffled memory is done. This approach makes sense if the passes through the working set is at least larger than 1, which is the case (i.e. $k_\mathrm{bt,iters}, k_\mathrm{g,iters} > 1$). 
 
 \section{Experimental Results}\label{sec:exp}
 
@@ -275,7 +284,7 @@ The experimental results are presenting here according to the algorithms.
   \caption{Performance of RE}
   \label{res:regions}
 \end{figure}
-
+{\color{red} should explain how the 0.5 bound was derived}
 
 \mypar{MIL} \textit{Experimental setup}
 
@@ -303,7 +312,7 @@ map to the same cache line. Similarly, for fixed $i,k$ and for some index $j_0$,
                               \end{cases}
   \right. \right\}
 \end{align}
-also map to the same cache line. This is visualized in Figure~\ref{res:conflict_miss_64}. This is a lot of conflicts, way more than the 8-way associativity can handle. Thus what happens then is after one pass of the block along one direction, when we start another pass of the same block for the next direction vector, there is no reuse due to all the conflict misses. When $n$ is 65, for example, (see Figure~\ref{res:conflict_miss_65}), the cache line mapping becomes a lot better for conflicts. To summarize, since the block is not stored contiguously, the strides that we take is associated with $n$, and so in this case for $n$ a multiple of 64 presents a particularly nasty scenario for cache line conflicts. In practice, a simple solution is to ensure that $n$ is not a multiple of 64. 
+also map to the same cache line. This is visualized in Figure~\ref{res:conflict_miss_64}. This is a lot of conflicts, much more than the 8-way associativity can handle. Thus what happens then is after one pass of the block along one direction, when we start another pass of the same block for the next direction vector, there is no reuse due to all the conflict misses. When $n$ is 65, for example, (see Figure~\ref{res:conflict_miss_65}), the cache line mapping becomes a lot better for conflicts. To summarize, since the block is not stored contiguously, the strides that we take is associated with $n$, and so in this case for $n$ a multiple of 64 presents a particularly nasty scenario for cache line conflicts. In practice, a simple solution is to ensure that $n$ is not a multiple of 64. 
 \begin{figure}[H]
   \inputpgf{figs/conflict_miss}{mil_blocking_conflicts_64.pgf}\vspace{-1cm}
   \caption{Cache line mappings for the first 16x16x16 block of a 64x64x64 region (all units are in doubles). Note that a single cache block is 8 doubles. The grey circle represents the start of a cache block (memory is contiguous along $i$). The numbers represent the cache line numbers for the associated $i,j$ entry and for $k=0,1,2,3,...$. }
