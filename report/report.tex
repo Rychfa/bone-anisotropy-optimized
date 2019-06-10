@@ -99,7 +99,7 @@ Bone fabric anisotropy or microstructure orientation was recently included in fi
 
 Bone anisotropy mapping methodology includes coordinates mapping between a low and a high-resolution images, region extraction (RE), the mean intercept length (MIL) method for quantification of the microstructure orientation, ellipsoid fitting (EF) of MIL and eigendecomposition to obtain the major direction of the microstructure.
 
-\mypar{Motivation} In the recent study, bone anisotropy mapping algorithms are performed for all low resolution image voxels and for all pairs (n=71) of low and high resolution images \cite{Panyasantisuk:18}. This preprocessing step consumes a significant amount of computing time. Moreover, researchers expect larger dataset to create a more general FE models of bone. Therefore, the performance of these algorithms are crucial. Two software packages for image processing which include MIL calculation are Medtool, a commercialized PYTHON package, and BoneJ, an open-source JAVA plugin for ImageJ. The external packages needed to be integrated to the computation pipeline and optimization is not straightforward. 
+\mypar{Motivation} In the recent study, bone anisotropy mapping algorithms are performed for all low resolution image voxels and for all pairs (n=71) {\color{red} ?} of low and high resolution images \cite{Panyasantisuk:18}. This preprocessing step consumes a significant amount of computing time. Moreover, researchers expect larger dataset to create a more general FE models of bone. Therefore, the performance of these algorithms are crucial. Two software packages for image processing which include MIL calculation are Medtool, a commercialized PYTHON package, and BoneJ, an open-source JAVA plugin for ImageJ. The external packages needed to be integrated to the computation pipeline and optimization is not straightforward. 
 
 In this paper, we are presenting an integrated and optimized methodology of bone anisotropy mapping. At our best knowledge, this is the first paper to study and optimize the performance of MIL calculation depending on the extracted region size.
   
@@ -107,7 +107,7 @@ In this paper, we are presenting an integrated and optimized methodology of bone
 % Coord mapping & region extraction
 The methodology is shown in Fig.~\ref{fig:method}. Coordinates from a low resolution image were mapped to its own high resolution image. Then, a sphere region is extracted and centered at the mapped coordinate in the high resolution image. 
 % MIL
-Subsequently, the anisotropy of the extracted bone region is quantified by using MIL method which imposed direction vectors on the regions. The mean length of each vector is the sum of the length inside the bone region devided by the number of intercepts which intersect with bone/non-bone transition.
+Subsequently, the anisotropy of the extracted bone region is quantified by using MIL method which imposed direction vectors on the regions. The mean length of each vector is the sum of the length inside the bone region divided by the number of intercepts which intersect with bone/non-bone transition.
 % ellipsoid fitting
 The MIL values can be plots as a cloud of points in the direction vector space and an ellipsoid can be fitted to obtain a representative two dimensional tensor, for which three eigenvalues and three eigenvectors are calculated. The eigenvector associated with the minimum eigenvalue is the major direction of that bone region.
 
@@ -127,15 +127,15 @@ This algorithm applies a sphere mask on the high resolution image and copies the
 % todo: add figure of MIL 
 The mean intercept length of a vector ${v}$ can be expressed as
 \begin{equation}
-  MIL({v}) = \frac{h({v})}{C({v})},
+  MIL({v}) = \frac{h({v})}{I_{count}({v})},
 \end{equation}
-where $h(v)$ is the summation of the bone intensities ``touched" by all the rays formed by direction vector $v$, and $C(v)$ is the number of intercepts of the vector $v$.  In general, each ray is separated by a stride $s=2$. Thus, each direction vector touches only $\frac{n^3}{s^2}$ voxels in the region for $n$ even. We consider only $N_{vec}=13$ direction vectors.
+where $h(v)$ is the summation of the bone intensities ``touched" by all the rays formed by direction vector $v$, and $I_{count}(v)$ is the number of intercepts of the vector $v$.  In general, each ray is separated by a stride $s=2$. Thus, each direction vector touches only $\frac{n^3}{s^2}$ voxels in the region for $n$ even. We consider only $N_{vec}=13$ direction vectors.
 
-As an example, consider the (2-D) extracted region in Fig~\ref{fig:method} with horizontal vector $\vec{v} = (1,0,0)$. In this region, $C({v})$ is the number of green dots, whereas $h({v})$ is calculated summing up all voxels touched by the horizontal doted lines.
+As an example, consider the (2-D) extracted region in Fig~\ref{fig:method} with horizontal vector $\vec{v} = (1,0,0)$. In this region, $I_{count}(v)$ is the number of green dots, whereas $h({v})$ is calculated summing up all voxels touched by the horizontal doted lines.
 
 %More precisely, let $R(\vec{v})$ be the set of rays formed by vector $\vec{v}$, where a ray $r\in R(\vec{v})$ is represented by the values of all voxels touched by such a ray. Thus, h and C can be calculated as follows:
 
-The algorithm includes floating point additions to calculate $h({v})$ and comparisons to detect interceptions. Note that additions performed to calculate $C({v})$ are not considered in the cost analysis because those are performed over integers. In addition, one division is performed per direction vector. The total cost of the MIL algorithm per extracted region is therefore $C(n) = N_{vec}(\frac{2n^3}{s^2}+1)$. Table \ref{tab:cost} provides a detailed breakdown of the cost analysis.
+The algorithm includes floating point additions to calculate $h({v})$ and comparisons to detect interceptions. Note that additions performed to calculate $I_{count}(v)$ are not considered in the cost analysis because those are performed over integers. In addition, one division is performed per direction vector. The total cost of the MIL algorithm per extracted region is therefore $C(n) = N_{vec}(\frac{2n^3}{s^2}+1)$. Table \ref{tab:cost} provides a detailed breakdown of the cost analysis.
 
 % todo: algorithm for ellipsoid fitting
 \mypar{Ellipsoid fitting (EF)}  
@@ -143,7 +143,7 @@ The ellipsoid fitting problem can be formalized as follows:
 \begin{align}
   \mathrm{minimize}_{Q\in\mathbb{R}^{3x3}} \sum_{i=1}^{N_{vec}} (p_i^T Q p_i - 1)^2
 \end{align}
-where $p_i = MIL(v_i) v_i/||v_i||_2$. The above corresponds to a least squares regression problem. The algorithm we choose to solve this is gradient decent with a backtracking line search~\cite{boyd2004convex} for finding the step size. Both the outer gradient descent and the inner line search are iterative algorithms and terminates depending on the input data-set based on some sort of error criteria. The next iteration of the gradient descent cannot proceed before the current iteration is completed. The total number of flops, per call of the ellipsoid fitting algorithm, is  $C(k_\text{g iters},k_\text{bt iters},N_{vec}) = (51N_{vec} + k_\text{bt,iters}23N_{vec})k_\text{g,iters}$ flops, where $k_\text{bt,iters}$ is the number of back tracking line search iterations and $k_\text{g,iters}$ is the number of outer gradient descent iterations. The iteration counts differ depending on the input points $p_i$. Since the flop count is not deterministic, the code is instrumented to get the total flop count. {\color{red}{per voxel I cannot give a flop count..}}.
+where $p_i = MIL(v_i) v_i/||v_i||_2$. The above corresponds to a least squares regression problem. The algorithm we choose to solve this is gradient decent with a backtracking line search~\cite{boyd2004convex} for finding the step size. Both the outer gradient descent and the inner line search are iterative algorithms and terminates depending on the input data-set based on some sort of error criteria. The next iteration of the gradient descent cannot proceed before the current iteration is completed. The total number of flops, per call of the ellipsoid fitting algorithm, is  $C(k_\text{g iters},k_\text{bt iters},N_{vec}) = (51N_{vec} + k_\text{bt,iters}23N_{vec})k_\text{g,iters}$ flops, where $k_\text{bt,iters}$ is the number of back tracking line search iterations and $k_\text{g,iters}$ is the number of outer gradient descent iterations. Note that the cost does not depend on $n$. The iteration counts differ depending on the input points $p_i$. Since the flop count is not deterministic, the code is instrumented to get the exact flop count. 
 
 %\begin{table}
 %  \caption{Cost analysis}
@@ -161,7 +161,7 @@ where $p_i = MIL(v_i) v_i/||v_i||_2$. The above corresponds to a least squares r
 %\end{table}
 
 %{\color{red} Should we move this paragraph till the end (after we explain each algorithm)?}
-From the basic implementation, MIL calculation, EF and RE consume approximately {\color{red} 80\%, 15\% and 5 \%} of the overall computing time, respectively. Therefore, we focused on these three algorithms for the optimization. The run time was measured by using time stamp counter (TSC).  We define our cost measure as the number of floating point operations (flops) performed by the algorithms. The cost analysis for each algorithm is shown in Table~\ref{tab:cost}, where $n$ is the size of the region extracted during RE. Note that each algorithm is performed once per non-zero voxel in the low resolution image. {\color{red} (This can be omitted)} Thus, the cost of the whole program is ${\color{red} total}\cdot N_{nz}$, where $N_{nz}$ is the number of non-zero voxels in the low resolution image which represent the bone voxel.
+From the basic implementation, RE calculation, MIL and EF consume approximately 20, 72, and 8 percent of the overall computing time, respectively. Therefore, we focused on these three algorithms for the optimization. The run time was measured by using time stamp counter (TSC).  We define our cost measure as the number of floating point operations (flops) performed by the algorithms. The cost analysis for each algorithm is shown in Table~\ref{tab:cost}, where $n$ is the size of the region extracted during RE. Note that each algorithm is performed once per non-zero voxel in the low resolution image. {\color{red} (This can be omitted)} Thus, the cost of the whole program is $N_{nz}(n^3 + 13(n^3/2+1) + O(1))$ where $N_{nz}$ is the number of non-zero voxels in the low resolution image which represent the bone voxel. To get the exact flop count, the $N_{nz}O(1)$ term, which comes from EF, is computed through instrumentation.
 
 \begin{table}[H]
     \caption{Cost analysis per low-resolution bone voxel.}
@@ -172,7 +172,7 @@ From the basic implementation, MIL calculation, EF and RE consume approximately 
         \midrule
         RE & - & $n^{3}$ & - & - &   $n^{3}$\\
         MIL & $\frac{13n^{3}}{4}$ & -  & 13 & $\frac{13n^{3}}{4}$ &  $13(\frac{n^{3}}{2}+1)$\\
-        EF & & & & & \\
+        EF & $O(1)$ & $O(1)$ & 0 & 0 & $O(1)$\\
         \bottomrule
     \end{tabular}
 \end{table}
@@ -207,7 +207,7 @@ void mil_base(double* region, int n, double* mil){
     mil[v] = h[v] / C[v];
  }
 \end{ccode}
-As can be seen, the baseline implementation iterates through all rays of all 13 direction vectors (see the \texttt{for} loop in lines 4-5). For each ray, we first get its starting voxel to begin iterating from (line 6). Finally, the inner loop iterates through the whole ray and computes $h(v)$ and $C(v)$. Note that $C(v)$ is an integer array; thus, the only floating point operations in this loop are the addition and comparison in lines 9-10.
+As can be seen, the baseline implementation iterates through all rays of all 13 direction vectors (see the \texttt{for} loop in lines 4-5). For each ray, we first get its starting voxel to begin iterating from (line 6). Finally, the inner loop iterates through the whole ray and computes $h(v)$ and $I_{count}(v)$. Note that $I_{count}(v)$ is an integer array; thus, the only floating point operations in this loop are the addition and comparison in lines 9-10.
 
 \mypar{Improving ILP}
 The first performance bottleneck in the baseline implementation is due to the non-associativity of floating point additions in line 9. This creates inter-loop dependencies between addition operations that limit the instruction level parallelism (ILP) of the implementation. Assuming a latency of floating point additions of 4 cycles, an upper bound on the performance due to this dependency is 0.5 flops/cycle (1 \texttt{add} + 1 \texttt{cmp} every 4 cycles).
@@ -220,7 +220,7 @@ The second performance blocker are memory accesses. Assume that the extracted re
 The second direction vector, $v_2 = (0,1,0)$, iterates through the extracted region vertically. Since we assumed a very large data-set, there is no reuse of data from the previous vector. Further, note that for the vertical vector, only half of the data in a cache line will be used in the best case due to the stride of $s=2$ for consecutive rays. Since unused data in a cache line still have to be read from memory, a lower bound for the data read for the vertical vector is $Q_2(n) \geq \frac{n^3}{2}$ doubles. The remaining vectors will behave similarly as the vertical vector. Hence, a lower bound for the total amount of data read from memory is $Q(n) \geq \frac{n^3}{4} + \frac{12n^3}{2} = 6.25n^3$. Recall from the cost analysis of the previous section that the total number of flops performed by MIL is $W(n)=13(\frac{n^{3}}{2}+1) \approx 6.5n^3$. An upper bound on the operation intensity of MIL for a large $n$ is therefore $I(n) \leq \frac{6.5n^3}{6.25n^3} = 1.04$ flops/double. We conclude that the implementation of the algorithm is memory bound when the data does not longer fit in the cache. 
 
 \mypar{Blocking}
-In order to improve the operational intensity and cache locality, the next optimization applied was blocking. The idea behind blocking is that we can improve on data reuse by partially calculating $h(v)$ and $C(v)$ in a cube-block of size $N_B^3$ that fits in L1 cache. Since the blocked data will still be in the cache for the next vector, data reuse will improve by taking advantage of spacial and temporal locality. Afterwards, we repeat this process for the next block until all the extracted region is covered. For simplicity, we assumed that the region size $n$ is divisible by the block size $N_B$.
+In order to improve the operational intensity and cache locality, the next optimization applied was blocking. The idea behind blocking is that we can improve on data reuse by partially calculating $h(v)$ and $I_{count}(v)$ in a cube-block of size $N_B^3$ that fits in L1 cache. Since the blocked data will still be in the cache for the next vector, data reuse will improve by taking advantage of spacial and temporal locality. Afterwards, we repeat this process for the next block until all the extracted region is covered. For simplicity, we assumed that the region size $n$ is divisible by the block size $N_B$.
 
 There are two things to consider when implementing blocking for MIL. First, note that we are accessing the voxels in the extracted region that are touched by the rays of all direction vectors. To this end, the implementation first determines the start of a ray in the limits of the region to begin iterating from. When blocking, we have to pay special attention to choose the right starting points for the partial rays processed by each block. To illustrate this, consider Figure ??. The highlighted voxels are the starting points for each block. As can be seen, in this particular case, not all blocks have the same pattern for the starting points (see for example B1 and B2). This means that we would have to determine the start pattern for each block to implement blocking. Since we favor simplicity, we would like to have the same starting patter within all blocks. This is easy to achieve for 1-D and 2-D vectors by simply choosing $N_B$ multiple of the stride $s=2$. On the other hand, to achieve homogeneity between blocks when processing 3-D vectors, we had to change the starting pattern of the baseline implementation as shown in Figure ??.
 
@@ -250,14 +250,23 @@ If the working set (i.e. all the points $p_i$) don't fit in L1, then each time w
   &= \frac{51N_{vec} + k_\text{bt,iters}23N_{vec}}{3N_{vec} + k_\text{bt,iters}3N_{vec}} \approx 8 \\
   &\sim O(1)
 \end{align}
-In this case, the intensity is still high enough to be compute bound.
+In this case, the intensity is still high enough to be compute bound. 
 
 \mypar{Scalar optimization}
--ilp doesn't help, pipeline already filled with some computations
--loop invariant code was removed (didn't modify flop count), and achieve max based on instruction mix of 3
+Loop unrolling and breaking up dependencies to increase ILP doesn't really help, as the pipeline is already filled with some computations and aliasing is not an issue (don't write constantly to one of the input arrays). For example, when computing the gradient or when computing the cost during the line search, a quadratic form is computed for each of the points. Each quadratic form can fill the pipeline as some dependencies are inherently not there. However, one particular optimization that proved effective was removing loop invariant code: in the backtracking line search, a condition is checked which involves comparing the cost of the current best guess of $Q^*$ with that of the previous best guess, and the compiler was not able to move the cost of the previous best guess outside the loop (didn't modify flop count). Doing this hits the maximum achievable flop count of 3, which is derived using the instruction mix.
 
 \mypar{SIMD vectorization}
--vectorize across points: each point ...
+Each of the points $p_i$ contribute to the gradient as well as to the cost (as a quadratic form, as mentioned earlier). Thus, a vectorization strategy is to vectorize across the points to simultaneously compute the quadratic forms for four points at a time, and then sum the results at the end. Doing so involves shuffling the input array of points, which is in the format 
+\begin{align}
+  [x_0, y_0, z_0, x_1, y_1, z_1, x_2, y_2, ...]
+\end{align}
+to a format suitable for vectorization
+\begin{align}
+  &[x_0, x_1, x_2, ...] \\
+  &[y_0, y_1, y_2, ...] \\
+  &[z_0, z_1, z_2, ...]
+\end{align}
+This is similar to the complex conversion problem of homework 3, except for 3D rather than 2D. Now every time the gradient or cost needs to be computed, the above shuffled loads take place to fill up 4 points worth of data before the flops can be computed. However, an additional optimization is to pre-shuffle the points before commencing with the gradient decent algorithm and store the shuffled data into memory. Subsequently, during the gradient decent computations, only loads from the already shuffled memory is done. This approach makes sense if the passes through the working set is at least larger than 1, which is the case (i.e. $k_\mathrm{bt,iters}, k_\mathrm{g,iters} > 1$). 
 
 \section{Experimental Results}\label{sec:exp}
 This section presents the performance results for each of the discussed algorithms.
@@ -273,7 +282,7 @@ This section presents the performance results for each of the discussed algorith
   \caption{Performance of RE}
   \label{res:regions}
 \end{figure}
-
+{\color{red} should explain how the 0.5 bound was derived}
 
 \subsection{MIL results} 
 \textit{Experimental setup}. 
@@ -291,7 +300,7 @@ Figure \ref{res:mil} shows the performance plot for MIL for four different confi
 \end{figure}
 
 \textit{Conflict Misses}
-When we block with $N_b = 16$, then the 16x16x16 block entirely fits in L1 cache, assuming full associativity. Thus, as we walk across this block over all direction vectors, there will only be compulsory misses on the very first pass of the block, and then again for the subsequent blocks, thereby removing capacity misses. However, the results in Figure~\ref{res:mil} shows that for $n=64x$, where $x=0,1,2,...$, we see a drop in performance, most notably in the blocking case. This reduced performance can be attributed to the increase in cache misses due to conflicts, as L1 cache has limited associativity: L1 cache has 64 sets, and is 8 way associative, with each cache block holding 8 doubles. When $n=64x$, it can be shown that for fixed $i,j$, the indexes in the set 
+When the block size $N_b = 16$, then the 16x16x16 block entirely fits in L1 cache, assuming full associativity. Thus, as we walk across this block over all direction vectors, there will only be compulsory misses on the very first pass of the block. However, the results in Figure~\ref{res:mil} shows that for $n=64x$, where $x=0,1,2,...$, we see a drop in performance, most notably in the blocking case. This reduced performance can be attributed to the increase in cache misses due to conflicts, as L1 cache has limited associativity: L1 cache has 64 sets, and is 8 way associative, with each cache block holding 8 doubles. When $n=64x$, it can be shown that for fixed $i,j$, the indexes in the set 
 \begin{align}
   \{(i,j,k) | k=0,1,2,... \}
 \end{align}
@@ -305,15 +314,15 @@ map to the same cache line. Similarly, for fixed $i,k$ and for some index $j_0$,
                               \end{cases}
   \right. \right\}
 \end{align}
-also map to the same cache line. This is visualized in Figure~\ref{res:conflict_miss_64}. This is a lot of conflicts, way more than the 8-way associativity can handle. Thus what happens then is after one pass of the block along one direction, when we start another pass of the same block for the next direction vector, there is no reuse due to all the conflict misses. When $n$ is 65, for example, (see Figure~\ref{res:conflict_miss_65}), the cache line mapping becomes a lot better for conflicts. To summarize, since the block is not stored contiguously, the strides that we take is associated with $n$, and so in this case for $n$ a multiple of 64 presents a particularly nasty scenario for cache line conflicts. In practice, a simple solution is to ensure that $n$ is not a multiple of 64. 
+also map to the same cache line. This is visualized in Figure~\ref{res:conflict_miss_64}. This is a lot of conflicts, much more than the 8-way associativity can handle. Thus what happens then is after one pass of the block along one direction, when we start another pass of the same block for the next direction vector, there is no reuse due to all the conflict misses. When $n$ is 65, for example, (see Figure~\ref{res:conflict_miss_65}), the cache line mapping becomes a lot better for conflicts. To summarize, since the block is not stored contiguously, the strides that we take is associated with $n$, and so in this case for $n$ a multiple of 64 presents a particularly nasty scenario for cache line conflicts. In practice, a simple solution is to ensure that $n$ is not a multiple of 64. 
 \begin{figure}[H]
   \inputpgf{figs/conflict_miss}{mil_blocking_conflicts_64.pgf}\vspace{-1cm}
-  \caption{Cache line mappings for the first 16x16x16 block of a 64x64x64 region (all units are in doubles). Note that a single cache block is 8 doubles. The grey circle represents the start of a cache block (memory is contiguous along $i$). The numbers represent the cache line numbers for the associated $i,j$ entry and for $k=0,1,2,3,...$. }
+  \caption{Cache line mappings for the first 16x16x16 block of a 64x64x64 region (all units are in doubles). Note that a single cache block is 8 doubles. The grey circle represents the start of a cache block (memory is contiguous along $i$). The numbers represent the cache line numbers for the associated $i,j$ entry and for $k=0,1,2,3,...$. Thus it can be seen that for the same $i,j$ entry, all entries along $k$ share the same cache line. }
   \label{res:conflict_miss_64}
 \end{figure}
 \begin{figure}[H]
   \inputpgf{figs/conflict_miss}{mil_blocking_conflicts_65.pgf}\vspace{-1cm}
-  \caption{Cache line mappings for the first 16x16x16 block of a 65x65x65 region (all units are in doubles). Note that a single cache block is 8 doubles. The grey circle represents the start of a cache block (memory is contiguous along $i$). The numbers represent the cache line numbers for the associated $i,j$ entry and for $k=0,1,2,3,...$. }
+  \caption{Cache line mappings for the first 16x16x16 block of a 65x65x65 region. Notice now that cache lines used are more diverse, thereby reducing conflicts. }
   \label{res:conflict_miss_65}
 \end{figure}
 
