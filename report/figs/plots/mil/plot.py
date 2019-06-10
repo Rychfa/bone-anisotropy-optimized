@@ -6,21 +6,28 @@ with open("mil_benchmark.csv","r") as f:
 
 data.pop(0)
 
-n = []
-simd_nonblocking = []
-simd_blocking = []
-blocking = []
-nonblocking = []
-baseline = []
+# n = []
+# simd_nonblocking = []
+# simd_blocking = []
+# blocking = []
+# nonblocking = []
+# baseline = []
 
-for line in data:
-    values = line.strip().split()
-    n.append(int(values[0]) )
-    simd_nonblocking.append(float(values[1]))
-    simd_blocking.append(float(values[2]))
-    blocking.append(float(values[3]))
-    nonblocking.append(float(values[4]))
-    baseline.append( float(values[5]))
+# for line in data:
+#     values = line.strip().split()
+#     n.append(int(values[0]) )
+#     simd_nonblocking.append(float(values[1]))
+#     simd_blocking.append(float(values[2]))
+#     blocking.append(float(values[3]))
+#     nonblocking.append(float(values[4]))
+#     baseline.append( float(values[5]))
+
+n = [16, 32, 48, 64, 80, 96, 112, 128, 144, 160, 176, 192, 208, 224, 240, 256, 272, 288, 304, 320, 336, 352]
+baseline = [0.253126, 0.273263,0.285723,0.268263,0.292533,0.22245,0.190012,0.141454,0.154034,0.14583,0.130745,0.131468,0.132991,0.13068,0.129215,0.11497,0.125344,0.12235,0.117174,0.115357,0.122026,0.120587]
+nonblocking = [ 0.507966,0.518339,0.442633,0.357604,0.272747,0.267925,0.204402,0.166334,0.178962,0.173255,0.178665,0.152704,0.168882,0.149292,0.140991,0.115668,0.127536,0.120879,0.123546,0.0945074,0.118324,0.0977236]
+blocking = [ 0.484023,0.471778,0.481992,0.322162,0.445875,0.42407,0.417652,0.28337,0.426249,0.404632,0.404399,0.293365,0.397039,0.386905,0.387979,0.277467,0.397114,0.37891,0.379555,0.298291,0.378078,0.379609]
+simd = [ 1.30327,1.13983,1.24452,0.616068,1.07943,0.95392,0.581806,0.474591,0.945199,0.874368,0.857527,0.612672,0.836425,0.834621,0.806127,0.511187,0.809358,0.780495,0.791103,0.598147,0.778034,0.748431]
+
 
 
 # plot performance
@@ -33,7 +40,7 @@ ax.axvline(115, color="tab:gray" )
 #
 ax.plot(n, baseline, "-ko", label= "baseline")
 # ax.plot(n, simd_nonblocking, "-ro", label= "simd nonblocking")
-ax.plot(n, simd_blocking, "-ro", label= "simd blocking")
+ax.plot(n, simd, "-ro", label= "simd blocking")
 ax.plot(n, blocking, "-go", label= "blocking")
 ax.plot(n, nonblocking, "-bo", label= "nonblocking")
 #
