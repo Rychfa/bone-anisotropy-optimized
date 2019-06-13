@@ -1,6 +1,7 @@
 #include "tsc_x86.h"
 #include <stdlib.h>
 #include <stdio.h>
+#include <immintrin.h>
 
 #define NUM_RUNS 5
 #define CALIBRATE
@@ -59,6 +60,29 @@ void mm2(double *A, double *B, double *C, int n)
 	}
 }
 
+/*
+ */
+void mm3(double *A, double *B, double *C, int n)
+{
+    int i,j,k;
+
+    __m256d aa, bb, cc;
+    int id;
+
+    for (i=0; i<n; i++) {
+        for (j=0; j<n; j++) {
+            for (k=0; k<n; k+=4) {
+                id = i*n*n + j*n + k;
+//                printf("%d: A: %.3f, B: %.3f, C: %.3f\n", id, A[id], B[id], C[id]);
+                aa = _mm256_load_pd(A + id);
+                bb = _mm256_load_pd(B + id);
+                cc = _mm256_mul_pd(aa, bb);
+                _mm256_store_pd(C + id, cc);
+            }
+        }
+    }
+}
+
 
 void fill_vector(double * x, int n) {
     for(int i=0; i < n; i++) {
@@ -111,24 +135,66 @@ int main(int argc, char **argv)
 	}
 
 	/* initialize data */
-	double *A = malloc(sizeof(double)*n*n*n);
-	double *B = malloc(sizeof(double)*n*n*n);
-	double *C = malloc(sizeof(double)*n*n*n);
+	double *A = aligned_alloc(32, sizeof(double)*n*n*n);
+	double *B = aligned_alloc(32, sizeof(double)*n*n*n);
+	double *C = aligned_alloc(32, sizeof(double)*n*n*n);
 
 	fill_vector(A, n*n*n);
 	fill_vector(B, n*n*n);
 	fill_vector(C, n*n*n);
 
 	/* perform timings */
-	double cycles = rdtsc(A, B, C, n, mm1);
-	printf("%f, %f, %f\n", A[0], B[0], C[0]);
-	printf("mm1: %g, %g\n", cycles, (n*n*n)/cycles);
+//	double cycles = rdtsc(A, B, C, n, mm1);
+//	printf("%f, %f, %f\n", A[0], B[0], C[0]);
+//	printf("mm1: %g, %g\n", cycles, (n*n*n)/cycles);
+//
+//	cycles = rdtsc(A, B, C, n, mm2);
+//	printf("%f, %f, %f\n", A[0], B[0], C[0]);
+//	printf("mm2: %g, %g\n", cycles, (n*n*n)/cycles);
 
-	cycles = rdtsc(A, B, C, n, mm2);
-	printf("%f, %f, %f\n", A[0], B[0], C[0]);
-	printf("mm2: %g, %g\n", cycles, (n*n*n)/cycles);
+    printf("8,");
+    for (n = 16; n < 140; n += 16) {
+        printf("%d,", n);
+    }
+    printf("\n");
 
-	free(A);
-	free(B);
-	free(C);
+    n = 8;
+    double cycles = rdtsc(A, B, C, n, mm3);
+    printf("%g,", (n*n*n)/cycles);
+
+    free(A);
+    free(B);
+    free(C);
+
+    for (n = 16; n < 140; n += 16) {
+        A = aligned_alloc(32, sizeof(double)*n*n*n);
+        B = aligned_alloc(32, sizeof(double)*n*n*n);
+        C = aligned_alloc(32, sizeof(double)*n*n*n);
+
+        fill_vector(A, n*n*n);
+        fill_vector(B, n*n*n);
+        fill_vector(C, n*n*n);
+
+        cycles = rdtsc(A, B, C, n, mm3);
+        printf("%d: %g\n", n, (n*n*n)/cycles);
+
+        free(A);
+        free(B);
+        free(C);
+    }
+
+//	free(A);
+//	free(B);
+//	free(C);
+
+    8,16,32,48,64,80,96,112,128,
+         1.40659,
+    16:  0.698857
+    32:  0.628498
+    48:  0.617698
+    64:  0.629618
+    80:  0.416643
+    96:  0.312164
+    112: 0.284031
+    128: 0.258183
 }

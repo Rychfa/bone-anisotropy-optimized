@@ -438,8 +438,7 @@ void kernel_opt1 (double* sphere, double* extracted_region, double* ptrHighRes, 
 
                     // compute fabric */
                     double mils[NUM_DIRECTIONS];
-                    mil2_baseline(extracted_region, SPHERE_NDIM, mils);
-                    // mil2_simd(extracted_region, SPHERE_NDIM, mils);
+                    mil2_simd(extracted_region, SPHERE_NDIM, mils);
 
                     double Q[3][3];
                     // fit_ellipsoid_mils(mils, (double (*)[3][3])Q);
