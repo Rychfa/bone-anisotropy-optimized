@@ -341,13 +341,13 @@ also map to the same cache set. This is visualized in Figure~\ref{res:conflict_m
 %   \label{res:conflict_miss_65}
 % \end{figure}
 
-\mypar{EF} \textit{Experimental setup}
+\mypar{EF} \textit{Experimental setup} {\color{red} in caption}
 
 \textit{Results}
- 
+ The results can be seen in Fig.~\ref{res:ellipsoid}. The `baseline' already performs quite well due to the lack of dependences and aliasing. The `Optimized' version removes loop-invariant code and we can hit the peak from the instruction mix. The `SIMD points' shuffles the points once during an initializing before proceeding with the algorithm, and this yields the largest performance gain; not doing this initializing corresponds to the `SIMD points shuffle' curve. As mentioned, we operate at $N_{vec}=13$, and thus the performance gain with respect the baseline is roughly 3.3x. 
 \begin{figure}[H]
   \centering \includegraphics[width=3.5in]{figs/plots/ellipsoid/ellipsoid_performance.pdf}
-  \caption{Performance of EF}
+  \caption{Performance of EF. Test performed on a Intel i7 6700HQ (Skylake), Turboboost off, compiled with \texttt{gcc} with flags \texttt{-O3 -fno-tree-vectorize}. {\color{red} change n to $N_{vec}$}}
   \label{res:ellipsoid}
 \end{figure}
 
