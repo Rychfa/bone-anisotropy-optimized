@@ -211,6 +211,78 @@ static void print_simd(__m256d a) {
 ///
 /// Skeleton for region extraction
 ///
+void region_extraction_simd2 (int i_hr, int j_hr, int k_hr, double *sphere, double *extracted_region, double *ptrHighRes) {
+
+    int ihr_min, jhr_min, khr_min;
+    int ihr_max, jhr_max, khr_max;
+    int i, j, k, ii;
+    int ihr, jhr, khr, ii_hr;
+
+    __m256d sphere_vec, highres_vec, extract_vec;
+
+    // find min for sphere
+    ihr_min = i_hr - SPHERE_HALF_NDIM;
+    jhr_min = j_hr - SPHERE_HALF_NDIM;
+    khr_min = k_hr - SPHERE_HALF_NDIM;
+    // find max for sphere
+    ihr_max = i_hr + SPHERE_HALF_NDIM;
+    jhr_max = j_hr + SPHERE_HALF_NDIM;
+    khr_max = k_hr + SPHERE_HALF_NDIM;
+    //
+    if (ihr_max > HIGH_RES_D1) {
+       ihr_max = HIGH_RES_D1;
+    }
+    if (jhr_max > HIGH_RES_D2) {
+       jhr_max = HIGH_RES_D2;
+    }
+    if (khr_max > HIGH_RES_D3) {
+       khr_max = HIGH_RES_D3;
+    }
+
+    extract_vec = _mm256_set1_pd(0.0);
+    for (k=0; k < SPHERE_NDIM; k++) {
+        for (j=0; j < SPHERE_NDIM; j++) {
+            for (i=0; i < SPHERE_NDIM; i+=4) {
+                ii = i + j*SPHERE_NDIM + k*SPHERE_NDIM*SPHERE_NDIM;
+                _mm256_store_pd(extracted_region + ii, extract_vec);
+                
+            }
+        }
+    }
+    for (khr=khr_min; khr < khr_max; khr++) {
+        k = khr - khr_min;
+        for (jhr=jhr_min; jhr < jhr_max; jhr++) {
+            j = jhr - jhr_min;
+            for (ihr=ihr_min; ihr < ihr_max-4; ihr+=4) {
+                i = ihr - ihr_min;
+                // calculate index
+                ii =  i + j*SPHERE_NDIM + k*SPHERE_NDIM*SPHERE_NDIM;
+                ii_hr =  ihr + jhr*HIGH_RES_D1 + khr*HIGH_RES_D1*HIGH_RES_D2;
+                // printf("%d, %d, %d\n", i, j, k);
+                // 
+                sphere_vec = _mm256_load_pd(sphere + ii);
+                highres_vec = _mm256_loadu_pd(ptrHighRes + ii_hr);
+                extract_vec = _mm256_mul_pd(sphere_vec, highres_vec);
+
+                // store
+                _mm256_store_pd(extracted_region + ii, extract_vec);
+            }
+            for (;ihr<ihr_max; ihr++) { /* need clean-up */
+                i = ihr - ihr_min;
+                // calculate index
+                ii =  i + j*SPHERE_NDIM + k*SPHERE_NDIM*SPHERE_NDIM;
+                ii_hr =  ihr + jhr*HIGH_RES_D1 + khr*HIGH_RES_D1*HIGH_RES_D2;
+                extracted_region[ii] = sphere[ii] * ptrHighRes[ii_hr];
+            }
+        }
+    }
+}
+
+
+
+///
+/// Skeleton for region extraction
+///
 void region_extraction_simd (int i_hr, int j_hr, int k_hr, double *sphere, double *extracted_region, double *ptrHighRes) {
 
     double hr_voxel0, hr_voxel1, hr_voxel2, hr_voxel3;
@@ -228,6 +300,20 @@ void region_extraction_simd (int i_hr, int j_hr, int k_hr, double *sphere, doubl
     ihr_min = i_hr - SPHERE_HALF_NDIM;
     jhr_min = j_hr - SPHERE_HALF_NDIM;
     khr_min = k_hr - SPHERE_HALF_NDIM;
+    // find max for sphere
+    ihr_max = i_hr + SPHERE_HALF_NDIM;
+    jhr_max = j_hr + SPHERE_HALF_NDIM;
+    khr_max = k_hr + SPHERE_HALF_NDIM;
+    //
+    if (ihr_max > HIGH_RES_D1) {
+       ihr_max = HIGH_RES_D1;
+    }
+    if (jhr_max > HIGH_RES_D2) {
+       jhr_max = HIGH_RES_D2;
+    }
+    if (khr_max > HIGH_RES_D3) {
+       khr_max = HIGH_RES_D3;
+    }
 
     extract_vec = _mm256_set1_pd(0.0);
     for (k=0; k < SPHERE_NDIM; k++) {
@@ -241,13 +327,12 @@ void region_extraction_simd (int i_hr, int j_hr, int k_hr, double *sphere, doubl
     } //<--- removing this improve sperf from 0.4 to 0.5
 
     int ihr_max_simd;
-
-    ihr_max_simd = ihr_max - (ihr_max%4);
+    ihr_max_simd = ihr_max - (ihr_max%4); 
     for (khr=khr_min; khr < khr_max; khr++) {
         k = khr - khr_min;
         for (jhr=jhr_min; jhr < jhr_max; jhr++) {
             j = jhr - jhr_min;
-            for (ihr=ihr_min; ihr < ihr_max_simd; ihr+=4*2) {
+            for (ihr=ihr_min; ihr < ihr_max_simd; ihr+=4) {
                 i = ihr - ihr_min;
                 // calculate index
                 ii =  i + j*SPHERE_NDIM + k*SPHERE_NDIM*SPHERE_NDIM;
@@ -255,22 +340,30 @@ void region_extraction_simd (int i_hr, int j_hr, int k_hr, double *sphere, doubl
                 // printf("%d, %d, %d\n", i, j, k);
                 // load
                 sphere_vec = _mm256_load_pd(sphere + ii);
-                highres_vec = _mm256_load_pd(ptrHighRes + ii_hr);
-                sphere_vec2 = _mm256_load_pd(sphere + ii +4);
-                highres_vec2 = _mm256_load_pd(ptrHighRes + ii_hr + 4);
-                // sphere_vec2 = _mm256_load_pd(sphere + ii +4*2);
-                // highres_vec2 = _mm256_load_pd(ptrHighRes + ii_hr + 4*2);
+                highres_vec = _mm256_loadu_pd(ptrHighRes + ii_hr);
+                // sphere_vec2 = _mm256_load_pd(sphere + ii +4);  // TODO: could probably improve by unrolling if there is enough room to do so...
+                // highres_vec2 = _mm256_load_pd(ptrHighRes + ii_hr + 4);
+                // sphere_vec3 = _mm256_load_pd(sphere + ii +4*2);
+                // highres_vec3 = _mm256_load_pd(ptrHighRes + ii_hr + 4*2);
 
                 // mul
                 extract_vec = _mm256_mul_pd(sphere_vec, highres_vec);
-                extract_vec2 = _mm256_mul_pd(sphere_vec2, highres_vec2);
+                // extract_vec2 = _mm256_mul_pd(sphere_vec2, highres_vec2);
                 // extract_vec3 = _mm256_mul_pd(sphere_vec3, highres_vec3);
 
                 // store
                 _mm256_store_pd(extracted_region + ii, extract_vec);
-                _mm256_store_pd(extracted_region + ii+4, extract_vec);
-                // _mm256_store_pd(extracted_region + ii+4*2, extract_vec);
+                // _mm256_store_pd(extracted_region + ii+4, extract_vec2);
+                // _mm256_store_pd(extracted_region + ii+4*2, extract_vec3);
             }
+            for (;ihr<ihr_max; ihr++) { /* need clean-up */
+                i = ihr - ihr_min;
+                // calculate index
+                ii =  i + j*SPHERE_NDIM + k*SPHERE_NDIM*SPHERE_NDIM;
+                ii_hr =  ihr + jhr*HIGH_RES_D1 + khr*HIGH_RES_D1*HIGH_RES_D2;
+                extracted_region[ii] = sphere[ii] * ptrHighRes[ii_hr];
+            }
+
         }
     }
 }
