@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
 
 with open("mil_benchmark.csv","r") as f:
    data = f.readlines()
@@ -45,7 +46,13 @@ ax.plot(n, blocking, "-go", label= "blocking")
 ax.plot(n, nonblocking, "-bo", label= "nonblocking")
 #
 ax.yaxis.grid()
-ax.set_ylim([0, 2.0])
+ax.set_ylim([0, 1.5])
+#
+tick_spacing = 0.3
+ax.yaxis.set_major_locator(ticker.MultipleLocator(tick_spacing))
+
+ax.get_xaxis().set_ticks([])
+ax.get_yaxis().set_ticks([])
 #
 plt.savefig(plotname)
 plt.clf()

@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.pyplot as ticker
 
 # performance
 # n = np.arange(16, 130, 16)
@@ -23,8 +24,10 @@ for i, j in zip(n, size):
 
 # performance for [ 8 16 32 48 64 80 96 112 128]
 # with high res image in RAM
-perf_noopt=[0.775293, 0.581542, 0.400057, 0.344852, 0.17986, 0.17542, 0.185002, 0.186485, 0.192796]
-perf_opt1=[0.765889, 0.603839, 0.488816, 0.356639, 0.19169, 0.181904, 0.180183, 0.190401, 0.189839]
+perf_noopt=[0.784633, 0.653057, 0.399443, 0.335706, 0.185376, 0.174986, 0.177575, 0.185827, 0.189169 ]
+perf_opt1=[0.780664, 0.611077, 0.479769, 0.378966, 0.18659, 0.182955, 0.181743, 0.192446, 0.191375]
+perf_simd= [1.40928, 0.851174, 0.539571, 0.426128, 0.193017, 0.137667, 0.133517, 0.135984,  0.148356]
+
 
 # plot performance
 plotname = "regions_performance.png"
@@ -41,9 +44,14 @@ ax.axvline(69, color="tab:gray" )
 # ax.axvline(69, 0.5,1.0, color="m" )
 #
 ax.plot(n, perf_noopt, "-ko", label= "baseline")
-ax.plot(n, perf_opt1, "-ro", label= "loop unrolling")
+ax.plot(n, perf_opt1, "-bo", label= "loop unrolling")
+ax.plot(n, perf_simd, "-ro", label= "simd")
 #
-ax.set_ylim([0, 1.2])
+ax.set_ylim([0, 1.5])
+#
+tick_spacing = 0.3
+ax.yaxis.set_major_locator(ticker.MultipleLocator(tick_spacing))
+#
 ax.yaxis.grid()
 plt.savefig(plotname)
 plt.clf()
