@@ -239,16 +239,16 @@ void region_extraction_simd (int i_hr, int j_hr, int k_hr, double *sphere, doubl
        khr_max = HIGH_RES_D3;
     }
 
-    extract_vec = _mm256_set1_pd(0.0);
-    for (k=0; k < SPHERE_NDIM; k++) {
-        for (j=0; j < SPHERE_NDIM; j++) {
-            for (i=0; i < SPHERE_NDIM; i+=4) {
-                ii = i + j*SPHERE_NDIM + k*SPHERE_NDIM*SPHERE_NDIM;
-                _mm256_store_pd(extracted_region + ii, extract_vec);
-                
-            }
-        }
-    }
+//    extract_vec = _mm256_set1_pd(0.0);
+//    for (k=0; k < SPHERE_NDIM; k++) {
+//        for (j=0; j < SPHERE_NDIM; j++) {
+//            for (i=0; i < SPHERE_NDIM; i+=4) {
+//                ii = i + j*SPHERE_NDIM + k*SPHERE_NDIM*SPHERE_NDIM;
+//                _mm256_store_pd(extracted_region + ii, extract_vec);
+//
+//            }
+//        }
+//    }
     for (khr=khr_min; khr < khr_max; khr++) {
         k = khr - khr_min;
         for (jhr=jhr_min; jhr < jhr_max; jhr++) {
