@@ -85,7 +85,7 @@ void register_functions()
 {
     long int flops = 0;
     //      kernel + regions
-    flops = (6*LOW_RES_D3 + 6*LOW_RES_D2*LOW_RES_D3 + 3*LOW_RES_D1*LOW_RES_D2*LOW_RES_D3 + 21*4814) + pow(SPHERE_NDIM,3) * NON_ZERO_VOXELS;
+    flops = (6*LOW_RES_D3 + 6*LOW_RES_D2*LOW_RES_D3 + 3*LOW_RES_D1*LOW_RES_D2*LOW_RES_D3 + 21 * NON_ZERO_VOXELS) + pow(SPHERE_NDIM,3) * NON_ZERO_VOXELS;
     flops += 767496569; // ellipsoid             
     flops += SPHERE_NDIM*SPHERE_NDIM*SPHERE_NDIM*6.5 * NON_ZERO_VOXELS; // mil; todo: divide by three?
     flops += 0; // eigen?
