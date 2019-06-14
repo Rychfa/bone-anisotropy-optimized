@@ -90,7 +90,7 @@
 %
 
 \begin{abstract}
-In this paper, we optimized an implementation for bone anisotropy mapping.
+In this paper, we optimized an implementation for bone anisotropy mapping to obtain the microstructure orientation of a low resolution image of a bone from a high resolution image. This process includes three main components that we optimized, namely region extraction, the mean intercept length and ellipsoid fitting. For the latter two, we achieve a maximum performance improvement of 6.4x and 3.3x compared to the initial implementation. The maximum performance improvement for the overall application is {\color{red} ?}.
 \end{abstract}
 
 \section{Introduction}\label{sec:intro}
@@ -277,8 +277,6 @@ This is similar to the complex conversion problem of homework 3, except for 3D r
 
 \section{Experimental Results}\label{sec:exp}
 This section presents the performance results for each of the discussed algorithms.
-
-{\color{red} Add label to each serie, and update cache lines for MIL plot}
 \begin{figure}[H]
   \centering \includegraphics[width=3.25in]{figs/plots/overall/overall_performance.pdf}
   \caption{Performance of (a) RE, (b) MIL, (c) EF and (d) overall.}
@@ -324,7 +322,7 @@ also map to the same cache set. This is shown in Fig \ref{res:conflict_miss_64} 
 %   \label{res:conflict_miss_65}
 % \end{figure}
 
-\mypar{EF} \textit{Experimental setup} The tests were performed on a Intel i7 6700HQ (Skylake) with TurboBoost disabled, compiled with \texttt{gcc} with flags \texttt{-O3 -fno-tree-vectorize -mavx2}.
+\mypar{EF} \textit{Experimental setup} The tests were performed on a Intel i7 6700HQ (Skylake) with TurboBoost disabled, compiled with \texttt{gcc} \texttt{-O3 -fno-tree-vectorize -mavx2}.
 
 \textit{Results}
  The results can be seen in Fig.~\ref{fig:performance} (c). The \textit{baseline} already performs quite well due to the lack of dependencies and aliasing. The \textit{Optimized} version removes loop-invariant code and we can hit the peak from the instruction mix. The `SIMD points' shuffles the points once during an initializing before proceeding with the algorithm, and this yields the largest performance gain; not doing this initializing corresponds to the \textit{SIMD points shuffle} curve. As mentioned, we operate at $N_{vec}=13$, and thus the performance gain with respect the baseline is roughly 3.3x. 
