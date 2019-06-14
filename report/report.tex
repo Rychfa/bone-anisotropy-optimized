@@ -90,7 +90,7 @@
 %
 
 \begin{abstract}
-\color{red}{Todo}
+In this paper, we optimized an implementation for bone anisotropy mapping.
 \end{abstract}
 
 \section{Introduction}\label{sec:intro}
@@ -285,13 +285,13 @@ This section presents the performance results for each of the discussed algorith
   \label{fig:performance}
 \end{figure}
 
-\mypar{RE} \textit{Experimental setup}. The tests were performed on Intel i7 U7600 (Kaby Lake), 2.8 GHz without TurboBoost. The L1, L2 and L3 cache size were 32KB, 256KB, and 8MB, respectively. The highest optimization flag was used without vectorization (\texttt{-O3 -fno-vectorize-tree}). The sphere region size were ranged from $n=8$ to $128$.
+\mypar{RE} \textit{Experimental setup}. The tests were performed on Intel i7 U7600 (Kaby Lake), 2.8 GHz without TurboBoost. The L1, L2 and L3 cache size were 32KB, 256KB, and 8MB, respectively. We compiled with \texttt{gcc} with flags \texttt{-O3 -fno-vectorize-tree -mavx2}. The sphere region size were ranged from $n=8$ to $128$.
 
 \textit{Results} As seen in Fig.~\ref{fig:performance} (a), the loop unrolling and scalar replacement did not improve the performance for the region extraction algorithms. The compiler might already perform well in alias checking and parallelizing the multiplications. When the extracted region size fitted in the cache, the performance was bound to 1 flops/cycle due to the instruction combinations (2 {\tt loads}, 1 {\tt mult}, 1 {\tt logic} and 1 {\tt store}). On the other hand, when the extracted region size was too large for the cache, the performance was bound to 0.5 flops/cycle due to the memory as the three arrays needed to be loaded from the memory before writing. The results shows that the algorithm reached around 0.8 flops/cycle in the cache and stayed around 0.2 flops/cycle in the memory.   
 
 \mypar{MIL results} 
 \textit{Experimental setup}.
-All experiments in this section were performed on an {\color{red} Intel Xeon E-2176M (Coffee Lake)  } with TurboBoost disabled using gcc 7.3.0 compiler with flags \texttt{-O3 -fno-vectorize-tree -mavx2}. The sphere region size were ranged from $n=16$ to $400$.
+All experiments in this section were performed on an Intel Core i9-8950HK, @2.90GHz (Coffe Lake) with TurboBoost disabled using gcc 7.3.0 with flags \texttt{-O3 -fno-vectorize-tree \\-mavx2}. The region size were ranged from $n=16$ to $400$.
 
 \textit{Results}. Fig \ref{fig:performance} (b) shows the performance plot for MIL for four different configurations, namely the \textit{baseline},\textit{ scalar non-blocking}, \textit{scalar with blocking} and \textit{SIMD with blocking}. As can be seen, the performance of \textit{scalar non-blocking} (blue line) already improves the performance by around 2x for small sizes compared to the baseline. This is mainly due to an improvement in ILP. However, performance drops considerably when the data does not longer fits in L3 cache. As expected \textit{scalar with blocking} (green line) improves the performance by 3x for large sizes by reducing the number of cache misses. Finally, \textit{SIMD with blocking} (red line) achieves a maximum performance gain of 6.4x compared to the baseline when the data does not fit cache. For a small $n$, we observe a maximum performance of 1.3 flops/cycle. Since MIL doesn't use FMA instructions, the peak performance is 8 flops/cycle. Thus, we are only getting at most 16.25\% of the peak performance. We attribute this low percentage of peak performance to the extra non floating point instructions performed, as well as the overhead of changing to another set of rays specially for 2-D and 3-D vectors.
 
@@ -324,16 +324,18 @@ also map to the same cache set. This is shown in Fig \ref{res:conflict_miss_64} 
 %   \label{res:conflict_miss_65}
 % \end{figure}
 
-\mypar{EF} \textit{Experimental setup} The tests were performed on a Intel i7 6700HQ (Skylake) with TurboBoost disabled, compiled with \texttt{gcc} with flags \texttt{-O3 -fno-tree-vectorize}.
+\mypar{EF} \textit{Experimental setup} The tests were performed on a Intel i7 6700HQ (Skylake) with TurboBoost disabled, compiled with \texttt{gcc} with flags \texttt{-O3 -fno-tree-vectorize -mavx2}.
 
 \textit{Results}
  The results can be seen in Fig.~\ref{fig:performance} (c). The \textit{baseline} already performs quite well due to the lack of dependencies and aliasing. The \textit{Optimized} version removes loop-invariant code and we can hit the peak from the instruction mix. The `SIMD points' shuffles the points once during an initializing before proceeding with the algorithm, and this yields the largest performance gain; not doing this initializing corresponds to the \textit{SIMD points shuffle} curve. As mentioned, we operate at $N_{vec}=13$, and thus the performance gain with respect the baseline is roughly 3.3x. 
 
 
-\mypar{Overall performance}
+\mypar{Overall performance} \textit{Experimental setup} The setup for the overall performance is the same as MIL.
+
+\textit{Results}
 
 \section{Conclusions}
-In this paper, the bone anisotropy mapping was integrated and optimized. From a baseline implementation, we identified three parts to optimize, namely region extraction (RE), MIL and ellipsoid fitting (EF), which take roughly 20, 72, and 8 percent of the overall runtime respectively. In particular, RE is memory bound; however, SIMD instructions improve the performance when considering warm cache. For MIL, we achieved a maximum improvement of 6.4x compared to the baseline when optimizing using blocking and SIMD vectorization. The results showed a significant decrease in performance when the region is multiple of 64 due to conflict misses on L1 cache. We showed that only 25\% of the cache is being effectively used for the case when $n = 64$. For EF, an important optimization was to pre-shuffle the input points before starting with the gradient decent algorithm  to make the input suitable for vectorization. The performance after optimizations when $N_B = 13$ for ellipsoid fitting was roughly 6.6 flops/cycle, which corresponds to a performance gain of 3.3x compared to the baseline. For other values of $N_B$ we achieved a maximum performance of roughly 10 flops/cycle. Finally, the overall performance achieved is...
+In this paper, the bone anisotropy mapping was integrated and optimized. From a baseline implementation, we identified three parts to optimize, namely region extraction (RE), MIL and ellipsoid fitting (EF), which take roughly 20, 72, and 8 percent of the overall runtime respectively. In particular, RE is memory bound; however, SIMD instructions improve the performance when considering warm cache. For MIL, we achieved a maximum improvement of 6.4x compared to the baseline when optimizing using blocking and SIMD vectorization. The results showed a significant decrease in performance when the region is multiple of 64 due to conflict misses on L1 cache. We showed that only 25\% of the cache is being effectively used for the case when $n = 64$. For EF, an important optimization was to pre-shuffle the input points before starting with the gradient decent algorithm  to make the input suitable for vectorization. The performance after optimizations when $N_B = 13$ for ellipsoid fitting was roughly 6.6 flops/cycle, which corresponds to a performance gain of 3.3x compared to the baseline. For other values of $N_B$ we achieved a maximum performance of roughly 10 flops/cycle. Finally, the overall performance achieved {\color{red}is...}
 
 As next steps, we could reduce conflict misses in MIL when the regions size is multiple of 64 by increasing its size by one. Also, we could merge some of the building blocks to get additional improvements. For example, we could add some MIL or EF computations inside RE to do some useful work while RE is waiting for data from memory.
 
