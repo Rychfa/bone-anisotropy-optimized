@@ -43,7 +43,9 @@ using namespace std;
 #define REP 1          /* ? */
 #define MIN_NUM_RUNS 1 /* do at least these many runs */
 #define EPS (1e-3)
-#define CLOCK_FREQ 2.8
+#define CLOCK_FREQ 2.9
+
+#define NON_ZERO_VOXELS 4814
 
 /* prototype of the function you need to optimize */
 typedef void(*comp_func)(double*, double*, double*, double*, double*, double*, double *);
@@ -74,6 +76,7 @@ void destroy(double* sphere, double* extracted_region, double* ptrHighRes, doubl
     deInit(sphere, extracted_region, ptrHighRes, ptrLowRes, rotation_matrix, ptrEvecOut, ptrEvalsOut, generate_ground_truth);
 }
 
+
 /*
 * Called by the driver to register your functions
 * Use add_function(func, description) to add your own functions
@@ -82,9 +85,9 @@ void register_functions()
 {
     long int flops = 0;
     //      kernel + regions
-    flops = (6*LOW_RES_D3 + 6*LOW_RES_D2*LOW_RES_D3 + 3*LOW_RES_D1*LOW_RES_D2*LOW_RES_D3 + 21*4814) + pow(SPHERE_NDIM,3)*4814;
+    flops = (6*LOW_RES_D3 + 6*LOW_RES_D2*LOW_RES_D3 + 3*LOW_RES_D1*LOW_RES_D2*LOW_RES_D3 + 21*4814) + pow(SPHERE_NDIM,3) * NON_ZERO_VOXELS;
     flops += 767496569; // ellipsoid             
-    flops += 2*SPHERE_NDIM*SPHERE_NDIM*SPHERE_NDIM/4.0*13*LOW_RES_SIZE/3; // mil; todo: divide by three?
+    flops += SPHERE_NDIM*SPHERE_NDIM*SPHERE_NDIM*6.5 * NON_ZERO_VOXELS; // mil; todo: divide by three?
     flops += 0; // eigen?
 
 
