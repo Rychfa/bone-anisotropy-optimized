@@ -38,6 +38,32 @@ perf_noopt_rc=[0.484848,0.414365,0.419404,0.416757,0.19456, 0.102223,0.0836013,0
 perf_opt1_rc=[0.433164,0.413278,0.42048,0.43172, 0.258695,0.0864294,0.0936839,0.169645,0.12865]
 perf_simd_rc= [1.3951,1.03618,0.559582,0.511844,0.397273,0.107143,0.107968,0.169772, 0.27153]
 
+# RG
+#n, pbase, punrol, psimd
+perfs = np.array([
+[8, 0.36, 0.46, 0.67],
+[16, 0.30, 0.40, 0.58],
+[24, 0.26, 0.34, 0.44],
+[32, 0.27, 0.33, 0.40],
+[40, 0.25, 0.31, 0.37],
+[48, 0.26, 0.32, 0.36],
+[56, 0.25, 0.30, 0.34],
+[64, 0.20, 0.24, 0.28],
+[68, 0.18, 0.21, 0.25],
+[72, 0.18, 0.20, 0.22],
+[80, 0.15, 0.18, 0.18],
+[88, 0.15, 0.18, 0.17],
+[104, 0.15, 0.16, 0.15]] )
+
+perfs_t = perfs.T
+n_rg = perfs_t[0]
+perf_noopt_rg = perfs_t[1]
+perf_opt1_rg = perfs_t[2]
+perf_simd_rg = perfs_t[3]
+print(n_rg)
+print(perf_noopt_rg)
+print(perf_opt1_rg)
+print(perf_simd_rg)
 
 # plot performance
 plotname = "regions_performance.png"
@@ -53,16 +79,16 @@ ax.axvline(69, color="tab:gray" )
 # ax.axhline(0.5, 69,150, color="m" )
 # ax.axvline(69, 0.5,1.0, color="m" )
 #
-ax.plot(n, perf_noopt, "-ko", label= "baseline")
-ax.plot(n, perf_opt1, "-bo", label= "loop unrolling")
-ax.plot(n, perf_simd, "-ro", label= "simd")
+ax.plot(n_rg, perf_noopt_rg, "-ko", label= "baseline")
+ax.plot(n_rg, perf_opt1_rg, "-bo", label= "loop unrolling")
+ax.plot(n_rg, perf_simd_rg, "-ro", label= "simd")
 #
 # ax.legend(loc="best")
 # ax.set_xlabel("n")
 # ax.set_ylabel("performance [flops/cycle]")
-ax.set_ylim([0, 0.6])
+ax.set_ylim([0, 0.8])
 #
-tick_spacing = 0.1
+tick_spacing = 0.2
 ax.yaxis.set_major_locator(ticker.MultipleLocator(tick_spacing))
 #
 ax.yaxis.grid()
