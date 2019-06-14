@@ -15,6 +15,9 @@ perfs_t = perfs.T
 n = perfs_t[0]
 perf_noopt = perfs_t[1]
 perf_opt1 = perfs_t[2]
+speedup = [ b/a for a, b in zip(perf_noopt, perf_opt1)]
+for i, j in enumerate(n):
+   print(i, speedup[i],j )
 
 # plot performance
 plotname = "overall_performance.png"
