@@ -279,13 +279,14 @@ This is similar to the complex conversion problem of homework 3, except for 3D r
 \section{Experimental Results}\label{sec:exp}
 This section presents the performance results for each of the discussed algorithms.
 
-\mypar{RE} \textit{Experimental setup}. The tests were performed on Intel i7 U7600 (Kaby Lake), 2.8 GHz without TurboBoost. The L1, L2 and L3 cache size were 32KB, 256KB, and 8MB, respectively. We compiled with \texttt{gcc} with flags \texttt{-O3 -fno-vectorize-tree -mavx2}. The sphere region size were ranged from $n=8$ to $128$.
+\mypar{RE} \textit{Experimental setup}. 
+The tests were performed on a Intel i7 6700HQ (Skylake) with TurboBoost disabled, compiled with \texttt{gcc} \texttt{-O3 -fno-tree-vectorize -mavx2}. The L1, L2 and L3 cache size are 32KB, 256KB, and 8MB, respectively. The sphere region size is ranged from $n=8$ to $128$.
 
 \textit{Results} As seen in Fig.~\ref{fig:performance} (a), the loop unrolling and scalar replacement did not improve the performance for the region extraction algorithms. The compiler might already perform well in alias checking and parallelizing the multiplications. When the extracted region size fitted in the cache, the performance was bound to 1 flops/cycle due to the instruction combinations (2 {\tt loads}, 1 {\tt mult}, 1 {\tt logic} and 1 {\tt store}). On the other hand, when the extracted region size was too large for the cache, the performance was bound to 0.5 flops/cycle due to the memory as the three arrays needed to be loaded from the memory before writing. The results shows that the algorithm reached around 0.8 flops/cycle in the cache and stayed around 0.2 flops/cycle in the memory.   
 
 \mypar{MIL results} 
 \textit{Experimental setup}.
-All experiments in this section were performed on an Intel Core i9-8950HK, @2.90GHz (Coffe Lake) with TurboBoost disabled using gcc 7.3.0 with flags \texttt{-O3 -fno-vectorize-tree \\-mavx2}. The region size were ranged from $n=16$ to $400$.
+All experiments in this section were performed on an Intel Core i9-8950HK The L1, L2 and L3 cache size were 32KB, 256KB, and 8MB, respectively.), @2.90GHz with TurboBoost disabled using gcc 7.3.0 with flags \texttt{-O3 -fno-vectorize-tree -mavx2}. The L1, L2 and L3 cache size are 32KB, 256KB, and 12MB, respectively. The region size is ranged from $n=16$ to $400$.
 
 \textit{Results}. Fig \ref{fig:performance} (b) shows the performance plot for MIL for four different configurations, namely the \textit{baseline},\textit{ scalar non-blocking}, \textit{scalar with blocking} and \textit{SIMD with blocking}. As can be seen, the performance of \textit{scalar non-blocking} (blue line) already improves the performance by around 2x for small sizes compared to the baseline. This is mainly due to an improvement in ILP. However, performance drops considerably when the data does not longer fits in L3 cache. As expected \textit{scalar with blocking} (green line) improves the performance by 3x for large sizes by reducing the number of cache misses. Finally, \textit{SIMD with blocking} (red line) achieves a maximum performance gain of 6.4x compared to the baseline when the data does not fit cache. For a small $n$, we observe a maximum performance of 1.3 flops/cycle. Since MIL doesn't use FMA instructions, the peak performance is 8 flops/cycle. Thus, we are only getting at most 16.25\% of the peak performance. We attribute this low percentage of peak performance to the extra non floating point instructions performed, as well as the overhead of changing to another set of rays specially for 2-D and 3-D vectors.
 
@@ -325,7 +326,7 @@ also map to the same cache set. This is shown in Fig \ref{res:conflict_miss_64} 
 %   \label{res:conflict_miss_65}
 % \end{figure}
 
-\mypar{EF} \textit{Experimental setup} The tests were performed on a Intel i7 6700HQ (Skylake) with TurboBoost disabled, compiled with \texttt{gcc} \texttt{-O3 -fno-tree-vectorize -mavx2}.
+\mypar{EF} \textit{Experimental setup} The setup for the overall performance is the same as RE.
 
 \textit{Results}
  The results can be seen in Fig.~\ref{fig:performance} (c). The \textit{baseline} already performs quite well due to the lack of dependencies and aliasing. The \textit{Optimized} version removes loop-invariant code and we can hit the peak from the instruction mix. The `SIMD points' shuffles the points once during an initializing before proceeding with the algorithm, and this yields the largest performance gain; not doing this initializing corresponds to the \textit{SIMD points shuffle} curve. As mentioned, we operate at $N_{vec}=13$, and thus the performance gain with respect the baseline is roughly 3.3x. 
