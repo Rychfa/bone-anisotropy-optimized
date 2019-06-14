@@ -277,15 +277,16 @@ This is similar to the complex conversion problem of homework 3, except for 3D r
 
 \section{Experimental Results}\label{sec:exp}
 This section presents the performance results for each of the discussed algorithms.
-\begin{figure}[H]
-  \centering \includegraphics[width=3.25in]{figs/plots/overall/overall_performance.pdf}
-  \caption{Performance of (a) RE, (b) MIL, (c) EF and (d) overall.}
-  \label{fig:performance}
-\end{figure}
 
 \mypar{RE} \textit{Experimental setup}. The tests were performed on Intel i7 U7600 (Kaby Lake), 2.8 GHz without TurboBoost. The L1, L2 and L3 cache size were 32KB, 256KB, and 8MB, respectively. We compiled with \texttt{gcc} with flags \texttt{-O3 -fno-vectorize-tree -mavx2}. The sphere region size were ranged from $n=8$ to $128$.
 
 \textit{Results} As seen in Fig.~\ref{fig:performance} (a), the loop unrolling and scalar replacement did not improve the performance for the region extraction algorithms. The compiler might already perform well in alias checking and parallelizing the multiplications. When the extracted region size fitted in the cache, the performance was bound to 1 flops/cycle due to the instruction combinations (2 {\tt loads}, 1 {\tt mult}, 1 {\tt logic} and 1 {\tt store}). On the other hand, when the extracted region size was too large for the cache, the performance was bound to 0.5 flops/cycle due to the memory as the three arrays needed to be loaded from the memory before writing. The results shows that the algorithm reached around 0.8 flops/cycle in the cache and stayed around 0.2 flops/cycle in the memory.   
+
+\begin{figure}[t]
+    \centering \includegraphics[width=3.25in]{figs/plots/overall/overall_performance.pdf}
+    \caption{Performance of (a) RE, (b) MIL, (c) EF and (d) overall.}
+    \label{fig:performance}
+\end{figure}
 
 \mypar{MIL results} 
 \textit{Experimental setup}.
