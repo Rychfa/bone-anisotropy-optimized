@@ -217,13 +217,13 @@ The second performance blocker are memory accesses. Assume that the extracted re
 The second direction vector, $v_2 = (0,1,0)$, traverses the extracted region vertically. There is no reuse of data from the previous vector sine we assumed a large $n$. Further, note that for the vertical vector, at most half of the data in a cache block will be used due to the stride of $s=2$ for consecutive rays. Since unused data in a cache line still have to be read from memory, a lower bound for the data read for this vector is $Q_2(n) \geq \frac{n^3}{2}$ doubles. The remaining vectors will behave similarly as the vertical vector. Hence, a lower bound for the total amount of data read from memory is $Q(n) \geq \frac{n^3}{4} + \frac{12n^3}{2} = 6.25n^3$. Recall from the cost analysis of the previous section that the total number of flops performed by MIL is $W(n)=13(\frac{n^{3}}{2}+1) \approx 6.5n^3$. An upper bound on the operation intensity of MIL for a large $n$ is therefore $I(n) \leq \frac{6.5n^3}{6.25n^3} = 1.04$ flops/double. We conclude that the implementation of the algorithm is memory bound when the data does not longer fit in the cache. 
 
 \mypar{Blocking}
-To improve the operational intensity and cache locality, we applied blocking. The idea behind blocking is that we can improve on data reuse by partially calculating $h(v)$ and $I_{count}(v)$ in a cube-block of size $N_B^3$ that fits in L1 cache. Since the blocked data will still be in the cache for the next vector, data reuse will be improved. Afterwards, we repeat this process for the next block until all the extracted region is covered. For simplicity, we assumed that the region size $n$ is divisible by the block size $N_B$.
+To improve the operational intensity and cache locality, we applied blocking. The idea behind blocking is that we can improve on data reuse by partially calculating $h(v)$ and $I_{count}(v)$ in a cube-block of size $N_B^3$ that fits in L1 cache. Since the blocked data will still be in the cache for the next vector, data reuse will be improved. Afterwards, we repeat this process for the next block until all the extracted region is covered. For simplicity, we assumed that the region size $n$ is divisible by the block size $N_B$. Fig \ref{fig:mil_blocking} depicts a block of size $N_B$ in an extracted region of size $n$. 
 
 
 \begin{figure}[h]
     \centering
     \includegraphics[width=2in]{figs/mil_blocking.eps}
-    \caption {Example of one block of size $N_b$ inside a extracted region of size $n$.}
+    \caption {Example of one block of size $N_B$ inside a extracted region of size $n$.}
     \label{fig:mil_blocking}
 \end{figure}
 
@@ -231,7 +231,7 @@ There are two things to consider when implementing blocking for MIL. First, note
 
 \begin{figure}[h]
     \centering
-    \includegraphics[width=2.2in]{figs/heterogeneous_blocking.eps}
+    \includegraphics[width=2.5in]{figs/heterogeneous_blocking.eps}
     \caption{a) Blocks with different starting pattern for rays of direction vector (1,1,0). b) Change in starting pattern for 3-D direction vectors to allow blocking.}
     \label{fig:start_pattern}
 \end{figure}
